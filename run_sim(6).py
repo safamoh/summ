@@ -16,6 +16,8 @@ import string
 from igraph import Graph
 from igraph import summary
 
+#ay shay ay shay kilma wa7da
+
 #not yet#  from run_topics import doc2topics
 
 ENC='utf-8'
