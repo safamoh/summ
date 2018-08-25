@@ -16,7 +16,7 @@ import string
 from igraph import Graph
 from igraph import summary
 
-#not yet#  from run_topics import doc2topics
+# hi iam safa
 
 # changes in github
 
