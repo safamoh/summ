@@ -7,14 +7,18 @@ import codecs
 from lxml import etree #pip install lxml
 from nltk.stem.porter import PorterStemmer
 from lxml import html
-
 import gensim
 from gensim.matutils import jaccard, cossim, dense2vec
 from gensim.parsing.preprocessing import STOPWORDS
 from gensim.models import Word2Vec
+from gensim.models import TfidfModel
+from gensim.corpora import Dictionary
+from gensim import models
+from gensim import corpora
+from gensim import similarities
 import string
-from igraph import Graph
-from igraph import summary
+
+
 
 
 ENC='utf-8'
@@ -24,31 +28,7 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 
 pStemmer = PorterStemmer() #For vectorizing
 
-
-#0v5# JC Aug 24, 2018  Workflow 3:  Update iterator
-#0v4# JC Aug 24, 2018  Workflow 3:  Add igraph, add html conversion rather then text
-#0v3# JC Aug 23, 2018  Workflow 2:  Add input query, add topic ids, remove NetworkX (iGraph next)
-#0v2# JC Aug 22, 2018  Workflow setup
-#0v1# JC Aug 22, 2018  Infrastructure setup
-
-
-##  INSTALLATION:
-# http://mkelsey.com/2013/04/30/how-i-setup-virtualenv-and-virtualenvwrapper-on-my-mac/
-# mkvirtualenv duc
-
-#pip install gensim
-#pip install python-louvain
-#pip install nltk
-#pip install lxml
-
-#pip install python-igraph
-#Binaries:
-#https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-igraph
-#https://pypi.org/project/python-igraph/#files
-
-#REFERENCE:
-#http://igraph.org/python/doc/igraph.VertexSeq-class.html
-#https://radimrehurek.com/gensim/models/word2vec.html
+#0v1# JC Aug 27, 2018  Run pipeline setup
 
 
 FILES_TO_PROCESS=10000000
@@ -101,8 +81,6 @@ def xml2text(xml_filename,text_tag='TEXT'):
     #print ("BLOB: "+str(blob))
     return blob
                     
-                    
-                    
     
 def files2sentences(limit_topic='',limit=0):
     #>update to grab DUC id
@@ -149,6 +127,7 @@ def files2sentences(limit_topic='',limit=0):
 
 
 def tokenize_sentences(sentences):
+    #> lots of ways to chunk  & clean sentences
     regex = re.compile('[%s]' % re.escape(string.punctuation))
     sentencesTokens = [regex.sub('', sen.lower()).split(' ') for sen in sentences]
 
@@ -162,17 +141,6 @@ def tokenize_sentences(sentences):
                     pass
         sentencesTokens[i] = tokens
     return sentencesTokens
-
-def create_vector_model(sentences):
-    sentencesTokens=tokenize_sentences(sentences)
-    vmodel = Word2Vec(sentencesTokens)
-    return vmodel,sentencesTokens
-
-def calc_sentence_similarity(sen1,sen2,vmodel,sen1a,sen2a):
-    sen1 = sum([vmodel[w] for w in sen1a if w in vmodel])
-    sen2 = sum([vmodel[w] for w in sen2a if w in vmodel])
-    simScore = cossim(dense2vec(sen1), dense2vec(sen2))
-    return simScore
 
 
 def get_query(topic_id):
@@ -195,80 +163,134 @@ def get_query(topic_id):
     blob=re.sub(r'\n',' ',blob)
     return blob
 
+#######################################################################
 
-def run_workflow2(verbose=True):
+def run_pipeline(verbose=True):
+
     #0/  Load query sentence
-    G= Graph()
+    vector_model='tfidf'
 
     topic_id='d301i' #
 
     query_sentence=get_query(topic_id)
     print ("Using query: "+str(query_sentence))
 
+
     #1/  LOAD
+    #################################
+
+
     print ("1/  Loading sentences...")
     documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
-
+    print("---------------------------------")
     for i,sentence in enumerate(sentences):
         print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
-        if i>3:break
+        if i>2:break
         
     #Add query as V1
     sentences.insert(0,query_sentence)
     sentences_topics.insert(0,topic_id)
-        
 
-    #2/  Create vector model (for similarities)
-    print ("Create vector model...")
-    vmodel,sentencesTokens=create_vector_model(sentences)
-        
-    #3/  Create Graph
-    G.add_vertices(sentences)
 
-    #4/  SIMILARITY Calcs
-    print "Calculating similarities..."
-    for i,sentence in enumerate(sentences):
-        similarity=calc_sentence_similarity(sentences[0], sentence, vmodel, sentencesTokens[0],sentencesTokens[i])
-        if i<20: print ("Similarity: "+str(similarity)+" between query and: "+sentence)
-        if i<20: print ("  Similarity: "+str(similarity)+" between query and: "+str(sentencesTokens[i]))
 
-        #4/  Create Graph edges
-        if i>0:
-            G.add_edge(sentences[0],sentence,weight=similarity)
+
+    #2/  Normalize corpus
+    ##########################################
+
+    ##print("---------------------------------")
+    ##print("list of sentences:")
+    ##print sentences
+    ##print("---------------------------------")
+    ##print("Tokenize sentences (After using PorterStemmer):")
+    norm_sentences=tokenize_sentences(sentences)
+    ##print norm_sentences
+    ##print("---------------------------------")
+
+
+
+
+
+    #STEP 3 : Index and vectorize
+    #####################################################
+
+    #We create a dictionary, an index of all unique values: <class 'gensim.corpora.dictionary.Dictionary'>
+    #the Dictionary is used as an index to convert words into integers.
+    dictionary = corpora.Dictionary(norm_sentences)
+    ##print (dictionary)
+    ##print("---------------------------------")
+    ##print("Dictionary (token:id):")
+    ##print(dictionary.token2id)
+    ##print("---------------------------------")
+    dictionary.save('doc_dict.dict') # store the dictionary, for future reference
+    dictionary.save_as_text('doc_txt_dict.txt',sort_by_word=False) # SAVE the dictionary as a text file,
+    #the format of doc_txt_dict.txt is: (id_1    word_1  document_frequency_1)
+
+    #---------------------------------
+
+    # compile corpus (vectors number of times each elements appears)
+    #The "compile corpus" section actually converts each sentence into a list of integers ("integer" bag-of-words)
+    #This raw_corpus is then fed into the tfidf model.
+    raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences]
+    #Then convert tokenized documents to vectors: <type 'list'>
+    print "Then convert tokenized documents to vectors: %s"% type(raw_corpus)
+    #each document is a list of sentence (vectors) --> (id of the word, tf in this doc)
+    ##print("raw_corpus:")
+    ##print raw_corpus 
+    #Save the vectorized corpus as a .mm file
+    corpora.MmCorpus.serialize('doc_vectors.mm', raw_corpus) # store to disk
+    print "Save the vectorized corpus as a .mm file"
+
+
+
+    # STEP 4 : tfidf
+    ###############################################
+    corpus = corpora.MmCorpus('doc_vectors.mm')
+
+    # Transform Text with TF-IDF
+    tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
+    print "We initialize our TF-IDF transformation tool : %s"%type(tfidf)
+   
+    # corpus tf-idf
+    corpus_tfidf = tfidf[corpus]
+    print "We convert our vectors corpus to TF-IDF space : %s"%type(corpus_tfidf)
+   
+
+
+
+    # STEP 5 : Create similarity matrix of all files
+    ###############################################
+   
+    index = similarities.MatrixSimilarity(tfidf[corpus])
+    #print "We compute similarities from the TF-IDF corpus : %s"%type(index)
+    index.save('sim_index.index')
+    index = similarities.MatrixSimilarity.load('sim_index.index')
     
-    #5/  Print graph
-    summary(G)
-    
-    print ("Done workflow2")
+    sims = index[corpus_tfidf]
+    #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
+
+
+    # STEP 6:  Print sims 
+    ###############################################
+    i=0
+    for item in list(enumerate(sims)):
+        i+=1
+        if i>0:break
+        sent_num1=item[0]
+        for sent_num2,cosim_value in enumerate(item[1]):
+            idx="("+str(sent_num1)+","+str(sent_num2)+")"
+            cosim_str="%.9f" % cosim_value
+            print ("AT: "+str(idx)+" sim: "+str(cosim_str))
+            print ("  for sent1: "+str(sentences[sent_num1]))
+            print ("   vs sent2: "+str(sentences[sent_num2]))
+
     return
 
+    #################################################
+
+
 if __name__=='__main__':
-    branches=['run_workflow2']
+    branches=['run_pipeline']
     for b in branches:
         globals()[b]()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
