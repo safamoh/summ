@@ -56,6 +56,17 @@ if not os.path.exists(TEMP_DATA_PATH):
 
 
 
+#############################################
+#  GLOBAL CONFIGS
+#############################################
+#
+TOPIC_ID='d301i'       #
+LIMIT_TOPICS=True      #Look at subset of data
+#
+#
+#############################################
+
+
 def walk_directory(folders,include_dir=False):
     if not isinstance(folders,list):folders=[folders]
     for folder in folders:
@@ -174,6 +185,7 @@ def get_query(topic_id):
 #######################################################################
 
 def run_pipeline(verbose=True):
+    global TOPIC_ID, LIMIT_TOPICS
     
     options=['print_sims']
     options=[]
@@ -181,18 +193,19 @@ def run_pipeline(verbose=True):
     #0/  Load query sentence
     vector_model='tfidf'
 
-    topic_id='d301i' #
-
-    query_sentence=get_query(topic_id)
+    query_sentence=get_query(TOPIC_ID)
     print ("Using query: "+str(query_sentence))
-
 
     #1/  LOAD
     #################################
 
 
     print ("1/  Loading sentences...")
-    documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
+    if LIMIT_TOPICS:
+        if not TOPIC_ID:stop_bad=setup
+        documents,sentences,sentences_topics=files2sentences(limit_topic=TOPIC_ID) #watch loading 2x data into mem
+    else:
+        documents,sentences,sentences_topics=files2sentences()
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     print("---------------------------------")
     for i,sentence in enumerate(sentences):
@@ -201,7 +214,7 @@ def run_pipeline(verbose=True):
         
     #Add query as V1
     sentences.insert(0,query_sentence)
-    sentences_topics.insert(0,topic_id)
+    sentences_topics.insert(0,TOPIC_ID)
 
 
     #2/  Normalize corpus
@@ -299,26 +312,70 @@ def run_pipeline(verbose=True):
 
 
 def run_graph_on_sims():
-    global TEMP_DATA_PATH
+    global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS
     
     options=['print_entire_graph']
     options=[]
     
     #LOAD STATE
-    topic_id='d301i' #
-    sims=np.load(TEMP_DATA_PATH+"sim_matrix.npy")
-    documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
+    #####################################################
+    print ("[]TODO: consider keeping in same pipeline as above -- otherwise, watch training parameters are same")
 
+    topic_id='d301i' #
+    query_sentence=get_query(topic_id)
+    print ("Using query: "+str(query_sentence))
+
+    if LIMIT_TOPICS:
+        if not TOPIC_ID:stop_bad=setup
+        documents,sentences,sentences_topics=files2sentences(limit_topic=TOPIC_ID) #watch loading 2x data into mem
+    else:
+        documents,sentences,sentences_topics=files2sentences()
+    sentences.insert(0,query_sentence)
+    sentences_topics.insert(0,topic_id)
+    #
+    #############################
+
+
+    #Reload simulation matrix
+    sims=np.load(TEMP_DATA_PATH+"sim_matrix.npy")
     
-    # STEP 7:  iGraph
-    #################################################
-    # iGraph conversion
-    ###############################################
+
+    #STEP A:  Zero node-to-node simularity diagonal to 0
+    np.fill_diagonal(sims, 0)
+    
+    #STEP B:  Create iGraph
     G = igraph.Graph.Weighted_Adjacency(sims.tolist())
     G.vs['label'] = sentences   #node_names  # or a.index/a.columns
+
+    #STEP C:  Query index or vector (alternatively matrix 1 at query, zero otherwise)
+    query_node_id=0
+    print ("Query from node: "+str(G.vs[query_node_id]))
     
+    #STEP D:  Random walk with restart
+    random_walk_with_restart=G.personalized_pagerank(reset_vertices=query_node_id)
+    print ("GOT RANDOM walk scores: "+str(random_walk_with_restart[:5])+"...")
+    #  Options:
+    #         - weights - edge weights to be used. Can be a sequence or iterable or even an edge attribute name.
+    #         - returns list
+    
+    #STEP E:  Sort and chose top scores
+    sorted_scores = sorted(zip(random_walk_with_restart, G.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
+    
+    #STEP F:  Output top sentences
+    #         - top match is query node itself
+    c=0
+    for score,vertex in sorted_scores:
+        c+=1
+        if c>6:break
+        if c>1:
+            print ("Top Score: %.9f"%score+" >"+vertex['label'])
+
     if 'print_entire_graph' in options:
+        c=0
         for edge in G.es:
+            c+=1
+            if c>10:break
+
             source_vertex_id = edge.source
             target_vertex_id = edge.target
             source_vertex = G.vs[source_vertex_id]
@@ -326,6 +383,13 @@ def run_graph_on_sims():
             
             print ("From: "+str(source_vertex)+" to: "+str(target_vertex))
             print ("Weight: "+str(edge['weight']))
+            if False and edge['weight']>0.15:
+                print ("------------------")
+                print ("From: "+str(source_vertex)+" to: "+str(target_vertex))
+                print ("Weight: "+str(edge['weight']))
+            
+    print
+    print ("Done for query: "+str(query_sentence))
     
     print ("Done run_graph_on_sims")
     return
@@ -334,7 +398,7 @@ if __name__=='__main__':
     branches=['run_pipeline']
     branches+=['run_graph_on_sims']
 
-    branches=['run_graph_on_sims']
+#    branches=['run_graph_on_sims']
     for b in branches:
         globals()[b]()
 
