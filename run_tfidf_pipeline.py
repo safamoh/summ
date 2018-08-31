@@ -17,6 +17,8 @@ from gensim import models
 from gensim import corpora
 from gensim import similarities
 import string
+import numpy as np
+import igraph
 
 
 #github
@@ -28,6 +30,7 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 
 pStemmer = PorterStemmer() #For vectorizing
 
+#0v2# JC Aug 31, 2018  Upgrade for random walk
 #0v1# JC Aug 27, 2018  Run pipeline setup
 
 
@@ -36,15 +39,20 @@ VERSION=2
 
 
 # SET BASE FOLDER OF INPUT FILES:
-DOCS_PATH=LOCAL_DIR+"data/2005/DUC2005_Summarization_Documents/duc2005_docs.tar/duc2005_docs"
-TOPIC_FILENAME=LOCAL_DIR+"data/2005/duc2005_topics.sgml"
+DOCS_PATH=LOCAL_DIR+"../data/2005/DUC2005_Summarization_Documents/duc2005_docs.tar/duc2005_docs"
+TOPIC_FILENAME=LOCAL_DIR+"../data/2005/duc2005_topics.sgml"
+TEMP_DATA_PATH=LOCAL_DIR+"../data/"
 
 if not os.path.exists(DOCS_PATH):
     DOCS_PATH="/Users/safaalballaa/Desktop/duc/2005/DUC2005_Summarization_Documents"
     TOPIC_FILENAME="/Users/safaalballaa/Desktop/duc/2005/duc2005_topics.sgml"
+    TEMP_DATA_PATH="./"
     if not os.path.exists(DOCS_PATH):
         print ("Input directory invalid: "+str(DOCS_PATH))
         hard_stop=bad_dir_inputs
+        
+if not os.path.exists(TEMP_DATA_PATH):
+    print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
 
 
 
@@ -166,6 +174,9 @@ def get_query(topic_id):
 #######################################################################
 
 def run_pipeline(verbose=True):
+    
+    options=['print_sims']
+    options=[]
 
     #0/  Load query sentence
     vector_model='tfidf'
@@ -193,8 +204,6 @@ def run_pipeline(verbose=True):
     sentences_topics.insert(0,topic_id)
 
 
-
-
     #2/  Normalize corpus
     ##########################################
 
@@ -209,8 +218,6 @@ def run_pipeline(verbose=True):
 
 
 
-
-
     #STEP 3 : Index and vectorize
     #####################################################
 
@@ -222,8 +229,8 @@ def run_pipeline(verbose=True):
     ##print("Dictionary (token:id):")
     ##print(dictionary.token2id)
     ##print("---------------------------------")
-    dictionary.save('doc_dict.dict') # store the dictionary, for future reference
-    dictionary.save_as_text('doc_txt_dict.txt',sort_by_word=False) # SAVE the dictionary as a text file,
+    dictionary.save(TEMP_DATA_PATH+'doc_dict.dict') # store the dictionary, for future reference
+    dictionary.save_as_text(TEMP_DATA_PATH+'doc_txt_dict.txt',sort_by_word=False) # SAVE the dictionary as a text file,
     #the format of doc_txt_dict.txt is: (id_1    word_1  document_frequency_1)
 
     #---------------------------------
@@ -238,14 +245,14 @@ def run_pipeline(verbose=True):
     ##print("raw_corpus:")
     ##print raw_corpus 
     #Save the vectorized corpus as a .mm file
-    corpora.MmCorpus.serialize('doc_vectors.mm', raw_corpus) # store to disk
+    corpora.MmCorpus.serialize(TEMP_DATA_PATH+'doc_vectors.mm', raw_corpus) # store to disk
     print "Save the vectorized corpus as a .mm file"
 
 
 
     # STEP 4 : tfidf
     ###############################################
-    corpus = corpora.MmCorpus('doc_vectors.mm')
+    corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
 
     # Transform Text with TF-IDF
     tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
@@ -263,34 +270,89 @@ def run_pipeline(verbose=True):
    
     index = similarities.MatrixSimilarity(tfidf[corpus])
     #print "We compute similarities from the TF-IDF corpus : %s"%type(index)
-    index.save('sim_index.index')
-    index = similarities.MatrixSimilarity.load('sim_index.index')
+    index.save(TEMP_DATA_PATH+'sim_index.index')
+    index = similarities.MatrixSimilarity.load(TEMP_DATA_PATH+'sim_index.index')
     
     sims = index[corpus_tfidf]
     #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
+    np.save(TEMP_DATA_PATH+"sim_matrix.npy",sims)
+
 
 
     # STEP 6:  Print sims 
     ###############################################
-    i=0
-    for item in list(enumerate(sims)):
-        i+=1
-        if i>0:break
-        sent_num1=item[0]
-        for sent_num2,cosim_value in enumerate(item[1]):
-            idx="("+str(sent_num1)+","+str(sent_num2)+")"
-            cosim_str="%.9f" % cosim_value
-            print ("AT: "+str(idx)+" sim: "+str(cosim_str))
-            print ("  for sent1: "+str(sentences[sent_num1]))
-            print ("   vs sent2: "+str(sentences[sent_num2]))
-
+    if 'print_sims' in options:
+        i=0
+        for item in list(enumerate(sims)):
+            i+=1
+            if i>0:break
+            sent_num1=item[0]
+            for sent_num2,cosim_value in enumerate(item[1]):
+                idx="("+str(sent_num1)+","+str(sent_num2)+")"
+                cosim_str="%.9f" % cosim_value
+                print ("AT: "+str(idx)+" sim: "+str(cosim_str))
+                print ("  for sent1: "+str(sentences[sent_num1]))
+                print ("   vs sent2: "+str(sentences[sent_num2]))
+            
     return
-
     #################################################
 
 
+def run_graph_on_sims():
+    global TEMP_DATA_PATH
+    
+    options=['print_entire_graph']
+    options=[]
+    
+    #LOAD STATE
+    topic_id='d301i' #
+    sims=np.load(TEMP_DATA_PATH+"sim_matrix.npy")
+    documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
+
+    
+    # STEP 7:  iGraph
+    #################################################
+    # iGraph conversion
+    ###############################################
+    G = igraph.Graph.Weighted_Adjacency(sims.tolist())
+    G.vs['label'] = sentences   #node_names  # or a.index/a.columns
+    
+    if 'print_entire_graph' in options:
+        for edge in G.es:
+            source_vertex_id = edge.source
+            target_vertex_id = edge.target
+            source_vertex = G.vs[source_vertex_id]
+            target_vertex = G.vs[target_vertex_id]
+            
+            print ("From: "+str(source_vertex)+" to: "+str(target_vertex))
+            print ("Weight: "+str(edge['weight']))
+    
+    print ("Done run_graph_on_sims")
+    return
+
 if __name__=='__main__':
     branches=['run_pipeline']
+    branches+=['run_graph_on_sims']
+
+    branches=['run_graph_on_sims']
     for b in branches:
         globals()[b]()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
