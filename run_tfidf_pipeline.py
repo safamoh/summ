@@ -389,6 +389,8 @@ def run_graph_on_sims():
                 print ("Weight: "+str(edge['weight']))
             
     print
+    print ("Total node count: "+str(len(G.vs)))
+    print ("Total scores count: "+str(len(sorted_scores)))
     print ("Done for query: "+str(query_sentence))
     
     print ("Done run_graph_on_sims")
