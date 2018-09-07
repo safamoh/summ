@@ -1,4 +1,4 @@
-from read import *
+from duc_reader import *
 
 
 def run_pipeline(verbose=True):

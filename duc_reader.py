@@ -35,7 +35,7 @@ pStemmer = PorterStemmer() #For vectorizing
 
 
 FILES_TO_PROCESS=10000000
-VERSION=2
+VERSION=3
 
 
 # SET BASE FOLDER OF INPUT FILES:
