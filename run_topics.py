@@ -46,14 +46,21 @@ if not os.path.exists(TEMP_DATA_PATH):
 if not os.path.exists(TEMP_DATA_PATH):
     print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
 
+
+#CONFIGURATION OPTIONS:
 VERSION="DUC_2005"
-NUM_TOPICS=40
+NUM_TOPICS=15
+LIMIT_TOPIC='d301i' #Or blank for non
+
+
 MODEL_FILENAME = datapath(TEMP_DATA_PATH+"lda_"+str(NUM_TOPICS)+"_"+str(VERSION)+".model")
 TOPIC_DICTIONARY_FILENAME=datapath(TEMP_DATA_PATH+"lda_dictionary_"+str(NUM_TOPICS)+"_"+str(VERSION)+".dict")
 TOPIC_CORPUS_FILENAME=datapath(TEMP_DATA_PATH+"lda_corpus_"+str(NUM_TOPICS)+"_"+str(VERSION)+".mm")
 
+
 def get_corpora(documents=[],common_dictionary='',verbose=True):
     from duc_reader import files2sentences #inner import
+    FILTER_LOW_HIGH_FREQUENCY_MENTIONS=False    #Allow for smaller datasets
     
     if common_dictionary:
         flag_use_pretrained_dict=True
@@ -65,7 +72,7 @@ def get_corpora(documents=[],common_dictionary='',verbose=True):
 
     #https://radimrehurek.com/gensim/tut1.html
     if not documents:
-        documents,sentences,sentences_duc_topics=files2sentences(limit=-1) #watch loading 2x data into mem
+        documents,sentences,sentences_duc_topics=files2sentences(limit_topic=LIMIT_TOPIC) #watch loading 2x data into mem
 
     if verbose:
         print ("Loaded "+str(len(documents))+" documents.")
@@ -115,7 +122,8 @@ def get_corpora(documents=[],common_dictionary='',verbose=True):
         common_dictionary = Dictionary(texts)  #common_texts)
         #7/  Filter out words that occur less than 10 documents, or more than 20% of the documents.
         if verbose: print('Number of unique words in initital documents:', len(common_dictionary))
-        common_dictionary.filter_extremes(no_below=10, no_above=0.2)
+        if FILTER_LOW_HIGH_FREQUENCY_MENTIONS:
+            common_dictionary.filter_extremes(no_below=10, no_above=0.2)
     else:
         print ("[debug] using previously trained dictionary..")
         #must retrain model#  common_dictionary.add_documents(texts)
