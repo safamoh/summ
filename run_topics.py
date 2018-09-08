@@ -31,12 +31,7 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 #0v2# JC Sep  7, 2018  Integrate model viewer
 #0v1# JC Aug 23, 2018  Setup for LDA topic modelling
 
-##  NOTES
-#- place data into subdirectory ./data/2005 (see below)
-
-
-##  REFERNCE:
-
+##  REFERENCE:
 #Options 1/
 #{simple version}:  https://radimrehurek.com/gensim/models/ldamodel.html 
 #Option 2/  
