@@ -131,9 +131,9 @@ def files2sentences(limit_topic='',limit=0):
     for filename in filenames:
         try:
             doc_text=xml2text(filename)
+            documents+=[doc_text]
         except:
             print ("[error] could not process input xml: "+str(filename))
-        documents+=[doc_text]
 
     print ("[debug] Tokenizing input sentences...")
     # flatten all documents into list of sentences
