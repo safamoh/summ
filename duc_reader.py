@@ -130,7 +130,7 @@ def files2sentences(limit_topic='',limit=0):
     documents=[]
     for filename in filenames:
         try:
-            doc_text=xml2text(filename)
+            doc_text=xml2text(filename) #Catch enabled
             documents+=[doc_text]
         except:
             print ("[error] could not process input xml: "+str(filename))
