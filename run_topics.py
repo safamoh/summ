@@ -45,6 +45,11 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 # Visualization (& pre-process options):
 #https://www.kaggle.com/ykhorramz/lda-and-t-sne-interactive-visualization
 
+TEMP_DATA_PATH=LOCAL_DIR+"../data/"
+if not os.path.exists(TEMP_DATA_PATH):
+    TEMP_DATA_PATH="/Users/safaalballaa/Desktop/resulted_files/"
+if not os.path.exists(TEMP_DATA_PATH):
+    print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
 
 VERSION="DUC_2005"
 NUM_TOPICS=40
@@ -70,7 +75,6 @@ def get_corpora(documents=[],common_dictionary='',verbose=True):
     if verbose:
         print ("Loaded "+str(len(documents))+" documents.")
     print ("Extra pre-processing steps for Topic model...")
-
     
     # FILTER WORDS FOR TOPIC MODELLING
     #############################################33
@@ -261,6 +265,7 @@ def visualize_topic_model():
     #pyldaviz
     #- inotebook option
     #- built-in webserver option
+    print ("--->  Running visualization")
 
     if False: #via notebook
         pyLDAvis.enable_notebook()

@@ -50,7 +50,6 @@ if not os.path.exists(DOCS_PATH):
     if not os.path.exists(DOCS_PATH):
         print ("Input directory invalid: "+str(DOCS_PATH))
         hard_stop=bad_dir_inputs
-        
 if not os.path.exists(TEMP_DATA_PATH):
     print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
 
@@ -105,6 +104,7 @@ def files2sentences(limit_topic='',limit=0):
     #>update to grab DUC id
     global DOCS_PATH,ENC,FILES_TO_PROCESS
     sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+    print ("[debug] using training documents at: "+str(DOCS_PATH))
 
     # get list of filenames in the directory
     filenames=[]
