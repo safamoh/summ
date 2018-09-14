@@ -205,8 +205,8 @@ def filter_graph(g):
     return g
 
 def run_clustering_on_graph():
-    method='fastgreedy'
     method='betweenness'
+    method='fastgreedy'
 
     #STEP 1:  LOAD GRAPH ##########################
     g,query_sentence=load_sim_matrix_to_igraph()
@@ -216,24 +216,23 @@ def run_clustering_on_graph():
     
     cluster_count=15
     
+    print ("Running clustering ["+method+"] on graph...")
     if 'betweenness' in method:
-        print ("Running clustering (edge betweenness) on graph...")
         communities=g.community_edge_betweenness(clusters=cluster_count,weights='weight') #directed=
         
     if 'fastgreedy' in method:
         #** only works with undirected graphs
-        uG = g.as_undirected(combine_edges = 'mean')
+        uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
         communities = uG.community_fastgreedy(weights = 'weight')
         
         #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges) to obtain a VertexClustering that is in some sense optimal. For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized. Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering, but you may override this by specifying the desired number of clusters as an argument to as_clustering().
         #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information. They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram; in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
         
-
+    print ("Done clustering.")
         
-    #Remove signletons
-    #singletons = cg.vs.select(_degree = 0)
-    #cg.delete_vertices(singletons)
-    clusters = communities.as_clustering(n=cluster_count) #A VertexDendogram
+
+    clusters = communities.as_clustering(n=cluster_count) #Cut dendogram at level n. Returns VertexClustering object
+                                                          #"When an algorithm in igraph produces a `VertexDendrogram`, it may optionally produce a "hint" as well that tells us where to cut the dendrogram 
     
     #Edges between clusters#  edges_between = g.es.select(_between=(comm1, comm2))
     
@@ -246,32 +245,23 @@ def run_clustering_on_graph():
     return
 
 def output_clusters(g,communities,clusters):
-    #>  good intro https://www.researchgate.net/profile/Carlos_Figuerola/publication/319288008_A_Walk_on_Python-igraph/links/59a04e9a0f7e9b0fb8993019/A-Walk-on-Python-igraph.pdf
-    #print ("MEM: "+str(clusters.membership))
-    #subgraph_vs = (g.vs(name=m)[0].index for m in clusters.membership)
-    #for a in subgraph_vs:
-    #    print ("> "+str(a))
-    #print ("V: "+str(subgraph_vs))
-    # 
-    #If get non-VertexDendogram
-    if False:
-        print ("Discovered communities: "+str(len(communities)))
-        for n in range(0,len(communiites)):
-            print ("Community #"+str(n)+" has size: "+str(len(communities[n])))
-        
-        print ("Community members")
-        for n in range(0,len(communiites)):
-            print ("Community #"+str(n))
-            subgraph=communities.subgraph(n)
-            for z in community[n][:10]:
-                pass
-    #            print ("--> "g.vs[z][''])
+    #communities:  VertexDendogram 
+    #clusters:  VertexClustering object -- http://igraph.org/python/doc/igraph.clustering.VertexClustering-class.html
     
-    #Explore clusters
-    #for c,cluster in enumerate(clusters):
-    #    for i_subgraph in cluster:
-    #        print ("cluster #"+str(c))
-    #        print ("-- subgraph id: "+str(i_subgraph))
+    #Remove singletons
+    #singletons = cg.vs.select(_degree = 0)
+    #cg.delete_vertices(singletons)
+    
+    print ("Number of clusters: "+str(len(clusters)))
+    i=-1
+    for subgraph in clusters.subgraphs():
+        i+=1
+        print
+        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
+        
+        for idx, v in enumerate(subgraph.vs):
+            print ("Node: "+str(v['label']))
+            if idx>3:break
     return
 
 def view_graph_clusters(g,clusters):
