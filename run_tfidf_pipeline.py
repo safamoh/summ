@@ -1,4 +1,7 @@
 from duc_reader import *
+import numpy as np
+import random
+from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 
 
 def run_pipeline(verbose=True):
@@ -128,12 +131,8 @@ def run_pipeline(verbose=True):
     #################################################
 
 
-def run_graph_on_sims():
+def load_sim_matrix_to_igraph():
     global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS
-    
-    options=['print_entire_graph']
-    options=[]
-    
     #LOAD STATE
     #####################################################
     print ("[]TODO: consider keeping in same pipeline as above -- otherwise, watch training parameters are same")
@@ -164,6 +163,181 @@ def run_graph_on_sims():
     G = igraph.Graph.Weighted_Adjacency(sims.tolist())
     G.vs['label'] = sentences   #node_names  # or a.index/a.columns
 
+    return G,query_sentence
+
+def fix_dendrogram(graph, cl):
+    # takes a graph and an incomplete dendrogram 
+    already_merged = set()
+    for merge in cl.merges:
+        already_merged.update(merge)
+
+    num_dendrogram_nodes = graph.vcount() + len(cl.merges)
+    not_merged_yet = sorted(set(xrange(num_dendrogram_nodes)) - already_merged)
+    if len(not_merged_yet) < 2:
+        return
+
+    v1, v2 = not_merged_yet[:2]
+    cl._merges.append((v1, v2))
+    del not_merged_yet[:2]
+
+    missing_nodes = xrange(num_dendrogram_nodes,
+            num_dendrogram_nodes + len(not_merged_yet))
+    cl._merges.extend(izip(not_merged_yet, missing_nodes))
+    cl._nmerges = graph.vcount()-1
+    return cl
+
+def filter_graph(g):
+    if False:
+        # FILTER / TRIM GRAPH
+        print ("FILTERING graph edge count from: "+str(g.ecount()))
+        
+        #/filter option by weight (but leads to non-complete graph
+        #SELECT#  http://igraph.org/python/doc/igraph.EdgeSeq-class.html#select
+        #g.es.select(weight_lt=0.10).delete()  #615k to 27k
+        #g.es.select(weight_lt=0.20).delete()  #615k to 3.2k
+    
+        #/filter option by random
+        sample_size=25
+        subgraph_vertex_list = [v.index for v in random.sample(g.vs, sample_size)]
+        subgraph = igraph.Graph.subgraph(g, subgraph_vertex_list)
+        g=subgraph
+        print ("FILTERING graph edge count to: "+str(g.ecount()))
+    return g
+
+def run_clustering_on_graph():
+    method='fastgreedy'
+    method='betweenness'
+
+    #STEP 1:  LOAD GRAPH ##########################
+    g,query_sentence=load_sim_matrix_to_igraph()
+    ###############################################
+    #
+    g=filter_graph(g)
+    
+    cluster_count=15
+    
+    if 'betweenness' in method:
+        print ("Running clustering (edge betweenness) on graph...")
+        communities=g.community_edge_betweenness(clusters=cluster_count,weights='weight') #directed=
+        
+    if 'fastgreedy' in method:
+        #** only works with undirected graphs
+        uG = g.as_undirected(combine_edges = 'mean')
+        communities = uG.community_fastgreedy(weights = 'weight')
+        
+        #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges) to obtain a VertexClustering that is in some sense optimal. For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized. Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering, but you may override this by specifying the desired number of clusters as an argument to as_clustering().
+        #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information. They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram; in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
+        
+
+        
+    #Remove signletons
+    #singletons = cg.vs.select(_degree = 0)
+    #cg.delete_vertices(singletons)
+    clusters = communities.as_clustering(n=cluster_count) #A VertexDendogram
+    
+    #Edges between clusters#  edges_between = g.es.select(_between=(comm1, comm2))
+    
+    output_clusters(g,communities,clusters)
+    g.write_pickle(fname="save_clustered_graph.dat")
+    
+    if True:
+        print ("Visualize clusters...")
+        view_graph_clusters(g,clusters)
+    return
+
+def output_clusters(g,communities,clusters):
+    #>  good intro https://www.researchgate.net/profile/Carlos_Figuerola/publication/319288008_A_Walk_on_Python-igraph/links/59a04e9a0f7e9b0fb8993019/A-Walk-on-Python-igraph.pdf
+    #print ("MEM: "+str(clusters.membership))
+    #subgraph_vs = (g.vs(name=m)[0].index for m in clusters.membership)
+    #for a in subgraph_vs:
+    #    print ("> "+str(a))
+    #print ("V: "+str(subgraph_vs))
+    # 
+    #If get non-VertexDendogram
+    if False:
+        print ("Discovered communities: "+str(len(communities)))
+        for n in range(0,len(communiites)):
+            print ("Community #"+str(n)+" has size: "+str(len(communities[n])))
+        
+        print ("Community members")
+        for n in range(0,len(communiites)):
+            print ("Community #"+str(n))
+            subgraph=communities.subgraph(n)
+            for z in community[n][:10]:
+                pass
+    #            print ("--> "g.vs[z][''])
+    
+    #Explore clusters
+    #for c,cluster in enumerate(clusters):
+    #    for i_subgraph in cluster:
+    #        print ("cluster #"+str(c))
+    #        print ("-- subgraph id: "+str(i_subgraph))
+    return
+
+def view_graph_clusters(g,clusters):
+    
+    #igraph selections:
+    #vRes = G.vs.select(lambda x:x["name"]=="John" and x["age"]>20)
+    
+    #https://gist.github.com/rbnvrw/c2424fe3ff812da892a0
+    
+    #Change edge weights based on clusters
+    
+    # Set edge weights based on communities
+    weights = {v: len(c) for c in clusters for v in c}
+    g.es["weight"] = [weights[e.tuple[0]] + weights[e.tuple[1]] for e in g.es]
+
+    visual_style = {}
+
+    # Scale vertices based on degree
+    outdegree = g.outdegree()
+    visual_style["vertex_size"] = [x/max(outdegree)*25+50 for x in outdegree]
+    
+    # Set bbox and margin
+    visual_style["bbox"] = (800,800)
+    visual_style["margin"] = 100
+    
+    # Define colors used for outdegree visualization
+    colours = ['#fecc5c', '#a31a1c']
+    
+    # Order vertices in bins based on outdegree
+    bins = np.linspace(0, max(outdegree), len(colours))  
+    digitized_degrees =  np.digitize(outdegree, bins)
+    
+    # Set colors according to bins
+    g.vs["color"] = [colours[x-1] for x in digitized_degrees]
+    
+    # Also color the edges
+    for ind, color in enumerate(g.vs["color"]):
+            edges = g.es.select(_source=ind)
+            edges["color"] = [color]
+    # Don't curve the edges
+    visual_style["edge_curved"] = False
+
+    # Choose the layout
+    N = g.vcount()
+
+    visual_style["layout"] = g.layout_fruchterman_reingold(weights=g.es["weight"], maxiter=1000, area=N**3, repulserad=N**3)
+            
+    # Plot the graph
+    #plot(g, "social_network.pdf", **visual_style)
+    out=plot(g, **visual_style)
+    out.save('igraph_visual.png')
+
+    return
+
+
+def run_graph_on_sims():
+
+    #STEP 1:  LOAD GRAPH ##########################
+    G,query_sentence=load_sim_matrix_to_igraph()
+    ###############################################
+    #
+
+    options=['print_entire_graph']
+    options=[]
+    
+    
     #STEP C:  Query index or vector (alternatively matrix 1 at query, zero otherwise)
     query_node_id=0
     print ("Query from node: "+str(G.vs[query_node_id]))
@@ -215,7 +389,8 @@ def run_graph_on_sims():
 
 if __name__=='__main__':
     branches=['run_pipeline']
-    branches+=['run_graph_on_sims']
+    branches=['run_graph_on_sims']
+    branches=['run_clustering_on_graph']
 
 #    branches=['run_graph_on_sims']
     for b in branches:
