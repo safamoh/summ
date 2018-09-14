@@ -1,7 +1,13 @@
+from __future__ import division
 from duc_reader import *
 import numpy as np
 import random
+from itertools import izip
+
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
+from performance import Performance_Tracker #pip install psutil
+
+Perf=Performance_Tracker()
 
 
 def run_pipeline(verbose=True):
@@ -167,6 +173,7 @@ def load_sim_matrix_to_igraph():
 
 def fix_dendrogram(graph, cl):
     # takes a graph and an incomplete dendrogram 
+    # https://lists.nongnu.org/archive/html/igraph-help/2014-02/msg00067.html
     already_merged = set()
     for merge in cl.merges:
         already_merged.update(merge)
@@ -186,16 +193,31 @@ def fix_dendrogram(graph, cl):
     cl._nmerges = graph.vcount()-1
     return cl
 
-def filter_graph(g):
-    if False:
-        # FILTER / TRIM GRAPH
-        print ("FILTERING graph edge count from: "+str(g.ecount()))
-        
+def filter_graph(g,the_type=''):
+    #>>
+    if the_type=='remove_low_weights':
         #/filter option by weight (but leads to non-complete graph
         #SELECT#  http://igraph.org/python/doc/igraph.EdgeSeq-class.html#select
-        #g.es.select(weight_lt=0.10).delete()  #615k to 27k
         #g.es.select(weight_lt=0.20).delete()  #615k to 3.2k
-    
+        
+        #1/
+        b4edges=g.ecount()
+        
+        TRIM_WEIGHTS_LESS_THEN=0.13
+        
+        #SET CUT-OFF WEIGHT TO TRIM:
+        
+        #Past experiments:
+            #g.es.select(weight_lt=0.20).delete()  #615k to 3.2 #33s
+            #g.es.select(weight_lt=0.15).delete()  #615k to 8342 #772 seconds
+
+        g.es.select(weight_lt=TRIM_WEIGHTS_LESS_THEN).delete()   #615k to ___
+
+        after_edges=g.ecount()
+        print ("Edges trimmed from "+str(b4edges)+" to: "+str(after_edges)+" reduce by: "+str(1-after_edges/b4edges)+"%")
+        
+    if False:
+        # FILTER / TRIM GRAPH
         #/filter option by random
         sample_size=25
         subgraph_vertex_list = [v.index for v in random.sample(g.vs, sample_size)]
@@ -205,8 +227,8 @@ def filter_graph(g):
     return g
 
 def run_clustering_on_graph():
-    method='betweenness'
     method='fastgreedy'
+    method='betweenness'
 
     #STEP 1:  LOAD GRAPH ##########################
     g,query_sentence=load_sim_matrix_to_igraph()
@@ -217,8 +239,14 @@ def run_clustering_on_graph():
     cluster_count=15
     
     print ("Running clustering ["+method+"] on graph...")
+    Perf.start()
     if 'betweenness' in method:
+        print ("**betweenness requires edge trimming.  Doing that now...")
+        g=filter_graph(g,the_type='remove_low_weights')
+        print ("Calculating edge betweenness...")
         communities=g.community_edge_betweenness(clusters=cluster_count,weights='weight') #directed=
+        print ("Fixing/checking dendogram -- must be fully connected.")
+        communities=fix_dendrogram(g, communities)
         
     if 'fastgreedy' in method:
         #** only works with undirected graphs
@@ -228,7 +256,7 @@ def run_clustering_on_graph():
         #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges) to obtain a VertexClustering that is in some sense optimal. For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized. Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering, but you may override this by specifying the desired number of clusters as an argument to as_clustering().
         #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information. They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram; in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
         
-    print ("Done clustering.")
+    time_clustering=Perf.end()
         
 
     clusters = communities.as_clustering(n=cluster_count) #Cut dendogram at level n. Returns VertexClustering object
@@ -238,6 +266,8 @@ def run_clustering_on_graph():
     
     output_clusters(g,communities,clusters)
     g.write_pickle(fname="save_clustered_graph.dat")
+
+    print ("Done clustering took: "+str(time_clustering)+" seconds")
     
     if True:
         print ("Visualize clusters...")
@@ -251,17 +281,29 @@ def output_clusters(g,communities,clusters):
     #Remove singletons
     #singletons = cg.vs.select(_degree = 0)
     #cg.delete_vertices(singletons)
+    print_it=['samples','counts']
+    print_it=['counts']
     
-    print ("Number of clusters: "+str(len(clusters)))
-    i=-1
-    for subgraph in clusters.subgraphs():
-        i+=1
-        print
-        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
+    #>  Print clusters with examples
+    if 'samples' in print_it:
+        i=-1
+        for subgraph in clusters.subgraphs():
+            i+=1
+            print
+            print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
         
-        for idx, v in enumerate(subgraph.vs):
-            print ("Node: "+str(v['label']))
-            if idx>3:break
+            for idx, v in enumerate(subgraph.vs):
+                print ("Node: "+str(v['label']))
+                if idx>3:break
+
+    #>  Print cluster counts
+    if 'counts' in print_it:
+        i=-1
+        for subgraph in clusters.subgraphs():
+            i+=1
+            print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
+    
+        print ("Total number of clusters: "+str(len(clusters)))
     return
 
 def view_graph_clusters(g,clusters):
