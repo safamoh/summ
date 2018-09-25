@@ -30,6 +30,7 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 
 pStemmer = PorterStemmer() #For vectorizing
 
+#0v3# JC Sep 25, 2018  Filter small sentences.
 #0v2# JC Aug 31, 2018  Upgrade for random walk
 #0v1# JC Aug 27, 2018  Run pipeline setup
 
@@ -59,6 +60,7 @@ if not os.path.exists(TEMP_DATA_PATH):
 #  GLOBAL CONFIGS
 #############################################
 #
+#TOPIC_ID='d307b'
 TOPIC_ID='d301i'       #
 LIMIT_TOPICS=True      #Look at subset of data
 #
@@ -99,6 +101,11 @@ def xml2text(xml_filename,text_tag='TEXT'):
     #print ("BLOB: "+str(blob))
     return blob
                     
+def clean_sentence(sentence):
+    sentence=sentence.strip()
+    sentence=re.sub(r'([\. ]+)',r'\1',sentence) #remove repeated spaces and periods
+    if len(sentence)==1:sentence=''
+    return sentence
     
 def files2sentences(limit_topic='',limit=0):
     #>update to grab DUC id
@@ -141,10 +148,14 @@ def files2sentences(limit_topic='',limit=0):
     sentence_topics=[]
     for i,document in enumerate(documents):
         for sentence in sent_detector.tokenize(document):
-            sentence.strip()
+            sentence=clean_sentence(sentence)
             if sentence:
-                sentences+=[sentence]
-                sentence_topics+=[document_topics[i]]
+                if len(sentence)<10: #Prepend to previous sentence ie/ ., Why?", L.A., 
+                    sentences[len(sentences)-1]+=" "+sentence
+                    print ("[patch add short sentences to last]  Adding: "+sentence+" to end of: "+sentences[len(sentences)-1])
+                else:
+                    sentences+=[sentence]
+                    sentence_topics+=[document_topics[i]]
     return documents,sentences,sentence_topics
 
 

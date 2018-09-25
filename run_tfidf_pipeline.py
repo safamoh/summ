@@ -1,17 +1,25 @@
 from __future__ import division
-from duc_reader import *
 import numpy as np
 import random
 from itertools import izip
+from duc_reader import *
+
+from duc_reader import TOPIC_ID
+from duc_reader import TEMP_DATA_PATH
 
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
 
 Perf=Performance_Tracker()
 
+SIM_MATRIX_PATH=TEMP_DATA_PATH+"_"+TOPIC_ID+"_sim_matrix.npy"
+
+#0vA# Sept 25, 2018  New config for TOPIC_ID
+#                    > note:  random_walk_with_restart was removed
 
 def run_pipeline(verbose=True):
-    global TOPIC_ID, LIMIT_TOPICS
+    global TOPIC_ID, LIMIT_TOPICS, SIM_MATRIX_PATH
+    Perf.start()
     
     options=['print_sims']
     options=['print_entire_graph']
@@ -103,7 +111,6 @@ def run_pipeline(verbose=True):
    
 
 
-
     # STEP 5 : Create similarity matrix of all files
     ###############################################
    
@@ -114,7 +121,7 @@ def run_pipeline(verbose=True):
     
     sims = index[corpus_tfidf]
     #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
-    np.save(TEMP_DATA_PATH+"sim_matrix.npy",sims)
+    np.save(SIM_MATRIX_PATH,sims)
 
 
 
@@ -133,18 +140,20 @@ def run_pipeline(verbose=True):
                 print ("  for sent1: "+str(sentences[sent_num1]))
                 print ("   vs sent2: "+str(sentences[sent_num2]))
             
+    print ("TOPIC ID: "+str(TOPIC_ID))
+    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+    print ("Done run_pipeline in: "+str(Perf.end())+"s")
     return
     #################################################
 
 
 def load_sim_matrix_to_igraph():
-    global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS
+    global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS,SIM_MATRIX_PATH
     #LOAD STATE
     #####################################################
     print ("[]TODO: consider keeping in same pipeline as above -- otherwise, watch training parameters are same")
 
-    topic_id='d301i' #
-    query_sentence=get_query(topic_id)
+    query_sentence=get_query(TOPIC_ID)
     print ("Using query: "+str(query_sentence))
 
     if LIMIT_TOPICS:
@@ -153,13 +162,13 @@ def load_sim_matrix_to_igraph():
     else:
         documents,sentences,sentences_topics=files2sentences()
     sentences.insert(0,query_sentence)
-    sentences_topics.insert(0,topic_id)
+    sentences_topics.insert(0,TOPIC_ID)
     #
     #############################
 
 
     #Reload simulation matrix
-    sims=np.load(TEMP_DATA_PATH+"sim_matrix.npy")
+    sims=np.load(SIM_MATRIX_PATH)
     
 
     #STEP A:  Zero node-to-node simularity diagonal to 0
@@ -227,12 +236,17 @@ def filter_graph(g,the_type=''):
     return g
 
 def run_clustering_on_graph():
+    global SIM_MATRIX_PATH
     method='fastgreedy'
     #method='betweenness'
     #method='walktrap'
     #method='spinglass'
 
     #STEP 1:  LOAD GRAPH ##########################
+    #> check that graph exists
+    if not os.path.exists(SIM_MATRIX_PATH):
+        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+".  Calling run_pipeline...")
+        run_pipeline()
     g,query_sentence=load_sim_matrix_to_igraph()
     ###############################################
     #
@@ -289,12 +303,14 @@ def run_clustering_on_graph():
     output_clusters(g,communities,clusters)
     g.write_pickle(fname="save_clustered_graph.dat")
 
+    print ("For topic: "+str(TOPIC_ID))
     print ("Done clustering took: "+str(time_clustering)+" seconds")
     
-    if True:
+    if False:
         print ("Visualize clusters...")
-        #view_graph_clusters(g,clusters)
+        view_graph_clusters(g,clusters)
     return
+
 
 def output_clusters(g,communities,clusters):
     #communities:  VertexDendogram 
@@ -385,13 +401,10 @@ def view_graph_clusters(g,clusters):
     return
 
 
-
 if __name__=='__main__':
     branches=['run_pipeline']
-    branches=['run_graph_on_sims']
     branches=['run_clustering_on_graph']
 
-#    branches=['run_graph_on_sims']
     for b in branches:
         globals()[b]()
 
