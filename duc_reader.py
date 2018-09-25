@@ -60,8 +60,8 @@ if not os.path.exists(TEMP_DATA_PATH):
 #  GLOBAL CONFIGS
 #############################################
 #
-TOPIC_ID='d307b'
-#TOPIC_ID='d301i'       #
+#TOPIC_ID='d307b'
+TOPIC_ID='d301i'       #
 LIMIT_TOPICS=True      #Look at subset of data
 #
 #
@@ -150,12 +150,8 @@ def files2sentences(limit_topic='',limit=0):
         for sentence in sent_detector.tokenize(document):
             sentence=clean_sentence(sentence)
             if sentence:
-                if len(sentence)<10: #Prepend to previous sentence ie/ ., Why?", L.A., 
-                    sentences[len(sentences)-1]+=" "+sentence
-                    print ("[patch add short sentences to last]  Adding: "+sentence+" to end of: "+sentences[len(sentences)-1])
-                else:
-                    sentences+=[sentence]
-                    sentence_topics+=[document_topics[i]]
+                sentences+=[sentence]
+                sentence_topics+=[document_topics[i]]
     return documents,sentences,sentence_topics
 
 

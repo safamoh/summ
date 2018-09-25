@@ -244,7 +244,7 @@ def run_clustering_on_graph():
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
     if not os.path.exists(SIM_MATRIX_PATH):
-        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+".  Calling run_pipeline...")
+        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(SIM_MATRIX_PATH))
         run_pipeline()
     g,query_sentence=load_sim_matrix_to_igraph()
     ###############################################
