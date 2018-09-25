@@ -60,8 +60,8 @@ if not os.path.exists(TEMP_DATA_PATH):
 #  GLOBAL CONFIGS
 #############################################
 #
-#TOPIC_ID='d307b'
 TOPIC_ID='d301i'       #
+TOPIC_ID='d307b'
 LIMIT_TOPICS=True      #Look at subset of data
 #
 #
@@ -175,21 +175,26 @@ def tokenize_sentences(sentences):
 def get_query(topic_id):
     #sum_utilities.py
     found=False
+
+    #invalid xml#  tree = etree.parse(TOPIC_FILENAME)
+    #root = tree.getroot()
     with open(TOPIC_FILENAME, 'r') as xml:
         xmlstring = ''.join(xml.readlines())
-        parser = etree.XMLParser(recover=True)
-        root = etree.fromstring(xmlstring, parser=parser)
-        last_topic=''
-        for text in root:
+        xmlstring="<data>"+xmlstring+"</data>" #sgml has no wrap
+        root = etree.fromstring(xmlstring)
+        tree = etree.ElementTree(root)
+        for text in tree.iter():
             if text.tag == 'num':
-                last_topic=text.text
+                last_topic=text.text.strip()
             if text.tag=='narr':
                 blob=text.text
-                if topic_id==topic_id:
+                if topic_id==last_topic:
                     found=True
                     break
     if not found:blob=''
     blob=re.sub(r'\n',' ',blob)
+    print ("TOPIC FILENAME: "+str(TOPIC_FILENAME))
+    print ("FOR TOPIC: "+str(topic_id)+" got query: "+str(blob))
     return blob
 
 #######################################################################
