@@ -5,7 +5,7 @@ import random
 from itertools import izip
 
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
-from performance import Performance_Tracker #pip install psutil
+from performance import Performance_Tracker 
 
 Perf=Performance_Tracker()
 
@@ -228,7 +228,9 @@ def filter_graph(g,the_type=''):
 
 def run_clustering_on_graph():
     method='fastgreedy'
-    method='betweenness'
+    #method='betweenness'
+    #method='walktrap'
+    #method='spinglass'
 
     #STEP 1:  LOAD GRAPH ##########################
     g,query_sentence=load_sim_matrix_to_igraph()
@@ -247,7 +249,8 @@ def run_clustering_on_graph():
         communities=g.community_edge_betweenness(clusters=cluster_count,weights='weight') #directed=
         print ("Fixing/checking dendogram -- must be fully connected.")
         communities=fix_dendrogram(g, communities)
-        
+    #########################################################
+
     if 'fastgreedy' in method:
         #** only works with undirected graphs
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
@@ -256,6 +259,25 @@ def run_clustering_on_graph():
         #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges) to obtain a VertexClustering that is in some sense optimal. For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized. Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering, but you may override this by specifying the desired number of clusters as an argument to as_clustering().
         #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information. They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram; in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
         
+
+    #########################################################
+    if 'walktrap' in method:
+    #** only works with undirected graphs
+        uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
+        communities = uG.community_walktrap(weights = 'weight')
+
+
+     #########################################################
+    if 'spinglass' in method:
+    #** only works with undirected graphs
+        uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
+        clusters    = uG.clusters()
+        giant = clusters.giant()
+        communities = giant.community_spinglass(weights = 'weight')
+
+      
+      
+
     time_clustering=Perf.end()
         
 
@@ -271,7 +293,7 @@ def run_clustering_on_graph():
     
     if True:
         print ("Visualize clusters...")
-        view_graph_clusters(g,clusters)
+        #view_graph_clusters(g,clusters)
     return
 
 def output_clusters(g,communities,clusters):
@@ -301,7 +323,11 @@ def output_clusters(g,communities,clusters):
         i=-1
         for subgraph in clusters.subgraphs():
             i+=1
+            print("-----------------------------------")
             print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
+            for idx, v in enumerate(subgraph.vs):
+                print ("Node: "+str(v['label']))
+                if idx>3:break
     
         print ("Total number of clusters: "+str(len(clusters)))
     return
@@ -359,65 +385,6 @@ def view_graph_clusters(g,clusters):
     return
 
 
-def run_graph_on_sims():
-
-    #STEP 1:  LOAD GRAPH ##########################
-    G,query_sentence=load_sim_matrix_to_igraph()
-    ###############################################
-    #
-
-    options=['print_entire_graph']
-    options=[]
-    
-    
-    #STEP C:  Query index or vector (alternatively matrix 1 at query, zero otherwise)
-    query_node_id=0
-    print ("Query from node: "+str(G.vs[query_node_id]))
-    
-    #STEP D:  Random walk with restart
-    random_walk_with_restart=G.personalized_pagerank(reset_vertices=query_node_id)
-    print ("GOT RANDOM walk scores: "+str(random_walk_with_restart[:5])+"...")
-    #  Options:
-    #         - weights - edge weights to be used. Can be a sequence or iterable or even an edge attribute name.
-    #         - returns list
-    
-    #STEP E:  Sort and chose top scores
-    sorted_scores = sorted(zip(random_walk_with_restart, G.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
-    
-    #STEP F:  Output top sentences
-    #         - top match is query node itself
-    c=0
-    for score,vertex in sorted_scores:
-        c+=1
-        if c>6:break
-        if c>1:
-            print ("Top Score: %.9f"%score+" >"+vertex['label'])
-
-    if 'print_entire_graph' in options:
-        c=0
-        for edge in G.es:
-            c+=1
-            if c>10:break
-
-            source_vertex_id = edge.source
-            target_vertex_id = edge.target
-            source_vertex = G.vs[source_vertex_id]
-            target_vertex = G.vs[target_vertex_id]
-            
-            print ("From: "+str(source_vertex)+" to: "+str(target_vertex))
-            print ("Weight: "+str(edge['weight']))
-            if False and edge['weight']>0.15:
-                print ("------------------")
-                print ("From: "+str(source_vertex)+" to: "+str(target_vertex))
-                print ("Weight: "+str(edge['weight']))
-            
-    print
-    print ("Total node count: "+str(len(G.vs)))
-    print ("Total scores count: "+str(len(sorted_scores)))
-    print ("Done for query: "+str(query_sentence))
-    
-    print ("Done run_graph_on_sims")
-    return
 
 if __name__=='__main__':
     branches=['run_pipeline']
@@ -427,22 +394,6 @@ if __name__=='__main__':
 #    branches=['run_graph_on_sims']
     for b in branches:
         globals()[b]()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
