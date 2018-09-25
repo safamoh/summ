@@ -459,8 +459,9 @@ def view_graph_clusters(g,clusters):
 
 
 if __name__=='__main__':
-    branches=['run_clustering_on_graph']
+    
     branches=['run_pipeline']
+    branches=['run_clustering_on_graph']
 
     for b in branches:
         globals()[b]()

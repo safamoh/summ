@@ -60,8 +60,11 @@ if not os.path.exists(TEMP_DATA_PATH):
 #  GLOBAL CONFIGS
 #############################################
 #
-TOPIC_ID='d301i'       #
-TOPIC_ID='d307b'
+TOPIC_ID='d301i'       
+#TOPIC_ID='d307b'
+#TOPIC_ID='d311i'
+#TOPIC_ID='d313e'
+
 LIMIT_TOPICS=True      #Look at subset of data
 #
 #
