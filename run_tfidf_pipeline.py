@@ -176,8 +176,12 @@ def load_sim_matrix_to_igraph():
     #STEP B:  Create iGraph
     G = igraph.Graph.Weighted_Adjacency(sims.tolist())
     G.vs['label'] = sentences   #node_names  # or a.index/a.columns
+    
+    #Add sentence index to graph so can look up in O(n) time.
+    s_idx=range(len(sentences)) #Index to sentenes
+    G.vs['s_idx']=s_idx
 
-    return G,query_sentence
+    return G,query_sentence,sims
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def fix_dendrogram(graph, cl):
@@ -240,11 +244,11 @@ def filter_graph(g,the_type=''):
 
 def run_clustering_on_graph():
     global SIM_MATRIX_PATH
-    method='fastgreedy'
+    #method='fastgreedy'
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
     #method='spinglass'  # 
-    #method='leading_eigenvector'
+    method='leading_eigenvector'
 
 
     #STEP 1:  LOAD GRAPH ##########################
@@ -252,16 +256,18 @@ def run_clustering_on_graph():
     if not os.path.exists(SIM_MATRIX_PATH):
         print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(SIM_MATRIX_PATH))
         run_pipeline()
-    g,query_sentence=load_sim_matrix_to_igraph()
+    g,query_sentence,sims=load_sim_matrix_to_igraph()
     ###############################################
     #g=filter_graph(g)
     
-
-    #cluster_count=15
+    query_index=g.vs.find(label=query_sentence).index
     
+    communities=[]
+    clusters=[]
     print ("Running clustering ["+method+"] on graph...")
     Perf.start()
     if 'betweenness' in method:
+        #cluster_count=15
         print ("**betweenness requires edge trimming.  Doing that now...")
         g=filter_graph(g,the_type='remove_low_weights')
         print ("Calculating edge betweenness...")
@@ -294,29 +300,51 @@ def run_clustering_on_graph():
 
     #########################################################
     if 'spinglass' in method:
-    #** only works with undirected graphs
-        uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
-        communities =  uG.community_spinglass(weights = 'weight')
+        #The implementation of the spinglass clustering algorithm that is included in igraph works on connected graphs only. 
+        #You have to decompose your graph to its connected components, run the clustering on each of the connected components, 
+        #and then merge the membership vectors of the clusterings manually.
+        # clusters    = g.clusters()
+        # giant       = clusters.giant() ## using the biggest component as an example, you can use the others here.
+        # communities = giant.community_spinglass()
+        #**graph must not be unconnected
+        a=tbd
+        u#G = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
+        clustering =  uG.community_spinglass(weights = 'weight')
 
     #########################################################
     if 'leading_eigenvector' in method:
-    #** only works with undirected graphs
+        #http://igraph.org/python/doc/igraph.Graph-class.html#community_leading_eigenvector
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
-        communities = uG.community_leading_eigenvector(weights = 'weight')
+        clusters= uG.community_leading_eigenvector(clusters=None,weights = 'weight') #if clusters=None then tries as many as possible
 
-      
-      
 
     time_clustering=Perf.end()
 
-    num_communities = communities.optimal_count
-
-    clusters = communities.as_clustering(n= num_communities) #Cut dendogram at level n. Returns VertexClustering object
+    #Choose optimum number of communities
+    if not clusters:
+        num_communities = communities.optimal_count
+        clusters = communities.as_clustering(n= num_communities) #Cut dendogram at level n. Returns VertexClustering object
                                                           #"When an algorithm in igraph produces a `VertexDendrogram`, it may optionally produce a "hint" as well that tells us where to cut the dendrogram 
-    
-    #Edges between clusters#  edges_between = g.es.select(_between=(comm1, comm2))
-    
-    output_clusters(g,communities,clusters)
+                                                          
+                                            
+    # Calc weight of each cluster
+    #########################################################
+    #> weight = average cosine similarity between query and each node in cluster
+    #> reuse sim calcs where possible
+    #> note: subgraph index not same as g
+    cluster_weights=[]
+    for i,subgraph in enumerate(clusters.subgraphs()):
+        edge_sums=0
+        for idx, v in enumerate(subgraph.vs):
+            #print ("GOT: "+str(v.attribute_names()))
+            #print ("Node: "+str(v['label'])+" org id: "+str(v_idx))
+            edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
+            edge_sums+=edge_sim
+        avg_weight=edge_sums/subgraph.vcount()
+        cluster_weights+=[avg_weight]
+        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
+                
+    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
     g.write_pickle(fname="save_clustered_graph.dat")
 
     print ("For topic: "+str(TOPIC_ID))
@@ -329,7 +357,7 @@ def run_clustering_on_graph():
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def output_clusters(g,communities,clusters):
+def output_clusters(g,communities,clusters,cluster_weights=[]):
     #communities:  VertexDendogram 
     #clusters:  VertexClustering object -- http://igraph.org/python/doc/igraph.clustering.VertexClustering-class.html
     
@@ -357,7 +385,7 @@ def output_clusters(g,communities,clusters):
         for subgraph in clusters.subgraphs():
             i+=1
             print("-----------------------------------")
-            print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount()))
+            print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(cluster_weights[i]))
             for idx, v in enumerate(subgraph.vs):
                 print ("Node: "+str(v['label']))
                 if idx>3:break
@@ -369,7 +397,7 @@ def output_clusters(g,communities,clusters):
 
 def run_graph_on_sims():
     #STEP 1:  LOAD GRAPH ##########################
-    G,query_sentence=load_sim_matrix_to_igraph()
+    G,query_sentence,sims=load_sim_matrix_to_igraph()
     ###############################################
     #
     options=['print_entire_graph']
