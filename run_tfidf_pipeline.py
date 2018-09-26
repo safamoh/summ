@@ -14,9 +14,7 @@ Perf=Performance_Tracker()
 
 SIM_MATRIX_PATH=TEMP_DATA_PATH+"_"+TOPIC_ID+"_sim_matrix.npy"
 
-#0vA# Sept 25, 2018  New config for TOPIC_ID
-#                    > note:  random_walk_with_restart was removed
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def run_pipeline(verbose=True):
     global TOPIC_ID, LIMIT_TOPICS, SIM_MATRIX_PATH
     Perf.start()
@@ -146,6 +144,8 @@ def run_pipeline(verbose=True):
     return
     #################################################
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 def load_sim_matrix_to_igraph():
     global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS,SIM_MATRIX_PATH
@@ -178,6 +178,7 @@ def load_sim_matrix_to_igraph():
     G.vs['label'] = sentences   #node_names  # or a.index/a.columns
 
     return G,query_sentence
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def fix_dendrogram(graph, cl):
     # takes a graph and an incomplete dendrogram 
@@ -200,6 +201,8 @@ def fix_dendrogram(graph, cl):
     cl._merges.extend(izip(not_merged_yet, missing_nodes))
     cl._nmerges = graph.vcount()-1
     return cl
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def filter_graph(g,the_type=''):
     #>>
@@ -233,13 +236,16 @@ def filter_graph(g,the_type=''):
         g=subgraph
         print ("FILTERING graph edge count to: "+str(g.ecount()))
     return g
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def run_clustering_on_graph():
     global SIM_MATRIX_PATH
     method='fastgreedy'
-    #method='betweenness'
+    #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
-    #method='spinglass'
+    #method='spinglass'  # 
+    #method='leading_eigenvector'
+
 
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
@@ -248,10 +254,10 @@ def run_clustering_on_graph():
         run_pipeline()
     g,query_sentence=load_sim_matrix_to_igraph()
     ###############################################
-    #
-    g=filter_graph(g)
+    #g=filter_graph(g)
     
-    cluster_count=15
+
+    #cluster_count=15
     
     print ("Running clustering ["+method+"] on graph...")
     Perf.start()
@@ -269,8 +275,14 @@ def run_clustering_on_graph():
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
         communities = uG.community_fastgreedy(weights = 'weight')
         
-        #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges) to obtain a VertexClustering that is in some sense optimal. For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized. Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering, but you may override this by specifying the desired number of clusters as an argument to as_clustering().
-        #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information. They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram; in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
+        #When an algorithm in igraph produces a VertexDendrogram, it may optionally produce a "hint" as well that tells us where to cut the dendrogram (i.e. after how many merges)to obtain a VertexClustering that is in some sense optimal.
+        #For instance, the VertexDendrogram produced by community_fastgreedy() proposes that the dendrogram should be cut at the point where the modularity is maximized.
+        #Running as_clustering() on a VertexDendrogram simply uses the hint produced by the clustering algorithm to flatten the dendrogram into a clustering,
+        #but you may override this by specifying the desired number of clusters as an argument to as_clustering().
+        #As for the "distance" between two communities: it's a complicated thing because most community detection methods don't give you that information.
+        #They simply produce a sequence of merges from individual vertices up to a mega-community encapsulating everyone, and there is no "distance" information encoded in the dendrogram;
+        #in other words, the branches of the dendrogram have no "length". The best you can do is probably to go back to your graph and check the edge density between the communities; this could be a good indication of closeness. For example:
+        #https://stackoverflow.com/questions/17413836/igraph-in-python-relation-between-a-vertexdendrogram-object-and-vertexclusterin
         
 
     #########################################################
@@ -280,21 +292,26 @@ def run_clustering_on_graph():
         communities = uG.community_walktrap(weights = 'weight')
 
 
-     #########################################################
+    #########################################################
     if 'spinglass' in method:
     #** only works with undirected graphs
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
-        clusters    = uG.clusters()
-        giant = clusters.giant()
-        communities = giant.community_spinglass(weights = 'weight')
+        communities =  uG.community_spinglass(weights = 'weight')
+
+    #########################################################
+    if 'leading_eigenvector' in method:
+    #** only works with undirected graphs
+        uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
+        communities = uG.community_leading_eigenvector(weights = 'weight')
 
       
       
 
     time_clustering=Perf.end()
-        
 
-    clusters = communities.as_clustering(n=cluster_count) #Cut dendogram at level n. Returns VertexClustering object
+    num_communities = communities.optimal_count
+
+    clusters = communities.as_clustering(n= num_communities) #Cut dendogram at level n. Returns VertexClustering object
                                                           #"When an algorithm in igraph produces a `VertexDendrogram`, it may optionally produce a "hint" as well that tells us where to cut the dendrogram 
     
     #Edges between clusters#  edges_between = g.es.select(_between=(comm1, comm2))
@@ -310,6 +327,7 @@ def run_clustering_on_graph():
         view_graph_clusters(g,clusters)
     return
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def output_clusters(g,communities,clusters):
     #communities:  VertexDendogram 
@@ -347,6 +365,7 @@ def output_clusters(g,communities,clusters):
         print ("Total number of clusters: "+str(len(clusters)))
     return
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def run_graph_on_sims():
     #STEP 1:  LOAD GRAPH ##########################
@@ -404,6 +423,7 @@ def run_graph_on_sims():
     print ("Done run_graph_on_sims")
     return
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def view_graph_clusters(g,clusters):
     
@@ -456,6 +476,7 @@ def view_graph_clusters(g,clusters):
     out.save('igraph_visual.png')
 
     return
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 if __name__=='__main__':

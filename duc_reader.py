@@ -114,7 +114,7 @@ def files2sentences(limit_topic='',limit=0):
     #>update to grab DUC id
     global DOCS_PATH,ENC,FILES_TO_PROCESS
     sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-    print ("[debug] using training documents at: "+str(DOCS_PATH))
+   # print ("[debug] using training documents at: "+str(DOCS_PATH))
 
     # get list of filenames in the directory
     filenames=[]
@@ -145,7 +145,7 @@ def files2sentences(limit_topic='',limit=0):
         except:
             print ("[error] could not process input xml: "+str(filename))
 
-    print ("[debug] Tokenizing input sentences...")
+   # print ("[debug] Tokenizing input sentences...")
     # flatten all documents into list of sentences
     sentences=[]
     sentence_topics=[]
@@ -155,6 +155,7 @@ def files2sentences(limit_topic='',limit=0):
             if sentence:
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
+    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     return documents,sentences,sentence_topics
 
 
@@ -196,7 +197,7 @@ def get_query(topic_id):
                     break
     if not found:blob=''
     blob=re.sub(r'\n',' ',blob)
-    print ("TOPIC FILENAME: "+str(TOPIC_FILENAME))
+    #print ("TOPIC FILENAME: "+str(TOPIC_FILENAME))
     print ("FOR TOPIC: "+str(topic_id)+" got query: "+str(blob))
     return blob
 
