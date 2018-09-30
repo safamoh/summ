@@ -4,6 +4,7 @@ import re
 import numpy as np
 import random
 from itertools import izip
+from collections import OrderedDict
 
 from performance import Performance_Tracker 
 
@@ -147,6 +148,20 @@ def run_clustering_on_graph():
     return
 
 
+def calc_random_walk_with_restart(g,query_index):
+    
+    ## Calc random walk
+    random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index)
+    sorted_scores = sorted(zip(random_walk_with_restart, g.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
+
+    ## Index by index (for O(n) look up of node)
+    sorted_scores_idx=OrderedDict()
+    rank=-1
+    for score,vertex in sorted_scores:
+        rank+=1
+        sorted_scores_idx[vertex.index]=(score,vertex,rank)
+    return sorted_scores_idx
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def do_selection(g,clusters,cluster_weights,query_sentence):
     ##
@@ -158,6 +173,9 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
     #Grab query sentence info
     query_node=g.vs.find(label=query_sentence)
     query_index=query_node.index
+    
+    ##/  Random walk with restart calculation
+    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
     
     ##1/  Sort clusters by weight
     #- rather then duplicating data structure (memory) adjust pointers to clusters
@@ -173,32 +191,42 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
         if weight>weight_threshold:
             ptr_tuple_top+=[(i,weight)]
     
-    ##3/  Random walk sort within each cluster
+    ##3/ Lookup random walk scores for clusters
+    #i_cluster:  The index of the sub-graph (cluster)
+    #vc_index:   The index of a vertex in the sub-graph
+    #s_idx:      The original index of the sentence/vertex in g
+    rws_lookup={}
+    for i_cluster,weight in ptr_tuple_top:
+        subgraph=clusters.subgraphs()[i_cluster]
+        for vc_index, v in enumerate(subgraph.vs):
+            s_idx=v['s_idx']
+            walk_score,vertex,rank=g_random_walk_scores[s_idx]
+            #Store lookup between vertex index and walk scores
+            if not i_cluster in rws_lookup: rws_lookup[i_cluster]=[]
+            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score)]
+    
+    ##4/  Random walk sort within each cluster
     print ()
-    for i,weight in ptr_tuple_top:
-        print ("---- Selection on cluster #"+str(i)+"------ ")
-
-        subgraph=clusters.subgraphs()[i]
-        subgraph.add_vertex(query_node)
-        sub_query_index=subgraph.vcount()-1
-        #v1 = g.vs[g.vcount()-1]
+    for i_cluster,weight in ptr_tuple_top:
+        print ("---- Selection on cluster #"+str(i_cluster)+"------ ")
+        subgraph=clusters.subgraphs()[i_cluster]
         
-        ##/  Random walk with restart on cluster
-        sub_random_walk_with_restart=subgraph.personalized_pagerank(reset_vertices=sub_query_index)
-        
-        ##/  Sort
-        sub_sorted_scores = sorted(zip(sub_random_walk_with_restart, subgraph.vs), key=lambda x: x[0],reverse=True)
+        #Sort walk scores for each cluster
+        rws_sorted=sorted(rws_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
         
         ##/  Select top n  OR  % proportional
         top_n=3
         proportional_size=subgraph.vcount()/g.vcount()
-        
+
         c=0
-        for score,vertex in sub_sorted_scores[1:top_n+1]: #First is query_node
-            #Check that not matching query node
+        for vc_index,s_idx,walk_score in rws_sorted:
+            #Ignore original query
+            if s_idx==query_index:continue  #Skip query_index
             c+=1
-            print ("Cluster #"+str(i)+" Top Score #"+str(c)+": %.9f"%score+" >"+str(vertex['label']))
-            
+            vertex=subgraph.vs[vc_index]
+            print ("Cluster #"+str(i_cluster)+" Top Score #"+str(c)+": %.9f"%walk_score+" >"+str(vertex['label']))
+            if c==top_n:break
+        
     print ("Done do_selection")   
     return
 
