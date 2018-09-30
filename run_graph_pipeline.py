@@ -149,6 +149,9 @@ def run_clustering_on_graph():
 
 
 def calc_random_walk_with_restart(g,query_index):
+    echo_top_scores=6
+    if echo_top_scores:
+        print ("---> Random walk top scores:")
     
     ## Calc random walk
     random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index)
@@ -160,6 +163,8 @@ def calc_random_walk_with_restart(g,query_index):
     for score,vertex in sorted_scores:
         rank+=1
         sorted_scores_idx[vertex.index]=(score,vertex,rank)
+        if rank<echo_top_scores:
+            print ("RWS Rank #"+str(rank)+" is: "+str(score)+" sentence: "+vertex['label'])
     return sorted_scores_idx
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
