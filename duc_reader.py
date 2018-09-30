@@ -1,11 +1,12 @@
 import os
 import sys
 import re
+import codecs
+
 import nltk
 import nltk.data
-import codecs
-from lxml import etree #pip install lxml
 from nltk.stem.porter import PorterStemmer
+from lxml import etree #pip install lxml
 from lxml import html
 import gensim
 from gensim.matutils import jaccard, cossim, dense2vec
@@ -53,6 +54,7 @@ if not os.path.exists(DOCS_PATH):
         hard_stop=bad_dir_inputs
 if not os.path.exists(TEMP_DATA_PATH):
     print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
+    
 
 
 
@@ -66,6 +68,7 @@ TOPIC_ID='d301i'
 #TOPIC_ID='d313e'
 
 LIMIT_TOPICS=True      #Look at subset of data
+SIM_MATRIX_PATH=TEMP_DATA_PATH+"_"+TOPIC_ID+"_sim_matrix.npy"
 #
 #
 #############################################
