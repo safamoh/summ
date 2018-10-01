@@ -165,8 +165,13 @@ def files2sentences(limit_topic='',limit=0):
     return documents,sentences,sentence_topics
 
 def get_list_of_all_topics():
+    custom_topic_list=[]
     documents,sentences,sentence_topics=files2sentences()
-    return list(set(sentence_topics))
+    unique_topics=list(set(sentence_topics))
+    for topic_id in unique_topics:
+        if re.search(r'^d\d',topic_id):
+            custom_topic_list+=[topic_id]
+    return custom_topic_list
 
 def tokenize_sentences(sentences):
     #> lots of ways to chunk  & clean sentences
