@@ -13,7 +13,7 @@ from duc_reader import get_query
 from duc_reader import TEMP_DATA_PATH
 from duc_reader import TOPIC_ID
 from duc_reader import LIMIT_TOPICS
-from duc_reader import SIM_MATRIX_PATH
+from duc_reader import get_sim_matrix_path
 
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
@@ -23,17 +23,22 @@ Perf=Performance_Tracker()
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def run_pipeline(verbose=True):
-    global TOPIC_ID, LIMIT_TOPICS, SIM_MATRIX_PATH
+def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
+    global TOPIC_ID, LIMIT_TOPICS
     Perf.start()
+    if use_specific_topic:
+        local_topic_id=use_specific_topic
+    else:
+        local_topic_id=TOPIC_ID
     
     options=['print_sims']
     options=['print_entire_graph']
+    options=[]
 
     #0/  Load query sentence
     vector_model='tfidf'
 
-    query_sentence=get_query(TOPIC_ID)
+    query_sentence=get_query(local_topic_id)
     print ("Using query: "+str(query_sentence))
 
     #1/  LOAD
@@ -41,12 +46,13 @@ def run_pipeline(verbose=True):
 
 
     print ("1/  Loading sentences...")
-    if LIMIT_TOPICS:
-        if not TOPIC_ID:stop_bad=setup
-        documents,sentences,sentences_topics=files2sentences(limit_topic=TOPIC_ID) #watch loading 2x data into mem
+    if not LIMIT_TOPICS or use_all_topics:
+        requires_selection_of=sentence_properly
+        documents,sentences,sentences_topics=files2sentences(limit_topic='')
     else:
-        documents,sentences,sentences_topics=files2sentences()
-    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+        documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
+
+    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents. "+str(len(set(sentences_topics)))+" topics.")
     print("---------------------------------")
     for i,sentence in enumerate(sentences):
         print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
@@ -54,7 +60,7 @@ def run_pipeline(verbose=True):
         
     #Add query as V1
     sentences.insert(0,query_sentence)
-    sentences_topics.insert(0,TOPIC_ID)
+    sentences_topics.insert(0,local_topic_id)
 
 
     #2/  Normalize corpus
@@ -127,8 +133,7 @@ def run_pipeline(verbose=True):
     
     sims = index[corpus_tfidf]
     #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
-    np.save(SIM_MATRIX_PATH,sims)
-
+    np.save(get_sim_matrix_path(local_topic_id),sims)
 
 
     # STEP 6:  Print sims 
@@ -146,11 +151,11 @@ def run_pipeline(verbose=True):
                 print ("  for sent1: "+str(sentences[sent_num1]))
                 print ("   vs sent2: "+str(sentences[sent_num2]))
             
-    print ("TOPIC ID: "+str(TOPIC_ID))
+
+    print ("TOPIC ID: "+str(local_topic_id))
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     print ("Done run_pipeline in: "+str(Perf.end())+"s")
     return
-    #################################################
 
 
 if __name__=='__main__':

@@ -14,7 +14,7 @@ from duc_reader import get_query
 from duc_reader import TOPIC_ID
 from duc_reader import LIMIT_TOPICS
 from duc_reader import TEMP_DATA_PATH
-from duc_reader import SIM_MATRIX_PATH
+from duc_reader import get_sim_matrix_path
 
 from graph_utils import output_clusters
 from graph_utils import view_graph_clusters
@@ -31,8 +31,21 @@ Perf=Performance_Tracker()
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
+def run_random_walk_on_graph(topic_id):
+    #STEP 1:  LOAD GRAPH ##########################
+    #> check that graph exists
+    if not os.path.exists(get_sim_matrix_path(topic_id)):
+        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(topic_id)))
+        run_pipeline()
+    g,query_sentence,sims=load_sim_matrix_to_igraph(local_topic_id=topic_id)
+    query_node=g.vs.find(label=query_sentence)
+    query_index=query_node.index
+    ###############################################
+    print ("/ calculating random walk with restart on graph size: "+str(g.vcount))
+    return calc_random_walk_with_restart(g,query_index),query_index #sorted_scores
+
 def run_clustering_on_graph():
-    global SIM_MATRIX_PATH
     #method='fastgreedy'
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
@@ -42,8 +55,8 @@ def run_clustering_on_graph():
 
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
-    if not os.path.exists(SIM_MATRIX_PATH):
-        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(SIM_MATRIX_PATH))
+    if not os.path.exists(get_sim_matrix_path(TOPIC_ID)):
+        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(TOPIC_ID)))
         run_pipeline()
     g,query_sentence,sims=load_sim_matrix_to_igraph()
     ###############################################

@@ -9,7 +9,7 @@ from duc_reader import get_query
 from duc_reader import TOPIC_ID
 from duc_reader import LIMIT_TOPICS
 from duc_reader import TEMP_DATA_PATH
-from duc_reader import SIM_MATRIX_PATH
+from duc_reader import get_sim_matrix_path
 
 import igraph
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
@@ -116,27 +116,32 @@ def view_graph_clusters(g,clusters):
     return
 
 
-def load_sim_matrix_to_igraph():
-    global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS,SIM_MATRIX_PATH
+def load_sim_matrix_to_igraph(local_topic_id=''):
+    global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS
     #LOAD STATE
     #####################################################
+    
+    if not local_topic_id:
+        local_topic_id=TOPIC_ID
+        local_limit_topics=LIMIT_TOPICS
+    else:
+        local_limit_topics=True
 
-    query_sentence=get_query(TOPIC_ID)
+    query_sentence=get_query(local_topic_id)
     print ("Using query: "+str(query_sentence))
 
-    if LIMIT_TOPICS:
-        if not TOPIC_ID:stop_bad=setup
-        documents,sentences,sentences_topics=files2sentences(limit_topic=TOPIC_ID) #watch loading 2x data into mem
+    if local_limit_topics:
+        documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id) #watch loading 2x data into mem
     else:
         documents,sentences,sentences_topics=files2sentences()
     sentences.insert(0,query_sentence)
-    sentences_topics.insert(0,TOPIC_ID)
+    sentences_topics.insert(0,local_topic_id)
     #
     #############################
 
 
     #Reload simulation matrix
-    sims=np.load(SIM_MATRIX_PATH)
+    sims=np.load(get_sim_matrix_path(local_topic_id))
     
 
     #STEP A:  Zero node-to-node simularity diagonal to 0
@@ -149,6 +154,7 @@ def load_sim_matrix_to_igraph():
     #Add sentence index to graph so can look up in O(n) time.
     s_idx=range(len(sentences)) #Index to sentenes 0...
     G.vs['s_idx']=s_idx
+    G.vs['s_topic']=sentences_topics #For by topic query
 
     return G,query_sentence,sims
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

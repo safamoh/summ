@@ -68,11 +68,14 @@ TOPIC_ID='d301i'
 #TOPIC_ID='d313e'
 
 LIMIT_TOPICS=True      #Look at subset of data
-SIM_MATRIX_PATH=TEMP_DATA_PATH+"_"+TOPIC_ID+"_sim_matrix.npy"
 #
 #
 #############################################
 
+def get_sim_matrix_path(local_topic_id):
+    global TEMP_DATA_PATH
+    smp=TEMP_DATA_PATH+"_"+local_topic_id+"_sim_matrix.npy"
+    return smp
 
 def walk_directory(folders,include_dir=False):
     if not isinstance(folders,list):folders=[folders]
@@ -161,6 +164,9 @@ def files2sentences(limit_topic='',limit=0):
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     return documents,sentences,sentence_topics
 
+def get_list_of_all_topics():
+    documents,sentences,sentence_topics=files2sentences()
+    return list(set(sentence_topics))
 
 def tokenize_sentences(sentences):
     #> lots of ways to chunk  & clean sentences
@@ -205,3 +211,45 @@ def get_query(topic_id):
     return blob
 
 #######################################################################
+
+
+def demo_topic_classifier():
+    documents=['The world bank and the world bank women economic market']
+    doc_topics,reuseable_model,reuseable_dict=use_lda_model(documents=documents,model='',trained_dictionary='')
+    
+    for i,doc in enumerate(documents):
+        print ("DOC: "+str(doc))
+        print (" topic info: "+str(doc_topics))
+    return
+
+
+def test_tokenizer():
+    #documents,sentences,sentences_topics=files2sentences()
+    return
+
+if __name__=='__main__':
+    branches+=['test_tokenizer']
+
+    for b in branches:
+        globals()[b]()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
