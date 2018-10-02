@@ -23,7 +23,7 @@ def run_exercise():
     
     for topic_id in all_topics:
         top_n=10
-        top_n_output=TEMP_DATA_PATH+"top_"+str(top_n)+"_walk_scores_"+str(topic_id)+".txt"
+        top_n_output=TEMP_DATA_PATH+'/Top_summary/'+str(topic_id)+".txt"
 
         if 'create_sim_matrix' in branch:
             print ("-----------> Creating sim matrix for topic: "+str(topic_id))

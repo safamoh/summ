@@ -161,7 +161,7 @@ def files2sentences(limit_topic='',limit=0):
             if sentence:
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
-    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+    #print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     return documents,sentences,sentence_topics
 
 def get_list_of_all_topics():
