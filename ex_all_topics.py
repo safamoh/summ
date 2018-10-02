@@ -1,3 +1,4 @@
+import os
 import codecs
 from run_main_pipeline import run_pipeline
 from run_graph_pipeline import run_random_walk_on_graph
@@ -9,6 +10,9 @@ from duc_reader import TEMP_DATA_PATH
 #Request:
 #Run for each topic
 
+output_directory=TEMP_DATA_PATH+"/Top_summary"
+if not os.path.exists(output_directory):
+    os.mkdir(output_directory)
 
 def run_exercise():
     print ("For each topic, create sim matrix and do random walk")
@@ -23,7 +27,7 @@ def run_exercise():
     
     for topic_id in all_topics:
         top_n=10
-        top_n_output=TEMP_DATA_PATH+'/Top_summary/'+str(topic_id)+".txt"
+        top_n_output=output_directory+str(topic_id)+".txt"
 
         if 'create_sim_matrix' in branch:
             print ("-----------> Creating sim matrix for topic: "+str(topic_id))
