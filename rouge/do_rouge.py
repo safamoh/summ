@@ -54,6 +54,9 @@ def run_on_all_topics():
     r.system_filename_pattern = 'top_10_walk_scores_d(\d+)..txt' #text.(\d+).txt'
     r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
     
+    print ("Using user trained summaries from: "+str(r.system_dir))
+    print ("Using gold system trained summaries from: "+str(r.model_dir))
+    
     if not os.path.exists(r.system_dir): print ("Bad system dir: "+r.system_dir)
     if not os.path.exists(r.model_dir): print ("Bad model dir: "+r.model_dir)
     
