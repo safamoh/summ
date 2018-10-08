@@ -513,14 +513,18 @@ class Rouge155(object):
         else:
             options = [
                 '-e', self._data_dir,
-                '-c', 95,
-                '-2',
-                '-1',
-                '-U',
-                '-r', 1000,
-                '-n', 4,
-                '-w', 1.2,
+                '-n', 2,
+                '-x',
+                '-m',
                 '-a',
+                '-2',4,
+                '-c', 95,
+                '-r', 1000,
+                '-f',
+                'A',
+                '-p',0.5,
+                '-t',0,
+                '-d',
                 ]
             options = list(map(str, options))
 

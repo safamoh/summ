@@ -7,13 +7,13 @@ sys.path.insert(0,"..")
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
-r = Rouge155()
+r = Rouge155("/Users/safaalballaa/Desktop/test/summ/rouge/ROUGE-1.5.5")
 
 print ("Rouge install ok!")
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))+"/"
 
-OUTPUT_ROUGE_DIR=LOCAL_PATH+"/rouge_results"
+OUTPUT_ROUGE_DIR="/Users/safaalballaa/Desktop/resulted_files/rouge_results"
 
 
 #0v1#  JC  Oct 2, 2018  Initial setup
@@ -30,7 +30,7 @@ def run_one_topic_at_a_time():
 
         r.system_dir = TEMP_DATA_PATH+"Top_summary"         #Can't have subdirectories!
         r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
-        r.system_filename_pattern = 'top_10_walk_scores_d('+topic_digits+')..txt' #text.(\d+).txt'
+        r.system_filename_pattern = 'd(\d+)..txt'
         r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
 
         output = r.convert_and_evaluate()
@@ -51,7 +51,7 @@ def run_on_all_topics():
     #                     /data/
     r.system_dir = TEMP_DATA_PATH+"Top_summary"         #Can't have subdirectories!
     r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
-    r.system_filename_pattern = 'top_10_walk_scores_d(\d+)..txt' #text.(\d+).txt'
+    r.system_filename_pattern = 'd(\d+)..txt'
     r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
     
     print ("Using user trained summaries from: "+str(r.system_dir))
@@ -67,11 +67,12 @@ def run_on_all_topics():
     fp.close()
     print(output)
     output_dict = r.output_to_dict(output)
+    print("Done evaluation")
     return
 
 if __name__=='__main__':
     branches=['run_one_topic_at_a_time']
-    branches=['run_on_all_topics']
+   # branches=['run_on_all_topics']
     for b in branches:
         globals()[b]()
 
