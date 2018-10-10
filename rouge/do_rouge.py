@@ -37,14 +37,22 @@ def run_on_different_setups():
     branches=['do_random_walk']
     branches=['select_top_cos_sims']
     
+    option='run_individual_topics'
+    option='run_all_topics_together'
+    
     for branch in branches:
         if branch=='select_top_cos_sims':
             local_system_dir=system_dir+"/cos_sim"
             output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_cos_sim_"
-            run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
         if branch=='do_random_walk':
             local_system_dir=system_dir+"/random_walk"
-        run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+            output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_walk_"
+            
+        if 'run_individual_topics'==option:
+            run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+        else:
+            print ("Running rouge for all topics together")
+            run_on_all_topics(system_dir=local_system_dir)
     return
 
 
@@ -69,12 +77,11 @@ def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[])
 
     return
 
-def run_on_all_topics():
-    check_paths=setup-needed
+def run_on_all_topics(system_dir=''):
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
 
     #                     /data/
-    r.system_dir = TEMP_DATA_PATH+"Top_summary"         #Can't have subdirectories!
+    r.system_dir = system_dir
     r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
     r.system_filename_pattern = 'd(\d+)..txt'
     r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
@@ -96,8 +103,6 @@ def run_on_all_topics():
     return
 
 if __name__=='__main__':
-    branches=['run_one_topic_at_a_time']
-   # branches=['run_on_all_topics']
     branches=['run_on_different_setups']
     for b in branches:
         globals()[b]()
