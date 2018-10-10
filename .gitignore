@@ -7,4 +7,3 @@ data/*
 *.png
 /rouge/rouge_results
 *.DS_Store
-.*WordNet.*
