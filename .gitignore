@@ -7,3 +7,4 @@ data/*
 *.png
 /rouge/rouge_results
 *.DS_Store
+*WordNet-2.0.exc.db
