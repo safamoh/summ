@@ -31,6 +31,7 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 
 pStemmer = PorterStemmer() #For vectorizing
 
+#0v4# JC Oct 10, 2018  Filter < 2 tokens
 #0v3# JC Sep 25, 2018  Filter small sentences.
 #0v2# JC Aug 31, 2018  Upgrade for random walk
 #0v1# JC Aug 27, 2018  Run pipeline setup
@@ -115,6 +116,17 @@ def clean_sentence(sentence):
     sentence=re.sub(r'([\. ]+)',r'\1',sentence) #remove repeated spaces and periods
     if len(sentence)==1:sentence=''
     return sentence
+
+def filter_out_sentence(sentence):
+    filter=False
+    ## Filter:  Sentence must have 1 alpha numeric
+    if not re.search(r'\w',sentence):filter=True
+    
+    ## Filter:  Remove sentence with 2 tokens or less.. (Oct 10th)
+    token_count=len(re.findall(r'[ ]+',sentence)) #Count tokens
+    if token_count<3:filter=True
+
+    return filter
     
 def files2sentences(limit_topic='',limit=0):
     #>update to grab DUC id
@@ -158,7 +170,7 @@ def files2sentences(limit_topic='',limit=0):
     for i,document in enumerate(documents):
         for sentence in sent_detector.tokenize(document):
             sentence=clean_sentence(sentence)
-            if sentence:
+            if filter_out_sentence(sentence):
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
     #print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")

@@ -64,7 +64,7 @@ def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[])
 
         r.system_dir = system_dir
         r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
-        r.system_filename_pattern = 'd(\d+)..txt'
+        r.system_filename_pattern = 'd('+topic_digits+')..txt'
         r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
 
         output = r.convert_and_evaluate()
