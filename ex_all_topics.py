@@ -23,8 +23,8 @@ def run_exercise():
     branch=['create_sim_matrix']
 
     #branch+=['do_random_walk']
-    branch=['do_random_walk']
-    branch=['select_top_cos_sims']
+    branch+=['do_random_walk']
+    branch+=['select_top_cos_sims']
     
     if 'do_random_walk' in branch:
         output_directory+="/random_walk"
