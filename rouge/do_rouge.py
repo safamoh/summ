@@ -28,14 +28,33 @@ print ("Rouge install ok!")
 #My summaries:    system
 #Gold summaries:  model
 
-def run_one_topic_at_a_time():
+
+def run_on_different_setups():
+    system_dir = TEMP_DATA_PATH+"Top_summary"
     print ("Getting list of topics...")
-    for topic_id in get_list_of_all_topics():
+    all_topics=get_list_of_all_topics()
+
+    branches=['do_random_walk']
+    branches=['select_top_cos_sims']
+    
+    for branch in branches:
+        if branch=='select_top_cos_sims':
+            local_system_dir=system_dir+"/cos_sim"
+            output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_cos_sim_"
+            run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+        if branch=='do_random_walk':
+            local_system_dir=system_dir+"/random_walk"
+        run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+    return
+
+
+def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[]):
+    for topic_id in all_topics():
         topic_digits=re.sub(r'\D','',topic_id)
-        rouge_output_filename=OUTPUT_ROUGE_DIR+"/rouge_"+topic_id+".txt"
+        rouge_output_filename=output_filename_base+topic_id+".txt"
         print ("Running rouge on specific topic: "+topic_id+" output: "+str(rouge_output_filename))
 
-        r.system_dir = TEMP_DATA_PATH+"Top_summary"         #Can't have subdirectories!
+        r.system_dir = system_dir
         r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
         r.system_filename_pattern = 'd(\d+)..txt'
         r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
@@ -48,11 +67,10 @@ def run_one_topic_at_a_time():
         print(output)
         output_dict = r.output_to_dict(output)
 
-        break
-
     return
 
 def run_on_all_topics():
+    check_paths=setup-needed
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
 
     #                     /data/
@@ -80,6 +98,7 @@ def run_on_all_topics():
 if __name__=='__main__':
     branches=['run_one_topic_at_a_time']
    # branches=['run_on_all_topics']
+    branches=['run_on_different_setups']
     for b in branches:
         globals()[b]()
 
