@@ -157,6 +157,16 @@ def load_sim_matrix_to_igraph(local_topic_id=''):
     G.vs['s_topic']=sentences_topics #For by topic query
 
     return G,query_sentence,sims
+
+def load_sim_matrix(local_topic_id,zero_node2node=True):
+    #Reload simulation matrix
+    sims=np.load(get_sim_matrix_path(local_topic_id))
+    
+    if zero_node2node:
+        #STEP A:  Zero node-to-node simularity diagonal to 0
+        np.fill_diagonal(sims, 0)
+    return sims
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def fix_dendrogram(graph, cl):

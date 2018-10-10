@@ -6,3 +6,4 @@ data/*
 *.dat
 *.png
 /rouge/rouge_results
+*.DS_Store

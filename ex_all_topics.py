@@ -2,6 +2,7 @@ import os
 import codecs
 from run_main_pipeline import run_pipeline
 from run_graph_pipeline import run_random_walk_on_graph
+from run_graph_pipeline import select_top_cos_sims
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
@@ -15,11 +16,22 @@ if not os.path.exists(output_directory):
     os.mkdir(output_directory)
 
 def run_exercise():
-    print ("For each topic, create sim matrix and do random walk")
+    global output_directory
+
+    print ("For each topic, create sim matrix and do top n")
 
     branch=['create_sim_matrix']
-    branch+=['do_random_walk']
+
+    #branch+=['do_random_walk']
+    branch=['do_random_walk']
+    branch=['select_top_cos_sims']
     
+    if 'do_random_walk' in branch:
+        output_directory+="/random_walk"
+    elif 'select_top_cos_sims' in branch:
+        output_directory+="/cos_sim"
+    
+
     all_topics=get_list_of_all_topics()
 #    all_topics=['d301i']
     print ("Processing topics: "+str(all_topics))
@@ -27,7 +39,7 @@ def run_exercise():
     
     for topic_id in all_topics:
         top_n=10
-        top_n_output=output_directory+str(topic_id)+".txt"
+        top_n_output=output_directory+"/"+str(topic_id)+".txt"
 
         if 'create_sim_matrix' in branch:
             print ("-----------> Creating sim matrix for topic: "+str(topic_id))
@@ -45,6 +57,13 @@ def run_exercise():
                 if c==top_n:break
             fp.close()
             print ("Wrote to: "+top_n_output)
+            
+        if 'select_top_cos_sims' in branch:
+            print ("Calc top cos sims for topic: "+str(topic_id)+"...")
+            fp=codecs.open(top_n_output,'w',encoding='utf-8')
+            for sentence in select_top_cos_sims(topic_id=topic_id):
+                fp.write(sentence+"\n")
+            fp.close()
 
     print ("Done run_exercise...")
     return
@@ -57,4 +76,27 @@ if __name__=='__main__':
         
         
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

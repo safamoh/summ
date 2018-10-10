@@ -7,15 +7,22 @@ sys.path.insert(0,"..")
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
-r = Rouge155("/Users/safaalballaa/Desktop/test/summ/rouge/ROUGE-1.5.5")
-
-print ("Rouge install ok!")
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))+"/"
 
-OUTPUT_ROUGE_DIR="/Users/safaalballaa/Desktop/resulted_files/rouge_results"
+is_windows = sys.platform.startswith('win')
+
+if is_windows:
+    OUTPUT_ROUGE_DIR=LOCAL_PATH+"/rouge_results"
+    r = Rouge155()
+else:
+    OUTPUT_ROUGE_DIR="/Users/safaalballaa/Desktop/resulted_files/rouge_results"
+    r = Rouge155("/Users/safaalballaa/Desktop/test/summ/rouge/ROUGE-1.5.5")
+
+print ("Rouge install ok!")
 
 
+#0v2#  JC  Oct 9, 2018  #Update paths
 #0v1#  JC  Oct 2, 2018  Initial setup
 
 #My summaries:    system

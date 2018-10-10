@@ -21,6 +21,7 @@ from graph_utils import view_graph_clusters
 from graph_utils import load_sim_matrix_to_igraph
 from graph_utils import fix_dendrogram
 from graph_utils import filter_graph
+from graph_utils import load_sim_matrix
 
 from run_main_pipeline import run_pipeline
 
@@ -44,6 +45,7 @@ def run_random_walk_on_graph(topic_id):
     ###############################################
     print ("/ calculating random walk with restart on graph size: "+str(g.vcount))
     return calc_random_walk_with_restart(g,query_index),query_index #sorted_scores
+
 
 def run_clustering_on_graph():
     #method='fastgreedy'
@@ -248,9 +250,52 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
     print ("Done do_selection")   
     return
 
+def select_top_cos_sims(topic_id='',top_n=10,verbose=True):
+    top_sentences=[]
+
+    #STEP 1:  LOAD COS SIM MATRIX #################
+
+    ## Get sentences
+    documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
+    
+    ## Load sim matrix
+    try:
+        sims=load_sim_matrix(topic_id,zero_node2node=False) #Don't zero out diagonal to test scoring sort
+    except:
+        print ("NO SIM MATRIX FOR: "+topic_id)
+        print ("Auto run pipeline to calc sim matrix")
+        run_pipeline(use_specific_topic=topic_id)
+        sims=load_sim_matrix(topic_id,zero_node2node=False) #Don't zero out diagonal to test scoring sort
+    query_sims=sims.tolist()[0] #First is query -- but set to 0 for itself.
+    
+    ## Sort cos sims
+    sorted_scores = sorted(zip(query_sims, range(len(query_sims))), key=lambda x: x[0],reverse=True) #G.vs is node id list
+    
+    ## Validate top score is index 1
+    if not sorted_scores[0][1]==0:
+        print ("Error on sim matrix load")
+        hard_stop=expect_0_index
+    ## Validate that scores include query string
+    if not len(query_sims)==(len(sentences)+1):
+        print ("Scores does not include query index at 0")
+        hard_stop=expect_lengths
+        
+    ## output scores
+    c=0
+    for cos_sim,idx in sorted_scores:
+        c+=1
+        sentence=sentences[idx-1] #idx includes query at 0
+        if verbose:
+            print ("#"+str(c-1)+" score: "+str(cos_sim)+" sentence idx: "+str(idx)+" sentence: "+str(sentence))
+        if c>0:
+            top_sentences+=sentence
+        if c-1==top_n: break
+    return top_sentences
+
 
 if __name__=='__main__':
     branches=['run_clustering_on_graph']
+    branches=['select_top_cos_sims']
 
     for b in branches:
         globals()[b]()
