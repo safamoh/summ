@@ -64,6 +64,8 @@ def run_exercise():
             for sentence in select_top_cos_sims(topic_id=topic_id):
                 fp.write(sentence+"\n")
             fp.close()
+            
+#        break
 
     print ("Done run_exercise...")
     return

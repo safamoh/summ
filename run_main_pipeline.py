@@ -23,6 +23,7 @@ Perf=Performance_Tracker()
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     global TOPIC_ID, LIMIT_TOPICS
     Perf.start()
@@ -31,9 +32,9 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     else:
         local_topic_id=TOPIC_ID
     
-    options=['print_sims']
     options=['print_entire_graph']
     options=[]
+    options=['print_sims']
 
     #0/  Load query sentence
     vector_model='tfidf'
@@ -61,7 +62,6 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     #Add query as V1
     sentences.insert(0,query_sentence)
     sentences_topics.insert(0,local_topic_id)
-
 
     #2/  Normalize corpus
     ##########################################
@@ -142,14 +142,15 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
         i=0
         for item in list(enumerate(sims)):
             i+=1
-            if i>0:break
+            #            if i>0:break
             sent_num1=item[0]
             for sent_num2,cosim_value in enumerate(item[1]):
                 idx="("+str(sent_num1)+","+str(sent_num2)+")"
                 cosim_str="%.9f" % cosim_value
-                print ("AT: "+str(idx)+" sim: "+str(cosim_str))
-                print ("  for sent1: "+str(sentences[sent_num1]))
-                print ("   vs sent2: "+str(sentences[sent_num2]))
+                if False:
+                    print ("AT: "+str(idx)+" sim: "+str(cosim_str))
+                    print ("  for sent1: "+str(sentences[sent_num1]))
+                    print ("   vs sent2: "+str(sentences[sent_num2]))
             
 
     print ("TOPIC ID: "+str(local_topic_id))

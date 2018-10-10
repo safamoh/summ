@@ -251,9 +251,15 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
     return
 
 def select_top_cos_sims(topic_id='',top_n=10,verbose=True):
+    #Recall, sentences variable does not have query sentence
+    #Recall, sim matrix has query sentence values at 0
+
     top_sentences=[]
 
+    print ("SELECT TOP COS SIM FOR TOPIC: "+str(topic_id)+"--------")
     #STEP 1:  LOAD COS SIM MATRIX #################
+    query_sentence=get_query(topic_id)
+    print ("Query sentence: "+str(query_sentence))
 
     ## Get sentences
     documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id) #watch loading 2x data into mem
@@ -266,6 +272,7 @@ def select_top_cos_sims(topic_id='',top_n=10,verbose=True):
         print ("Auto run pipeline to calc sim matrix")
         run_pipeline(use_specific_topic=topic_id)
         sims=load_sim_matrix(topic_id,zero_node2node=False) #Don't zero out diagonal to test scoring sort
+
     query_sims=sims.tolist()[0] #First is query -- but set to 0 for itself.
     
     ## Sort cos sims
@@ -280,16 +287,17 @@ def select_top_cos_sims(topic_id='',top_n=10,verbose=True):
         print ("Scores does not include query index at 0")
         hard_stop=expect_lengths
         
+    sentences.insert(0,query_sentence)
     ## output scores
-    c=0
+    c=-1
     for cos_sim,idx in sorted_scores:
         c+=1
-        sentence=sentences[idx-1] #idx includes query at 0
-        if verbose:
-            print ("#"+str(c-1)+" score: "+str(cos_sim)+" sentence idx: "+str(idx)+" sentence: "+str(sentence))
+        sentence=sentences[idx]
         if c>0:
-            top_sentences+=sentence
-        if c-1==top_n: break
+            if verbose:
+                print ("#"+str(c)+" score: "+str(cos_sim)+" sentence idx: "+str(idx)+" sentence: "+str(sentence))
+            top_sentences+=[sentence]
+        if c==top_n: break
     return top_sentences
 
 
