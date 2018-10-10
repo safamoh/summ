@@ -7,3 +7,5 @@ data/*
 *.png
 /rouge/rouge_results
 *.DS_Store
+rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db
+/rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db
