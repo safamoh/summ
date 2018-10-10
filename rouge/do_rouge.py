@@ -49,7 +49,7 @@ def run_on_different_setups():
 
 
 def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[]):
-    for topic_id in all_topics():
+    for topic_id in all_topics:
         topic_digits=re.sub(r'\D','',topic_id)
         rouge_output_filename=output_filename_base+topic_id+".txt"
         print ("Running rouge on specific topic: "+topic_id+" output: "+str(rouge_output_filename))
