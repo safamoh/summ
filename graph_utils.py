@@ -53,13 +53,6 @@ def output_clusters(g,communities,clusters,cluster_weights=[]):
         print ("Total number of clusters: "+str(len(clusters)))
     return
 
-if __name__=='__main__':
-    
-    #branches=['run_pipeline']
-    branches=['run_clustering_on_graph']
-
-    for b in branches:
-        globals()[b]()
         
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -220,6 +213,11 @@ def filter_graph(g,the_type=''):
     return g
 
 
+
+if __name__=='__main__':
+    branches=[]
+    for b in branches:
+        globals()[b]()
 
 
 

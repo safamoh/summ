@@ -229,23 +229,8 @@ def get_query(topic_id):
 #######################################################################
 
 
-def demo_topic_classifier():
-    documents=['The world bank and the world bank women economic market']
-    doc_topics,reuseable_model,reuseable_dict=use_lda_model(documents=documents,model='',trained_dictionary='')
-    
-    for i,doc in enumerate(documents):
-        print ("DOC: "+str(doc))
-        print (" topic info: "+str(doc_topics))
-    return
-
-
-def test_tokenizer():
-    #documents,sentences,sentences_topics=files2sentences()
-    return
-
 if __name__=='__main__':
-    branches+=['test_tokenizer']
-
+    branches=[]
     for b in branches:
         globals()[b]()
 

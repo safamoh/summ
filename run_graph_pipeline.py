@@ -127,7 +127,7 @@ def run_clustering_on_graph():
         edge_sums=0
         for idx, v in enumerate(subgraph.vs):
             print ("GOT: "+str(v.attribute_names()))
-            print ("Node: "+str(v['label'])+" org id: "+str(v_idx))
+            print ("Node: "+str(v['label']))
             edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
             edge_sums+=edge_sim
         avg_weight=edge_sums/subgraph.vcount()
@@ -279,8 +279,8 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 
 
 if __name__=='__main__':
-    branches=['run_clustering_on_graph']
     #branches=['select_top_cos_sims']
+    branches=['run_clustering_on_graph']
 
     for b in branches:
         globals()[b]()

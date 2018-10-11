@@ -23,7 +23,7 @@ def run_exercise():
     branch=['create_sim_matrix']
 
     branch+=['do_random_walk']
-    #branch+=['select_top_cos_sims']
+    branch+=['select_top_cos_sims']
     
     all_topics=get_list_of_all_topics()
 
