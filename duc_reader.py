@@ -124,7 +124,8 @@ def filter_out_sentence(sentence):
     
     ## Filter:  Remove sentence with 2 tokens or less.. (Oct 10th)
     token_count=len(re.findall(r'[ ]+',sentence)) #Count tokens
-    if token_count<3:filter=True
+    if token_count<3:
+        filter=True
 
     return filter
     
@@ -170,7 +171,7 @@ def files2sentences(limit_topic='',limit=0):
     for i,document in enumerate(documents):
         for sentence in sent_detector.tokenize(document):
             sentence=clean_sentence(sentence)
-            if filter_out_sentence(sentence):
+            if not filter_out_sentence(sentence):
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
     #print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
