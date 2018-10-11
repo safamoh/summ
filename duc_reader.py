@@ -124,7 +124,7 @@ def filter_out_sentence(sentence):
     
     ## Filter:  Remove sentence with 2 tokens or less.. (Oct 10th)
     token_count=len(re.findall(r'[ ]+',sentence)) #Count tokens
-    if token_count<3:
+    if token_count<2:
         filter=True
 
     return filter
