@@ -46,13 +46,12 @@ def run_random_walk_on_graph(topic_id):
     print ("/ calculating random walk with restart on graph size: "+str(g.vcount))
     return calc_random_walk_with_restart(g,query_index),query_index #sorted_scores
 
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def run_clustering_on_graph():
-    #method='fastgreedy'
+    method='fastgreedy'
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
-    #method='spinglass'  # 
-    method='leading_eigenvector'
+    #method='leading_eigenvector'
 
 
     #STEP 1:  LOAD GRAPH ##########################
@@ -102,20 +101,6 @@ def run_clustering_on_graph():
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
         communities = uG.community_walktrap(weights = 'weight')
 
-
-    #########################################################
-    if 'spinglass' in method:
-        #The implementation of the spinglass clustering algorithm that is included in igraph works on connected graphs only. 
-        #You have to decompose your graph to its connected components, run the clustering on each of the connected components, 
-        #and then merge the membership vectors of the clusterings manually.
-        # clusters    = g.clusters()
-        # giant       = clusters.giant() ## using the biggest component as an example, you can use the others here.
-        # communities = giant.community_spinglass()
-        #**graph must not be unconnected
-        a=tbd
-        u#G = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
-        clustering =  uG.community_spinglass(weights = 'weight')
-
     #########################################################
     if 'leading_eigenvector' in method:
         #http://igraph.org/python/doc/igraph.Graph-class.html#community_leading_eigenvector
@@ -141,8 +126,8 @@ def run_clustering_on_graph():
     for i,subgraph in enumerate(clusters.subgraphs()):
         edge_sums=0
         for idx, v in enumerate(subgraph.vs):
-            #print ("GOT: "+str(v.attribute_names()))
-            #print ("Node: "+str(v['label'])+" org id: "+str(v_idx))
+            print ("GOT: "+str(v.attribute_names()))
+            print ("Node: "+str(v['label'])+" org id: "+str(v_idx))
             edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
             edge_sums+=edge_sim
         avg_weight=edge_sums/subgraph.vcount()
@@ -162,25 +147,6 @@ def run_clustering_on_graph():
     do_selection(g,clusters,cluster_weights,query_sentence)
     return
 
-
-def calc_random_walk_with_restart(g,query_index):
-    echo_top_scores=6
-    if echo_top_scores:
-        print ("---> Random walk top scores:")
-    
-    ## Calc random walk
-    random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index)
-    sorted_scores = sorted(zip(random_walk_with_restart, g.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
-
-    ## Index by index (for O(n) look up of node)
-    sorted_scores_idx=OrderedDict()
-    rank=-1
-    for score,vertex in sorted_scores:
-        rank+=1
-        sorted_scores_idx[vertex.index]=(score,vertex,rank)
-        if rank<echo_top_scores:
-            print ("RWS Rank #"+str(rank)+" is: "+str(score)+" sentence: "+vertex['label'])
-    return sorted_scores_idx
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def do_selection(g,clusters,cluster_weights,query_sentence):
@@ -250,6 +216,27 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
     print ("Done do_selection")   
     return
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def calc_random_walk_with_restart(g,query_index):
+    echo_top_scores=6
+    if echo_top_scores:
+        print ("---> Random walk top scores:")
+    
+    ## Calc random walk
+    random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index)
+    sorted_scores = sorted(zip(random_walk_with_restart, g.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
+
+    ## Index by index (for O(n) look up of node)
+    sorted_scores_idx=OrderedDict()
+    rank=-1
+    for score,vertex in sorted_scores:
+        rank+=1
+        sorted_scores_idx[vertex.index]=(score,vertex,rank)
+        if rank<echo_top_scores:
+            print ("RWS Rank #"+str(rank)+" is: "+str(score)+" sentence: "+vertex['label'])
+    return sorted_scores_idx
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
     # Get sim matrix, sort and output top-n
     top_sentences=[]
@@ -293,7 +280,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 
 if __name__=='__main__':
     branches=['run_clustering_on_graph']
-    branches=['select_top_cos_sims']
+    #branches=['select_top_cos_sims']
 
     for b in branches:
         globals()[b]()

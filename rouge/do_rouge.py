@@ -34,10 +34,10 @@ def run_on_different_setups():
     print ("Getting list of topics...")
     all_topics=get_list_of_all_topics()
 
-    branches=['do_random_walk']
+    #branches=['do_random_walk']
     branches=['select_top_cos_sims']
     
-    option='run_individual_topics'
+    #option='run_individual_topics'
     option='run_all_topics_together'
     
     for branch in branches:

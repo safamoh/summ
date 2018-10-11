@@ -22,8 +22,6 @@ import numpy as np
 import igraph
 
 
-#github
-
 ENC='utf-8'
 sys.stdout = codecs.getwriter(ENC)(sys.stdout) #Allow special characters to be printed
 sys.stderr = codecs.getwriter(ENC)(sys.stderr)

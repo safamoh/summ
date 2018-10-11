@@ -55,7 +55,7 @@ def output_clusters(g,communities,clusters,cluster_weights=[]):
 
 if __name__=='__main__':
     
-    branches=['run_pipeline']
+    #branches=['run_pipeline']
     branches=['run_clustering_on_graph']
 
     for b in branches:
