@@ -36,23 +36,39 @@ def run_on_different_setups():
 
     branches=['do_random_walk']
     branches=['select_top_cos_sims']
+    branches=['select_by_cluster_weight_factor']
     
     #option='run_individual_topics'
     option='run_all_topics_together'
     
-    for branch in branches:
-        if branch=='select_top_cos_sims':
-            local_system_dir=system_dir+"/cos_sim"
-            output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_cos_sim_"
-        if branch=='do_random_walk':
-            local_system_dir=system_dir+"/random_walk"
-            output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_walk_"
-            
-        if 'run_individual_topics'==option:
-            run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
-        else:
-            print ("Running rouge for all topics together")
-            run_on_all_topics(system_dir=local_system_dir)
+    #Special case 3 branches
+    if 'select_by_cluster_weight_factor' in branches:
+        sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+        for sub_branch in sub_branches:
+            local_system_dir=system_dir+"/"+sub_branch
+            output_filename_base=OUTPUT_ROUGE_DIR+"/"+sub_branch+"_"
+            if 'run_individual_topics'==option:
+                run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+            else:
+                print ("Running rouge for all topics together")
+                run_on_all_topics(system_dir=local_system_dir)
+
+    else: #Do standard runs
+        for branch in branches:
+            if branch=='select_top_cos_sims':
+                local_system_dir=system_dir+"/cos_sim"
+                output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_cos_sim_"
+            if branch=='do_random_walk':
+                local_system_dir=system_dir+"/random_walk"
+                output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_walk_"
+                
+            if 'run_individual_topics'==option:
+                run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+            else:
+                print ("Running rouge for all topics together")
+                run_on_all_topics(system_dir=local_system_dir)
+
+
     return
 
 

@@ -70,13 +70,13 @@ def run_exercise():
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
                 if not os.path.exists(out_report_dir):
                     os.mkdir(out_report_dir)
-            print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-            g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
-            print ("Doing selection")
-            fp=codecs.open(out_report_file,'w',encoding='utf-8')
-            for sentence in do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index):
-                fp.write(sentence+"\n")
-            fp.close()
+                print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
+                g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                print ("Doing selection")
+                fp=codecs.open(out_report_file,'w',encoding='utf-8')
+                for sentence in do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index):
+                    fp.write(sentence+"\n")
+                fp.close()
             
 
     print ("Done run_exercise...")
