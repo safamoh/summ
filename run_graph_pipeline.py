@@ -46,25 +46,31 @@ def run_random_walk_on_graph(topic_id):
     print ("/ calculating random walk with restart on graph size: "+str(g.vcount))
     return calc_random_walk_with_restart(g,query_index),query_index #sorted_scores
 
+
+def load_topic_matrix(topic_id):
+    #STEP 1:  LOAD GRAPH ##########################
+    #> check that graph exists
+    if not os.path.exists(get_sim_matrix_path(topic_id)):
+        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(TOPIC_ID)))
+        run_pipeline()
+    g,query_sentence,sims=load_sim_matrix_to_igraph()
+    query_node=g.vs.find(label=query_sentence)
+    query_index=query_node.index
+    ###############################################
+    return g,query_sentence,sims,query_node,query_index
+
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def run_clustering_on_graph():
-    method='fastgreedy'
+def run_clustering_on_graph(topic_id='',method='fast_greedy'):
+    if not topic_id:topic_required=no_globals
+    g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id)
+
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
     #method='leading_eigenvector'
 
 
-    #STEP 1:  LOAD GRAPH ##########################
-    #> check that graph exists
-    if not os.path.exists(get_sim_matrix_path(TOPIC_ID)):
-        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(TOPIC_ID)))
-        run_pipeline()
-    g,query_sentence,sims=load_sim_matrix_to_igraph()
-    ###############################################
     #g=filter_graph(g)
-    
-    query_node=g.vs.find(label=query_sentence)
-    query_index=query_node.index
     
     communities=[]
     clusters=[]
@@ -80,7 +86,7 @@ def run_clustering_on_graph():
         communities=fix_dendrogram(g, communities)
     #########################################################
 
-    if 'fastgreedy' in method:
+    if 'fast_greedy' in method:
         #** only works with undirected graphs
         uG = g.as_undirected(combine_edges = 'mean') #Retain edge attributes: max, first.
         communities = uG.community_fastgreedy(weights = 'weight')
@@ -126,33 +132,126 @@ def run_clustering_on_graph():
     for i,subgraph in enumerate(clusters.subgraphs()):
         edge_sums=0
         for idx, v in enumerate(subgraph.vs):
-            print ("GOT: "+str(v.attribute_names()))
-            print ("Node: "+str(v['label']))
+            if False:
+                print ("GOT: "+str(v.attribute_names()))
+                print ("Node: "+str(v['label']))
             edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
             edge_sums+=edge_sim
         avg_weight=edge_sums/subgraph.vcount()
         cluster_weights+=[avg_weight]
-        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
+#D        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
                 
-    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
-    g.write_pickle(fname="save_clustered_graph.dat")
 
-    print ("For topic: "+str(TOPIC_ID))
-    print ("Done clustering took: "+str(time_clustering)+" seconds")
+    print ("For topic: "+str(TOPIC_ID)+" Done clustering took: "+str(time_clustering)+" seconds")
     
     if False:
+        #Dview    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
+        #Dview    g.write_pickle(fname="save_clustered_graph.dat")
         print ("Visualize clusters...")
         view_graph_clusters(g,clusters)
-        
-    do_selection(g,clusters,cluster_weights,query_sentence)
-    return
 
+    return g,clusters,cluster_weights,query_sentence,query_index
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index,top_j_clusters=3,target_sentences=5):
+    #a)  Use only top j clusters
+
+    ##/  Sort clusters by weight
+    ptr_tuple=[]
+    for idx,weight in enumerate(cluster_weights):
+        ptr_tuple+=[(idx,weight)]
+    ptr_tuple=sorted(ptr_tuple,key=lambda x:x[1],reverse=True)
+    
+    ##/  Random walk with restart calculation
+    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+
+    ##3/ Lookup random walk scores for clusters
+    #i_cluster:  The index of the sub-graph (cluster)
+    #vc_index:   The index of a vertex in the sub-graph
+    #s_idx:      The original index of the sentence/vertex in g
+    rws_lookup={}
+    for i_cluster,weight in ptr_tuple:
+        subgraph=clusters.subgraphs()[i_cluster]
+        for vc_index, v in enumerate(subgraph.vs):
+            s_idx=v['s_idx']
+            walk_score,vertex,rank=g_random_walk_scores[s_idx]
+            #Store lookup between vertex index and walk scores
+            if not i_cluster in rws_lookup: rws_lookup[i_cluster]=[]
+            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score)]
+            
+    
+
+    ##/  Calc total weight of top j clusters
+    target_sentences_per_cluster={}
+    total_weights=0
+    c=0
+    for i_cluster,weight in ptr_tuple:
+        total_weights+=weight
+        c+=1
+        if c==top_j_clusters:break
+    ##/  Calc target sentences for each cluster
+    c=0
+    for i_cluster,weight in ptr_tuple:
+        target_sentences_per_cluster[i_cluster]=int(round(weight/total_weights*target_sentences))
+        c+=1
+        if c==top_j_clusters:break
+        
+    
+    ##4/  Random walk sort within each cluster
+    print ()
+    cache_sentences=[]
+    cache_one_last_sentence_each=[] #If count<250 add 1 more sentence from EACH cluster
+    token_count=0
+    cc=0
+    for i_cluster,weight in ptr_tuple:
+        print ("---- Selection on cluster #"+str(i_cluster)+"------ choosing "+str(target_sentences_per_cluster[i_cluster])+" sentences.")
+        subgraph=clusters.subgraphs()[i_cluster]
+        
+        #Sort walk scores for each cluster
+        rws_sorted=sorted(rws_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
+        
+        ##/  Select top n
+        #top_n=3
+        #proportional_size=subgraph.vcount()/g.vcount()
+        top_n=target_sentences_per_cluster[i_cluster]
+
+        c=0
+        for vc_index,s_idx,walk_score in rws_sorted:
+            #Ignore original query
+            if s_idx==query_index:continue  #Skip query_index
+            c+=1
+            vertex=subgraph.vs[vc_index]
+            sentence=vertex['label']
+            print ("Cluster #"+str(i_cluster)+" Top Score #"+str(c)+": %.9f"%walk_score+" >"+str(sentence))
+            
+            if c<=top_n:
+                cache_sentences+=[sentence]
+                token_count+=len(re.split(r' ',sentence))
+            elif c==(top_n+1):
+                cache_one_last_sentence_each+=[sentence] #If count<250 add 1 more sentence from EACH cluster
+            else:
+                break
+
+        cc+=1
+        if cc==top_j_clusters:break
+        
+    #Rounding can cause>target_sentences so limit
+    cache_sentences=cache_sentences[:target_sentences]
+
+    ##/ Special case:  If tokens<250 then add one more sentence from each cluster
+    if token_count<250:
+        print ("[special case] adding to sentences as <250")
+        cache_sentences+=cache_one_last_sentence_each
+    
+    return cache_sentences
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def do_selection(g,clusters,cluster_weights,query_sentence):
     ##
     #  Grab top sentences from each cluster
     ############################################
+    print ("NO LONGER DIRECTLY USED -- see do_selection_by_weight")
 
     weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
 
@@ -276,6 +375,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
         if c==top_n: break
 
     return top_sentences
+
 
 
 if __name__=='__main__':

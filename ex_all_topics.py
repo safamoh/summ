@@ -2,7 +2,9 @@ import os
 import codecs
 from run_main_pipeline import run_pipeline
 from run_graph_pipeline import run_random_walk_on_graph
+from run_graph_pipeline import run_clustering_on_graph
 from run_graph_pipeline import select_top_cos_sims
+from run_graph_pipeline import do_selection_by_weight
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
@@ -22,8 +24,9 @@ def run_exercise():
 
     branch=['create_sim_matrix']
 
-    branch+=['do_random_walk']
+#    branch+=['do_random_walk']
     branch+=['select_top_cos_sims']
+    branch=['select_by_cluster_weight_factor']
     
     all_topics=get_list_of_all_topics()
 
@@ -56,7 +59,22 @@ def run_exercise():
             top_n_output=output_directory+"/cos_sim/"+str(topic_id)+".txt"
             print ("Calc top cos sims for topic: "+str(topic_id)+"...")
             fp=codecs.open(top_n_output,'w',encoding='utf-8')
-            for sentence in select_top_cos_sims(topic_id=topic_id):
+            for sentence in select_top_cos_sims(topic_id=topic_id,top_n=3):
+                fp.write(sentence+"\n")
+            fp.close()
+
+        if 'select_by_cluster_weight_factor' in branch:
+            sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+            for sub_branch in sub_branches:
+                out_report_dir=top_n_output=output_directory+"/"+sub_branch
+                out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
+                if not os.path.exists(out_report_dir):
+                    os.mkdir(out_report_dir)
+            print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
+            g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+            print ("Doing selection")
+            fp=codecs.open(out_report_file,'w',encoding='utf-8')
+            for sentence in do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index):
                 fp.write(sentence+"\n")
             fp.close()
             
