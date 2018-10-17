@@ -11,7 +11,6 @@ from performance import Performance_Tracker
 from duc_reader import files2sentences
 from duc_reader import tokenize_sentences
 from duc_reader import get_query
-from duc_reader import TOPIC_ID
 from duc_reader import LIMIT_TOPICS
 from duc_reader import TEMP_DATA_PATH
 from duc_reader import get_sim_matrix_path
@@ -37,7 +36,7 @@ def run_random_walk_on_graph(topic_id):
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
     if not os.path.exists(get_sim_matrix_path(topic_id)):
-        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(topic_id)))
+        print (">> SIM MATRIX DOES NOT EXIST for: "+topic_id+": "+str(get_sim_matrix_path(topic_id)))
         run_pipeline()
     g,query_sentence,sims=load_sim_matrix_to_igraph(local_topic_id=topic_id)
     query_node=g.vs.find(label=query_sentence)
@@ -51,9 +50,9 @@ def load_topic_matrix(topic_id):
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
     if not os.path.exists(get_sim_matrix_path(topic_id)):
-        print (">> SIM MATRIX DOES NOT EXIST for: "+TOPIC_ID+": "+str(get_sim_matrix_path(TOPIC_ID)))
+        print (">> SIM MATRIX DOES NOT EXIST for: "+topic_id+": "+str(get_sim_matrix_path(topic_id)))
         run_pipeline()
-    g,query_sentence,sims=load_sim_matrix_to_igraph()
+    g,query_sentence,sims=load_sim_matrix_to_igraph(topic_id)
     query_node=g.vs.find(label=query_sentence)
     query_index=query_node.index
     ###############################################
@@ -142,7 +141,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy'):
 #D        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
                 
 
-    print ("For topic: "+str(TOPIC_ID)+" Done clustering took: "+str(time_clustering)+" seconds")
+    print ("For topic: "+str(topic_id)+" Done clustering took: "+str(time_clustering)+" seconds")
     
     if False:
         #Dview    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
@@ -247,12 +246,10 @@ def do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index
     return cache_sentences
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection(g,clusters,cluster_weights,query_sentence):
+def do_selection(g,clusters,cluster_weights,query_sentence,query_index):
     ##
     #  Grab top sentences from each cluster
     ############################################
-    print ("NO LONGER DIRECTLY USED -- see do_selection_by_weight")
-
     weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
 
     #Grab query sentence info
@@ -309,7 +306,9 @@ def do_selection(g,clusters,cluster_weights,query_sentence):
             if s_idx==query_index:continue  #Skip query_index
             c+=1
             vertex=subgraph.vs[vc_index]
-            print ("Cluster #"+str(i_cluster)+" Top Score #"+str(c)+": %.9f"%walk_score+" >"+str(vertex['label']))
+            sentence=vertex['label']
+            print ("Cluster #"+str(i_cluster)+" Top Score #"+str(c)+": %.9f"%walk_score+" >"+str(sentence))
+            yield  sentence
             if c==top_n:break
         
     print ("Done do_selection")   
