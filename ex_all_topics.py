@@ -68,7 +68,7 @@ def run_exercise():
         if 'select_by_cluster_weight_factor' in branch:
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
             for sub_branch in sub_branches:
-                out_report_dir=top_n_output=output_directory+"/do_selection/"+sub_branch
+                out_report_dir=top_n_output=output_directory+"/do_selection_by_weight/"+sub_branch
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
                 if not os.path.exists(output_directory+"/do_selection_by_weight"):
                     os.mkdir(output_directory+"/do_selection_by_weight")
