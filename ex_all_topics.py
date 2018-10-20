@@ -6,6 +6,7 @@ from run_graph_pipeline import run_clustering_on_graph
 from run_graph_pipeline import select_top_cos_sims
 from run_graph_pipeline import do_selection_by_weight
 from run_graph_pipeline import do_selection
+from run_graph_pipeline import do_selection_by_round_robin
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
@@ -26,10 +27,11 @@ def run_exercise():
 
 
 
-    branch+=['do_random_walk']
+#    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
+    branch+=['do_selection_by_round_robin']
 
     
 
@@ -72,7 +74,7 @@ def run_exercise():
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
 
             for sub_branch in sub_branches:
-                out_report_dir=top_n_output=output_directory+"/do_selection_by_weight/"+sub_branch
+                out_report_dir=output_directory+"/do_selection_by_weight/"+sub_branch
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
                 if not os.path.exists(output_directory+"/do_selection_by_weight"):
                     os.mkdir(output_directory+"/do_selection_by_weight")
@@ -91,7 +93,7 @@ def run_exercise():
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
 
             for sub_branch in sub_branches:
-                out_report_dir=top_n_output=output_directory+"/do_selection/"+sub_branch
+                out_report_dir=output_directory+"/do_selection/"+sub_branch
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
                 if not os.path.exists(output_directory+"/do_selection"):
                     os.mkdir(output_directory+"/do_selection")
@@ -107,8 +109,27 @@ def run_exercise():
                 fp.close()
             
 
-#==========================================================================================
+#==========================================================================================          
+        if 'do_selection_by_round_robin' in branch:
+            sub_branches=['fast_greedy','leading_eigenvector','walktrap']
 
+            for sub_branch in sub_branches:
+                out_report_dir=output_directory+"/round_robin/"+sub_branch
+                out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
+                if not os.path.exists(output_directory+"/round_robin"):
+                    os.mkdir(output_directory+"/round_robin")
+                if not os.path.exists(out_report_dir):
+                    os.mkdir(out_report_dir)
+
+                print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
+                g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                print ("Doing selection")
+                fp=codecs.open(out_report_file,'w',encoding='utf-8')
+                for sentence in do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10):
+                    fp.write(sentence+"\n")
+                fp.close()
+
+#==========================================================================================
 
 
 
