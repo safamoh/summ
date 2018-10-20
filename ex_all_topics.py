@@ -21,17 +21,19 @@ if not os.path.exists(output_directory):
 def run_exercise():
     global output_directory
     print ("For each topic, create sim matrix and do top n")
-
-
     branch=['create_sim_matrix']
 
-#    branch+=['do_random_walk']
-    branch+=['select_top_cos_sims']
-    branch+=['do_selection_multiple_cluster_algs']
-    branch+=['select_by_cluster_weight_factor']
-    
-    all_topics=get_list_of_all_topics()
 
+
+
+    branch+=['do_random_walk']
+#    branch+=['select_top_cos_sims']
+#    branch+=['do_selection_multiple_cluster_algs']
+#    branch+=['select_by_cluster_weight_factor']
+
+    
+
+    all_topics=get_list_of_all_topics()
     print ("Processing topics: "+str(all_topics))
     print (str(len(all_topics))+" topics found.")
     
@@ -42,6 +44,7 @@ def run_exercise():
             run_pipeline(use_specific_topic=topic_id)
     
 
+#==========================================================================================
         if 'do_random_walk' in branch:
             top_n=10
             top_n_output=output_directory+"/random_walk/"+str(topic_id)+".txt"
@@ -56,7 +59,7 @@ def run_exercise():
                 if c==top_n:break
             fp.close()
             print ("Wrote to: "+top_n_output)
-            
+#==========================================================================================          
         if 'select_top_cos_sims' in branch:
             top_n_output=output_directory+"/cos_sim/"+str(topic_id)+".txt"
             print ("Calc top cos sims for topic: "+str(topic_id)+"...")
@@ -64,9 +67,10 @@ def run_exercise():
             for sentence in select_top_cos_sims(topic_id=topic_id,top_n=10):
                 fp.write(sentence+"\n")
             fp.close()
-
+#==========================================================================================
         if 'select_by_cluster_weight_factor' in branch:
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+
             for sub_branch in sub_branches:
                 out_report_dir=top_n_output=output_directory+"/do_selection_by_weight/"+sub_branch
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
@@ -82,9 +86,10 @@ def run_exercise():
                 for sentence in do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index):
                     fp.write(sentence+"\n")
                 fp.close()
-                
+ #==========================================================================================               
         if 'do_selection_multiple_cluster_algs' in branch:
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+
             for sub_branch in sub_branches:
                 out_report_dir=top_n_output=output_directory+"/do_selection/"+sub_branch
                 out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
@@ -102,9 +107,14 @@ def run_exercise():
                 fp.close()
             
 
+#==========================================================================================
+
+
+
+
     print ("Done run_exercise...")
     return
-
+#==========================================================================================
 if __name__=='__main__':
     branches=['run_exercise']
     for b in branches:

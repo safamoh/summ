@@ -56,7 +56,7 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents. "+str(len(set(sentences_topics)))+" topics.")
     print("---------------------------------")
     for i,sentence in enumerate(sentences):
-        print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
+        #print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
         if i>2:break
         
     #Add query as V1

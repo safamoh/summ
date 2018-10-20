@@ -33,19 +33,24 @@ def run_on_different_setups():
     system_dir = TEMP_DATA_PATH+"Top_summary"
     print ("Getting list of topics...")
     all_topics=get_list_of_all_topics()
+    
 
     branches=['do_random_walk']
-    branches=['select_top_cos_sims']
-
-    branches=['select_by_cluster_weight_factor']
-    branches=['do_selection_multiple_cluster_algs'] #do_selection original
+    #branches=['select_top_cos_sims']
+    #branches=['select_by_cluster_weight_factor']
+    #branches=['do_selection_multiple_cluster_algs'] #do_selection original
     
+
     #option='run_individual_topics'
     option='run_all_topics_together'
-    
+
+
+#==========================================================================================
     #Special case 3 branches
     if 'do_selection_multiple_cluster_algs' in branches:
-        sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+        #sub_branches=['fast_greedy']
+        #sub_branches=['leading_eigenvector']
+        sub_branches=['walktrap']
         for sub_branch in sub_branches:
             local_system_dir=system_dir+"/do_selection/"+sub_branch
             output_filename_base=OUTPUT_ROUGE_DIR+"/do_selection/"+sub_branch+"_"
@@ -54,10 +59,12 @@ def run_on_different_setups():
             else:
                 print ("Running rouge for all topics together")
                 run_on_all_topics(system_dir=local_system_dir)
-
+#==========================================================================================
     #Special case 3 branches
     if 'select_by_cluster_weight_factor' in branches:
-        sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+        #sub_branches=['fast_greedy']
+        #sub_branches=['leading_eigenvector']
+        sub_branches=['walktrap']        
         for sub_branch in sub_branches:
             local_system_dir=system_dir+"/do_selection_by_weight/"+sub_branch
             output_filename_base=OUTPUT_ROUGE_DIR+"/do_selection_by_weight/"+sub_branch+"_"
@@ -66,28 +73,30 @@ def run_on_different_setups():
             else:
                 print ("Running rouge for all topics together")
                 run_on_all_topics(system_dir=local_system_dir)
-
+#==========================================================================================
     #Do standard runs
-    if branch=='select_top_cos_sims':
+    if 'select_top_cos_sims' in branches:
         local_system_dir=system_dir+"/cos_sim"
-        output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_cos_sim_"
+        output_filename_base=OUTPUT_ROUGE_DIR
 
         if 'run_individual_topics'==option:
             run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
         else:
             print ("Running rouge for all topics together")
             run_on_all_topics(system_dir=local_system_dir)
+#==========================================================================================
 
-    if branch=='do_random_walk':
+    if 'do_random_walk' in branches:
         local_system_dir=system_dir+"/random_walk"
-        output_filename_base=OUTPUT_ROUGE_DIR+"/rouge_walk_"
+        output_filename_base=OUTPUT_ROUGE_DIR
 
         if 'run_individual_topics'==option:
             run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
         else:
             print ("Running rouge for all topics together")
             run_on_all_topics(system_dir=local_system_dir)
-            
+#==========================================================================================
+         
 
     return
 
@@ -112,6 +121,7 @@ def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[])
         output_dict = r.output_to_dict(output)
 
     return
+#==========================================================================================
 
 def run_on_all_topics(system_dir=''):
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
