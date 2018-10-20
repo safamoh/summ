@@ -387,14 +387,24 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
             if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
                 
                 #Get next sentence in sorted sentences
+                got_next=True
                 vc_index,s_idx,walk_score=rws_sorted[cluster_ptr[i_cluster]]
-                vertex=subgraph.vs[vc_index]
-                sentence=vertex['label']
-                
-                print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
-                sentence_cache+=[sentence]
-                
-                cluster_ptr[i_cluster]+=1
+
+                if s_idx==query_index: #exception when query index
+                    got_next=False
+                    cluster_ptr[i_cluster]+=1
+                    if cluster_ptr[i_cluster]<len(rws_sorted):      #Case where only 1 sentence
+                        vc_index,s_idx,walk_score=rws_sorted[cluster_ptr[i_cluster]]
+                        got_next=True
+
+                if got_next:
+                    vertex=subgraph.vs[vc_index]
+                    sentence=vertex['label']
+                    
+                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
+                    sentence_cache+=[sentence]
+                    
+                    cluster_ptr[i_cluster]+=1
             if len(sentence_cache)==target_sentences:break
             
         
