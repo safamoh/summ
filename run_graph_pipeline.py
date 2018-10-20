@@ -204,7 +204,7 @@ def do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index
     token_count=0
     cc=0
     for i_cluster,weight in ptr_tuple:
-        print ("---- Selection on cluster #"+str(i_cluster)+"------ choosing "+str(target_sentences_per_cluster[i_cluster])+" sentences.")
+        print ("---- Selection on cluster #"+str(i_cluster)+", weight:"+str(weight)+" ----------- choosing "+str(target_sentences_per_cluster[i_cluster])+" sentences.")
         subgraph=clusters.subgraphs()[i_cluster]
         
         #Sort walk scores for each cluster
@@ -240,8 +240,9 @@ def do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index
 
     ##/ Special case:  If tokens<250 then add one more sentence from each cluster
     if token_count<250:
-        print ("[special case] adding to sentences as <250")
+        print ("[special case] adding sentences as Summary < 250 tokens:")
         cache_sentences+=cache_one_last_sentence_each
+        print(cache_one_last_sentence_each)
     
     return cache_sentences
 
