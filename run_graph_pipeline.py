@@ -315,6 +315,102 @@ def do_selection(g,clusters,cluster_weights,query_sentence,query_index):
     return
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,top_j_clusters=3,target_sentences=5):
+    #a)  Use only top j clusters
+
+    ##/  Sort clusters by weight
+    ptr_tuple=[]
+    for idx,weight in enumerate(cluster_weights):
+        ptr_tuple+=[(idx,weight)]
+    ptr_tuple=sorted(ptr_tuple,key=lambda x:x[1],reverse=True)
+    
+    ##/  Random walk with restart calculation
+    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+
+    ##3/ Lookup random walk scores for clusters
+    #i_cluster:  The index of the sub-graph (cluster)
+    #vc_index:   The index of a vertex in the sub-graph
+    #s_idx:      The original index of the sentence/vertex in g
+    rws_lookup={}
+    for i_cluster,weight in ptr_tuple:
+        subgraph=clusters.subgraphs()[i_cluster]
+        for vc_index, v in enumerate(subgraph.vs):
+            s_idx=v['s_idx']
+            walk_score,vertex,rank=g_random_walk_scores[s_idx]
+            #Store lookup between vertex index and walk scores
+            if not i_cluster in rws_lookup: rws_lookup[i_cluster]=[]
+            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score)]
+            
+    
+#
+#    ##/  Calc total weight of top j clusters
+#    target_sentences_per_cluster={}
+#    total_weights=0
+#    c=0
+#    for i_cluster,weight in ptr_tuple:
+#        total_weights+=weight
+#        c+=1
+#        if c==top_j_clusters:break
+#    ##/  Calc target sentences for each cluster
+#    c=0
+#    for i_cluster,weight in ptr_tuple:
+#        target_sentences_per_cluster[i_cluster]=int(round(weight/total_weights*target_sentences))
+#        c+=1
+#        if c==top_j_clusters:break
+        
+    ##4/  ROUND ROBIN SELECTION
+    
+    ##4/  Random walk sort within each cluster
+    print ()
+    cache_sentences=[]
+    cache_one_last_sentence_each=[] #If count<250 add 1 more sentence from EACH cluster
+    token_count=0
+    cc=0
+    for i_cluster,weight in ptr_tuple:
+        print ("---- Selection on cluster #"+str(i_cluster)+"------ choosing "+str(target_sentences_per_cluster[i_cluster])+" sentences.")
+        subgraph=clusters.subgraphs()[i_cluster]
+        
+        #Sort walk scores for each cluster
+        rws_sorted=sorted(rws_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
+        
+        ##/  Select top n
+        #top_n=3
+        #proportional_size=subgraph.vcount()/g.vcount()
+        top_n=target_sentences_per_cluster[i_cluster]
+
+        c=0
+        for vc_index,s_idx,walk_score in rws_sorted:
+            #Ignore original query
+            if s_idx==query_index:continue  #Skip query_index
+            c+=1
+            vertex=subgraph.vs[vc_index]
+            sentence=vertex['label']
+            print ("Cluster #"+str(i_cluster)+" Top Score #"+str(c)+": %.9f"%walk_score+" >"+str(sentence))
+            
+            if c<=top_n:
+                cache_sentences+=[sentence]
+                token_count+=len(re.split(r' ',sentence))
+            elif c==(top_n+1):
+                cache_one_last_sentence_each+=[sentence] #If count<250 add 1 more sentence from EACH cluster
+            else:
+                break
+
+        cc+=1
+        if cc==top_j_clusters:break
+        
+    #Rounding can cause>target_sentences so limit
+    cache_sentences=cache_sentences[:target_sentences]
+
+    ##/ Special case:  If tokens<250 then add one more sentence from each cluster
+    if token_count<250:
+        print ("[special case] adding to sentences as <250")
+        cache_sentences+=cache_one_last_sentence_each
+    
+    return cache_sentences
+
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def calc_random_walk_with_restart(g,query_index):
     echo_top_scores=6
     if echo_top_scores:
