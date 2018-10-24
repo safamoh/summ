@@ -108,6 +108,13 @@ def view_graph_clusters(g,clusters):
 
     return
 
+def add_vertex_to_graph(g,**kwargs):
+    g.add_vertices(1)
+    idx=g.vcount()-1
+    for kk in kwargs:
+        g.vs[idx][kk]=kwargs[kk]
+    return g,idx
+
 
 def load_sim_matrix_to_igraph(local_topic_id=''):
     global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS

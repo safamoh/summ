@@ -10,6 +10,13 @@ from run_graph_pipeline import do_selection_by_round_robin
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
 
+
+from run_graph_pipeline import do1_select_query_cluster
+from run_graph_pipeline import do2_local_walk
+from run_graph_pipeline import do3_avg_cosims
+from run_graph_pipeline import do4_median_weight
+
+
 #0v1#  Oct 1, 2018
 
 #Request:
@@ -31,7 +38,8 @@ def run_exercise():
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
-    branch+=['do_selection_by_round_robin']
+#    branch+=['do_selection_by_round_robin']
+    branch+=['experiments']
 
     
 
@@ -108,7 +116,6 @@ def run_exercise():
                     fp.write(sentence+"\n")
                 fp.close()
             
-
 #==========================================================================================          
         if 'do_selection_by_round_robin' in branch:
             sub_branches=['fast_greedy','leading_eigenvector','walktrap']
@@ -130,6 +137,33 @@ def run_exercise():
                 fp.close()
 
 #==========================================================================================
+        if 'experiments' in branch:
+            exs=['do1_select_query_cluster']
+            exs=['do2_local_walk']
+            
+            for ex in exs:
+                ex_name="ex_"+ex
+                sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+    
+                for sub_branch in sub_branches:
+                    out_report_dir=output_directory+"/"+ex_name+"/"+sub_branch
+                    out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
+                    if not os.path.exists(output_directory+"/"+ex_name):
+                        os.mkdir(output_directory+"/"+ex_name)
+                    if not os.path.exists(out_report_dir):
+                        os.mkdir(out_report_dir)
+    
+                    print ("Experiment: "+str(ex)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
+                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                    print ("Doing selection")
+                    fp=codecs.open(out_report_file,'w',encoding='utf-8')
+                    the_function=globals()[ex]
+                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index,topic_id=topic_id):
+                        fp.write(sentence+"\n")
+                    fp.close()
+                    print ("BREAK 1")
+                    break
+        break
 
 
 

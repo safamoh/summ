@@ -21,8 +21,10 @@ from graph_utils import load_sim_matrix_to_igraph
 from graph_utils import fix_dendrogram
 from graph_utils import filter_graph
 from graph_utils import load_sim_matrix
+from graph_utils import add_vertex_to_graph
 
 from run_main_pipeline import run_pipeline
+
 
 Perf=Performance_Tracker()
 
@@ -474,6 +476,103 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
     return top_sentences
 
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#COMMON FUNCTION:
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# ADDITIONAL SELECTION LOGICs:
+
+def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+    #1)    Consider only the cluster that has the query sentences and ignore all other clusters, then sort 
+    #its sentences according to the global random walk scores. Then choose top 10 sentences for the summary 
+    #(without the query sentence).  
+    
+    ##/  Random walk with restart calculation
+    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+
+    ##/ get cluster with query sentence
+    query_sentence_in_clusterX=-1
+    for cluster_idx,subgraph in enumerate(clusters.subgraphs()):
+        clusterX_walk_scores=[]
+        for vc_index, v in enumerate(subgraph.vs):
+            s_idx=v['s_idx']
+            sentence=v['label']
+            
+            # Remember walk score for sentence
+            walk_score,vertex,rank=g_random_walk_scores[s_idx]
+            clusterX_walk_scores+=[(s_idx,sentence,walk_score)]
+                        
+            if s_idx==query_index:
+                query_sentence_in_clusterX=cluster_idx
+        if query_sentence_in_clusterX>=0:
+            break
+    print ("Query sentence found in cluster #"+str(query_sentence_in_clusterX))
+
+    ##/  Sort remembered sentence clusters
+    clusterX_sentences_sorted_by_walk_score=sorted(clusterX_walk_scores, key=lambda x:x[2],reverse=True) #
+    
+    top_sentences=[]
+    for s_idx,sentence,score in clusterX_sentences_sorted_by_walk_score:
+        if s_idx==query_index:continue
+        top_sentences+=[sentence]
+        if len(top_sentences)==10:break
+
+    return top_sentences
+
+def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+    #2)    After finish the clustering, do local random walk algorithm for each cluster subgraph (you should 
+    #include the query node within each cluster and make it the reset vertex in the algorithm) then sort 
+    #the sentences in each cluster according its own random walk score (ignore the global random walk scores here).
+    
+    
+    ## / for each cluster -- do random walk
+    for cluster_idx,subgraph in enumerate(clusters.subgraphs()):
+        
+        #If query not in subgraph then add
+        try:
+            query_node=subgraph.vs.find(s_idx=query_index) #
+            idx_query_index=query_node.index
+        except:
+            query_node=''
+            
+        if not query_node: #Add query node to cluster sub-grpah
+            subgraph,idx_query_index=add_vertex_to_graph(subgraph,s_idx=query_index,label=query_sentence,s_topic=topic_id)
+
+        #Do random walk on sub-graph
+        subg_random_walk_scores=calc_random_walk_with_restart(subgraph, idx_query_index)
+                
+        #Sort
+        sorted_scores = sorted(zip(subg_random_walk_scores, subgraph.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
+        
+        for score,vertex in sorted_scores:
+            pass
+    return
+
+
+def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+    #3)    The weight of the cluster will be the average of two values: the average cosine similarity (the
+    # existing one in the code now) AND the average value of cosine similarity between all pairs (without 
+    #the query).
+    #To elaborate, consider the cos sim matrix for one of the clusters subgraph as:
+    #querySentence 1Sentence 2Sentence 3Query1valuevaluevalueSentence 1value1valuevalueSentence
+    # 2valuevalue1valueSentence 3valuevaluevalue1
+    #So the first value as you did is the average of the red highlighted values.
+    #Now, the second value will be the average of the yellow highlighted values.
+    #Finally the cluster weight will be the average of these two values.
+    
+    
+    return
+
+
+#4)    The weight of a cluster will be as:
+#a.    Compute the average vector for all sentences in the cluster (each sentence is a vector, compute the average vector to get the median vector) 
+#b.    Then compute the cos sim between the query vector and the median vector.
+#c.    This score is the weight of the cluster.
+def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+    return
+
+#5)    Try Markov clustering. 
 
 if __name__=='__main__':
     #branches=['select_top_cos_sims']
@@ -481,6 +580,54 @@ if __name__=='__main__':
 
     for b in branches:
         globals()[b]()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
