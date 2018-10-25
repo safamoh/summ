@@ -62,10 +62,9 @@ def load_topic_matrix(topic_id):
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def run_clustering_on_graph(topic_id='',method='fast_greedy'):
+def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     if not topic_id:topic_required=no_globals
     g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id)
-
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
     #method='leading_eigenvector'
@@ -130,17 +129,53 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy'):
     #> reuse sim calcs where possible
     #> note: subgraph index not same as g
     cluster_weights=[]
-    for i,subgraph in enumerate(clusters.subgraphs()):
-        edge_sums=0
-        for idx, v in enumerate(subgraph.vs):
-            if False:
-                print ("GOT: "+str(v.attribute_names()))
-                print ("Node: "+str(v['label']))
-            edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
-            edge_sums+=edge_sim
-        avg_weight=edge_sums/subgraph.vcount()
-        cluster_weights+=[avg_weight]
-#D        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
+    if experiment=='do3_avg_cosims':
+        #The weight of the cluster will be the average of two values: the average cosine similarity (the
+        # existing one in the code now) AND the average value of cosine similarity between all pairs (without 
+        #the query).
+        for i,subgraph in enumerate(clusters.subgraphs()):
+            edge_sums=0
+
+            #FOR EACH cluster
+
+            #[1] QUERY TO EACH SENTENCE
+            for idx, v in enumerate(subgraph.vs):
+                #Sim between [QUERY_SENTENCE] and [Sentence at s_idx]
+                edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
+                edge_sums+=edge_sim
+                
+            #[2] SENTENCE to SENTENCE
+            all_sum=0
+            sum_count=0
+            for idx1, v1 in enumerate(subgraph.vs):
+                if idx1==query_index:continue     #skip query indexes
+                for idx2, v2 in enumerate(subgraph.vs):
+                    if idx2==query_index:continue #skip query indexes
+                    if idx1==idx2: continue      #skip same sentences
+                    all_sum+=sims[v1['s_idx']][v2['s_idx']]
+                    sum_count+=1
+                    
+            ## Calc Cluster weights
+            avg_weight=edge_sums/subgraph.vcount()
+            if sum_count:
+                avg_inter_weights=((all_sum)/2)/sum_count #2 cause double count
+            else:
+                avg_inter_weights=0
+            print ("[experiment info]:  Cluster #"+str(i)+" inter weights average: "+str(avg_inter_weights))
+            
+            cluster_weights+=[(avg_weight+avg_inter_weights)/2]
+    else:
+        for i,subgraph in enumerate(clusters.subgraphs()):
+            edge_sums=0
+            for idx, v in enumerate(subgraph.vs):
+                if False:
+                    print ("GOT: "+str(v.attribute_names()))
+                    print ("Node: "+str(v['label']))
+                edge_sim=sims[query_index][v['s_idx']] #Use stored sentence index to look up old cosine sim value
+                edge_sums+=edge_sim
+            avg_weight=edge_sums/subgraph.vcount()
+            cluster_weights+=[avg_weight]
+    #D        print ("Cluster #"+str(i)+" has node count: "+str(subgraph.vcount())+" avg weight: "+str(avg_weight))
                 
 
     print ("For topic: "+str(topic_id)+" Done clustering took: "+str(time_clustering)+" seconds")
@@ -588,9 +623,9 @@ def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index):
     #So the first value as you did is the average of the red highlighted values.
     #Now, the second value will be the average of the yellow highlighted values.
     #Finally the cluster weight will be the average of these two values.
-    
-    
-    return
+    target_sentences=10
+
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=target_sentences)
 
 
 #4)    The weight of a cluster will be as:

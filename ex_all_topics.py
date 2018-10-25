@@ -39,8 +39,8 @@ def run_exercise():
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
-#    branch+=['experiments']
-    branch+=['do_selection_by_round_robin']
+#    branch+=['do_selection_by_round_robin']
+    branch+=['experiments']
 
     
 
@@ -141,6 +141,7 @@ def run_exercise():
         if 'experiments' in branch:
             exs=['do1_select_query_cluster']
             exs=['do2_local_walk']
+            exs=['do3_avg_cosims']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
@@ -155,16 +156,16 @@ def run_exercise():
                         os.mkdir(out_report_dir)
     
                     print ("Experiment: "+str(experiment)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch,experiment=experiment)
                     print ("Doing selection")
                     fp=codecs.open(out_report_file,'w',encoding='utf-8')
-                    the_function=globals()[ex]
+                    the_function=globals()[experiment]
                     for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
                         fp.write(sentence+"\n")
                     fp.close()
-#                    print ("BREAK 1")
-#                    break
-#        break
+                    print ("BREAK 1")
+                    break
+        break
 
 
 
