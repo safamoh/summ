@@ -39,7 +39,8 @@ def run_exercise():
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
-    branch+=['experiments']
+#    branch+=['experiments']
+    branch+=['do_selection_by_round_robin']
 
     
 
@@ -141,8 +142,8 @@ def run_exercise():
             exs=['do1_select_query_cluster']
             exs=['do2_local_walk']
             
-            for ex in exs:
-                ex_name="ex_"+ex
+            for experiment in exs:
+                ex_name="ex_"+experiment
                 sub_branches=['fast_greedy','leading_eigenvector','walktrap']
     
                 for sub_branch in sub_branches:
@@ -153,17 +154,17 @@ def run_exercise():
                     if not os.path.exists(out_report_dir):
                         os.mkdir(out_report_dir)
     
-                    print ("Experiment: "+str(ex)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
+                    print ("Experiment: "+str(experiment)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
                     g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
                     print ("Doing selection")
                     fp=codecs.open(out_report_file,'w',encoding='utf-8')
                     the_function=globals()[ex]
-                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index,topic_id=topic_id):
+                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
                         fp.write(sentence+"\n")
                     fp.close()
-                    print ("BREAK 1")
-                    break
-        break
+#                    print ("BREAK 1")
+#                    break
+#        break
 
 
 

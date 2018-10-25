@@ -317,50 +317,54 @@ def do_selection(g,clusters,cluster_weights,query_sentence,query_index):
     print ("Done do_selection")   
     return
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5):
-    ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
-    ##
-
-    #  Grab top sentences from each cluster
-    ############################################
-    weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
-
-    #Grab query sentence info
-    query_node=g.vs.find(label=query_sentence)
-    query_index=query_node.index
-    
-    ##/  Random walk with restart calculation
-    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
-    
-    ##1/  Sort clusters by weight
+def alg_sort_clusters_by_weight(cluster_weights):
     #- rather then duplicating data structure (memory) adjust pointers to clusters
     ptr_tuple=[]
     for i,weight in enumerate(cluster_weights):
         ptr_tuple+=[(i,weight)]
-    
     ptr_tuple=sorted(ptr_tuple,key=lambda x:x[1],reverse=True)
+    return ptr_tuple
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5):
+    ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
+
+    ###  Standard info
+    query_node=g.vs.find(label=query_sentence)
+    query_index=query_node.index
+
+    ##/  Random walk with restart calculation
+    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+    
+
+    ##1/  Sort clusters by weight
+    ptr_tuple=alg_sort_clusters_by_weight(cluster_weights)
+
 
     ##2/  Filter clusters by weight threshold
+    weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
     ptr_tuple_top=[]
     for i,weight in ptr_tuple:
         if weight>weight_threshold:
             ptr_tuple_top+=[(i,weight)]
     
+
     ##3/ Lookup random walk scores for clusters
-    #i_cluster:  The index of the sub-graph (cluster)
-    #vc_index:   The index of a vertex in the sub-graph
-    #s_idx:      The original index of the sentence/vertex in g
+    #        i_cluster:  The index of the sub-graph (cluster)
+    #        vc_index:   The index of a vertex in the sub-graph
+    #        s_idx:      The original index of the sentence/vertex in g
     rws_lookup={}
     for i_cluster,weight in ptr_tuple_top:
         subgraph=clusters.subgraphs()[i_cluster]
         for vc_index, v in enumerate(subgraph.vs):
             s_idx=v['s_idx']
+            sentence=v['label']
             walk_score,vertex,rank=g_random_walk_scores[s_idx]
             #Store lookup between vertex index and walk scores
             if not i_cluster in rws_lookup: rws_lookup[i_cluster]=[]
-            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score)]
+            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score,sentence)]
     
+
     ##4/  Random walk sort within each cluster
     print ()
     sorted_sentences_in_cluster={}
@@ -375,41 +379,30 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
         sorted_sentences_in_cluster[i_cluster]=rws_sorted
         
 
-    ##5/  Round robin
+    ##5/  Round Robin Selection
     print ("Doing round robin selection")
     sentence_cache=[] #Top sentences to collect
     while len(sentence_cache)<target_sentences: #while need more sentences
-
-        # For each cluster do round-robin
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
-            subgraph=clusters.subgraphs()[i_cluster]  #From above
+            rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
+            vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
 
-            #Get sorted sentences for each cluster
-            rws_sorted=sorted_sentences_in_cluster[i_cluster]
             if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
-                
-                #Get next sentence in sorted sentences
                 got_next=True
-                vc_index,s_idx,walk_score=rws_sorted[cluster_ptr[i_cluster]]
-
                 if s_idx==query_index: #exception when query index
                     got_next=False
                     cluster_ptr[i_cluster]+=1
                     if cluster_ptr[i_cluster]<len(rws_sorted):      #Case where only 1 sentence
-                        vc_index,s_idx,walk_score=rws_sorted[cluster_ptr[i_cluster]]
+                        vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
                         got_next=True
 
                 if got_next:
-                    vertex=subgraph.vs[vc_index]
-                    sentence=vertex['label']
-                    
                     print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
                     sentence_cache+=[sentence]
-                    
+
                     cluster_ptr[i_cluster]+=1
             if len(sentence_cache)==target_sentences:break
             
-        
     print ("Done do_selection")   
     return sentence_cache
 
@@ -483,7 +476,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ADDITIONAL SELECTION LOGICs:
 
-def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index):
     #1)    Consider only the cluster that has the query sentences and ignore all other clusters, then sort 
     #its sentences according to the global random walk scores. Then choose top 10 sentences for the summary 
     #(without the query sentence).  
@@ -517,17 +510,28 @@ def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_ind
         if s_idx==query_index:continue
         top_sentences+=[sentence]
         if len(top_sentences)==10:break
-
     return top_sentences
 
-def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+
+def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10):
     #2)    After finish the clustering, do local random walk algorithm for each cluster subgraph (you should 
     #include the query node within each cluster and make it the reset vertex in the algorithm) then sort 
     #the sentences in each cluster according its own random walk score (ignore the global random walk scores here).
     
-    
-    ## / for each cluster -- do random walk
+    ##1/  Sort clusters by weight
+    ptr_tuple=alg_sort_clusters_by_weight(cluster_weights)
+
+    ##/  For each cluster -- do random walk
+    #    - get top sentences within cluster
+    sorted_sentences_in_cluster={}
+    active_clusters=[]
+    cluster_ptr={}
     for cluster_idx,subgraph in enumerate(clusters.subgraphs()):
+        cluster_ptr[i_cluster]=0  #Initialize
+        
+        ## Filter clusters by weight threshold
+        if cluster_weights[cluster_idx]<0.009:continue  #Filter low weight clusters
+        active_clusters+=[cluster_idx]
         
         #If query not in subgraph then add
         try:
@@ -535,22 +539,46 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,topic_i
             idx_query_index=query_node.index
         except:
             query_node=''
-            
         if not query_node: #Add query node to cluster sub-grpah
-            subgraph,idx_query_index=add_vertex_to_graph(subgraph,s_idx=query_index,label=query_sentence,s_topic=topic_id)
+            subgraph,idx_query_index=add_vertex_to_graph(subgraph,s_idx=query_index,label=query_sentence,s_topic='')
+
 
         #Do random walk on sub-graph
         subg_random_walk_scores=calc_random_walk_with_restart(subgraph, idx_query_index)
                 
-        #Sort
+        #Sort sentences within cluster by their local walk scores
         sorted_scores = sorted(zip(subg_random_walk_scores, subgraph.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
         
-        for score,vertex in sorted_scores:
-            pass
-    return
+        sorted_sentences_in_cluster[i_cluster]=sorted_scores
+        
+    #Output via Round Robin
+    sentence_cache=[] #Top sentences to collect
+    while len(sentence_cache)<target_sentences: #while need more sentences
+        for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
+            if not i_cluster in active_clusters:continue #filtered
+
+            sorted_scores=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
+            subg_walk_score,vertex=sorted_scores[cluster_ptr[i_cluster]]
+
+            if cluster_ptr[i_cluster]<len(sorted_scores):                      #If pointer within length of array
+                got_next=True
+                if vertex['s_idx']==query_index: #exception when query index
+                    got_next=False
+                    cluster_ptr[i_cluster]+=1
+                    if cluster_ptr[i_cluster]<len(sorted_scores):      #Case where only 1 sentence
+                        subg_walk_score,vertex=sorted_scores[cluster_ptr[i_cluster]]
+                        got_next=True
+
+                if got_next:
+                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
+                    sentence_cache+=[sentence]
+
+                    cluster_ptr[i_cluster]+=1
+            if len(sentence_cache)==target_sentences:break
+    return sentence_cache
 
 
-def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index):
     #3)    The weight of the cluster will be the average of two values: the average cosine similarity (the
     # existing one in the code now) AND the average value of cosine similarity between all pairs (without 
     #the query).
@@ -569,10 +597,11 @@ def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_i
 #a.    Compute the average vector for all sentences in the cluster (each sentence is a vector, compute the average vector to get the median vector) 
 #b.    Then compute the cos sim between the query vector and the median vector.
 #c.    This score is the weight of the cluster.
-def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topic_id='d301i'):
+def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index):
     return
 
 #5)    Try Markov clustering. 
+
 
 if __name__=='__main__':
     #branches=['select_top_cos_sims']
