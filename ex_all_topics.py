@@ -139,9 +139,11 @@ def run_exercise():
 
 #==========================================================================================
         if 'experiments' in branch:
-            exs=['do1_select_query_cluster']
-            exs=['do2_local_walk']
-            exs=['do3_avg_cosims']
+            exs=[]
+            #tbd#  exs=['do4_median_weight']
+            exs+=['do1_select_query_cluster']
+            exs+=['do2_local_walk']
+            exs+=['do3_avg_cosims']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
@@ -163,9 +165,9 @@ def run_exercise():
                     for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
                         fp.write(sentence+"\n")
                     fp.close()
-                    print ("BREAK 1")
-                    break
-        break
+#                    break #at first cluster
+#                break #at first experiment
+#        break #break #at first topic
 
 
 

@@ -25,6 +25,7 @@ class DirectoryProcessor:
         for input_file_name in input_file_names:
             logger.info("Processing {}.".format(input_file_name))
             input_file = os.path.join(input_dir, input_file_name)
+            input_file=re.sub(r'\\','/',input_file)
             with codecs.open(input_file, "r", encoding="UTF-8",errors='ignore') as f: #JC ERRORS IGNORE BAD ENCODING
                 input_string = f.read()
             output_string = function(input_string)

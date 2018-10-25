@@ -6,6 +6,7 @@ from itertools import izip
 from gensim import corpora
 from gensim import models
 from gensim import similarities
+from gensim import utils, matutils
 
 from duc_reader import files2sentences
 from duc_reader import tokenize_sentences
@@ -98,8 +99,11 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     #The "compile corpus" section actually converts each sentence into a list of integers ("integer" bag-of-words)
     #This raw_corpus is then fed into the tfidf model.
     raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences]
+
     #Then convert tokenized documents to vectors: <type 'list'>
     print "Then convert tokenized documents to vectors: %s"% type(raw_corpus)
+    
+    
     #each document is a list of sentence (vectors) --> (id of the word, tf in this doc)
     ##print("raw_corpus:")
     ##print raw_corpus 
@@ -151,11 +155,65 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
                     print ("AT: "+str(idx)+" sim: "+str(cosim_str))
                     print ("  for sent1: "+str(sentences[sent_num1]))
                     print ("   vs sent2: "+str(sentences[sent_num2]))
+
             
 
     print ("TOPIC ID: "+str(local_topic_id))
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
     print ("Done run_pipeline in: "+str(Perf.end())+"s")
+
+    # STEP 7:  Vectorize sentences
+    #TBD
+    if False:
+        print ("SENTENCE 0: "+str(sentences[0]))
+        print ("Has normalize bow: "+str(raw_corpus[0]))
+        sent_vector0 = tfidf[raw_corpus[0]]
+        sent_vector1 = tfidf[raw_corpus[1]]
+        print ("Sentence 0 verctor: "+str(sent_vector0))
+        print ("Sentence 0 verctor type: "+str(type(sent_vector0)))
+        
+        featureVec=sent_vector0
+        print ("Normalize vector before average?")
+        num_features=len(sent_vector0)
+        
+        vectors=[]
+        vectors+=[matutils.unitvec(sent_vector0)]
+        vectors+=[matutils.unitvec(sent_vector0)]
+        vectors+=[matutils.unitvec(sent_vector1)]
+        print ("UNIT: "+str(vectors))
+        
+        if False:
+            #num_features=sent_vector0[0][0].shape  #     vector.shape (100,)
+            print ("FEATURES: "+str(num_features))
+            sumVec = np.zeros((num_features,), dtype="float32")
+            sumVec = np.add(featureVec)
+        
+            avgVec = np.divide(sumVec, 1)
+        else:
+    #        mean = matutils.unitvec(np.array(vectors).mean(axis=0)).astype(REAL)
+            mean = np.array(vectors).mean(axis=0)
+            print ("GOT MEAN: "+str(mean))
+    #        mean = matutils.unitvec(np.array(vectors).mean(axis=0))
+    #        dists = dot(vectors, mean)
+    
+    #If you multiply the BoW vector with the word embedding matrix and divide by the total number of words in the document then you have the average word2vec representation. This contains mostly the same information as BoW but in a lower dimensional encoding. You can actually train a model to recover which words were used in the document from the average word2vec vector. So, you aren't losing very much information by compressing the representation like this.
+    
+    #def intra_inter(model, test_docs, num_pairs=10000):
+    #    # split each test document into two halves and compute topics for each half
+    #    part1 = [model[id2word_wiki.doc2bow(tokens[: len(tokens) / 2])] for tokens in test_docs]
+    #    part2 = [model[id2word_wiki.doc2bow(tokens[len(tokens) / 2 :])] for tokens in test_docs]
+    #    
+    #    # print computed similarities (uses cossim)
+    #    print("average cosine similarity between corresponding parts (higher is better):")
+    #    print(np.mean([gensim.matutils.cossim(p1, p2) for p1, p2 in zip(part1, part2)]))
+    #
+    #    random_pairs = np.random.randint(0, len(test_docs), size=(num_pairs, 2))
+    #    print("average cosine similarity between 10,000 random parts (lower is better):")    
+    #    print(np.mean([gensim.matutils.cossim(part1[i[0]], part2[i[1]]) for i in random_pairs]))
+        
+    #    print ("Average: ____: "+str(avgVec))
+        
+
     return
 
 
@@ -165,6 +223,14 @@ if __name__=='__main__':
 
     for b in branches:
         globals()[b]()
+
+
+
+
+
+
+
+
 
 
 

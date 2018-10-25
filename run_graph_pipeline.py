@@ -164,6 +164,14 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             print ("[experiment info]:  Cluster #"+str(i)+" inter weights average: "+str(avg_inter_weights))
             
             cluster_weights+=[(avg_weight+avg_inter_weights)/2]
+    elif experiment=='do4_median_weight':
+        #The weight of a cluster will be as:
+        # Compute the average vector for all sentences in the cluster (each sentence is a vector, 
+        #   compute the average vector to get the median vector) 
+        # Then compute the cos sim between the query vector and the median vector.
+        # This score is the weight of the cluster.
+
+        pass
     else:
         for i,subgraph in enumerate(clusters.subgraphs()):
             edge_sums=0
@@ -562,7 +570,7 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
     active_clusters=[]
     cluster_ptr={}
     for cluster_idx,subgraph in enumerate(clusters.subgraphs()):
-        cluster_ptr[i_cluster]=0  #Initialize
+        cluster_ptr[cluster_idx]=0  #Initialize
         
         ## Filter clusters by weight threshold
         if cluster_weights[cluster_idx]<0.009:continue  #Filter low weight clusters
@@ -584,12 +592,12 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
         #Sort sentences within cluster by their local walk scores
         sorted_scores = sorted(zip(subg_random_walk_scores, subgraph.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
         
-        sorted_sentences_in_cluster[i_cluster]=sorted_scores
+        sorted_sentences_in_cluster[cluster_idx]=sorted_scores
         
     #Output via Round Robin
     sentence_cache=[] #Top sentences to collect
     while len(sentence_cache)<target_sentences: #while need more sentences
-        for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
+        for i_cluster,weight in ptr_tuple: #FOR EACH CLUSTER
             if not i_cluster in active_clusters:continue #filtered
 
             sorted_scores=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
@@ -606,7 +614,7 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
 
                 if got_next:
                     print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
-                    sentence_cache+=[sentence]
+                    sentence_cache+=[vertex['label']]
 
                     cluster_ptr[i_cluster]+=1
             if len(sentence_cache)==target_sentences:break

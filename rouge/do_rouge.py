@@ -35,10 +35,11 @@ def run_on_different_setups():
     all_topics=get_list_of_all_topics()
     
 
-    branches=['do_random_walk']
+    #branches=['do_random_walk']
     #branches=['select_top_cos_sims']
     #branches=['select_by_cluster_weight_factor']
     #branches=['do_selection_multiple_cluster_algs'] #do_selection original
+    branches=['experiments']
     
 
     #option='run_individual_topics'
@@ -96,7 +97,27 @@ def run_on_different_setups():
             print ("Running rouge for all topics together")
             run_on_all_topics(system_dir=local_system_dir)
 #==========================================================================================
-         
+    if 'experiments' in branches:
+        exs=[]
+        #tbd#  exs=['do4_median_weight']
+        exs+=['do1_select_query_cluster']
+        exs+=['do2_local_walk']
+        exs+=['do3_avg_cosims']
+        
+        sub_dirs=['fast_greedy','leading_eigenvector','walktrap']
+        
+        for cluster_type in sub_dirs:
+            for experiment in exs:
+                ex_name="ex_"+experiment
+                    
+                local_system_dir=system_dir+"/"+ex_name+"/"+cluster_type
+                output_filename_base=OUTPUT_ROUGE_DIR
+        
+                if 'run_individual_topics'==option:
+                    run_one_topic_at_a_time(system_dir=local_system_dir,output_filename_base=output_filename_base,all_topics=all_topics)
+                else:
+                    print ("Running rouge for all topics together")
+                    run_on_all_topics(system_dir=local_system_dir)
 
     return
 
@@ -124,6 +145,7 @@ def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[])
 #==========================================================================================
 
 def run_on_all_topics(system_dir=''):
+    print ("[debug run rouge system dir]: "+str(system_dir))
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
 
     #                     /data/
