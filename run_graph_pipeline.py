@@ -428,7 +428,9 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     while len(sentence_cache)<target_sentences: #while need more sentences
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
             rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
-            vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
+
+            if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
+                vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
 
             if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
                 got_next=True
