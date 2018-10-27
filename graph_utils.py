@@ -2,6 +2,7 @@ from __future__ import division
 import numpy as np
 import random
 from itertools import izip
+from collections import defaultdict
 
 from duc_reader import files2sentences
 from duc_reader import tokenize_sentences
@@ -220,9 +221,28 @@ def filter_graph(g,the_type=''):
     return g
 
 
+def rankVec(arg):
+    p = np.unique(arg) #take unique value
+    k = (p).argsort().argsort() #sort based on arguments in ascending order
+    dd = defaultdict(int)
+    for i in xrange(np.shape(p)[0]):
+        dd[p[i]] = k[i]
+    return np.array([dd[x] for x in arg])
+
+def calc_percent_distribution(vec):
+    pranks=[]
+    for rank in rankVec(vec): #1 is lowest
+        rank=rank+1 #Start at 1 not 0
+        pranks+=[rank/len(vec)]
+    return pranks
+
+def test_rank():
+    vec=[3, 1, 4, 15, 92]
+    print(rankVec(vec))
+    return
 
 if __name__=='__main__':
-    branches=[]
+    branches=['test_rank']
     for b in branches:
         globals()[b]()
 

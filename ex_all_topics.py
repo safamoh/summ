@@ -15,6 +15,7 @@ from run_graph_pipeline import do1_select_query_cluster
 from run_graph_pipeline import do2_local_walk
 from run_graph_pipeline import do3_avg_cosims
 from run_graph_pipeline import do4_median_weight
+from run_graph_pipeline import do6_two_scores
 
 
 #0v1#  Oct 1, 2018
@@ -144,6 +145,8 @@ def run_exercise():
             exs+=['do1_select_query_cluster']
             exs+=['do2_local_walk']
             exs+=['do3_avg_cosims']
+            exs=[]
+            exs+=['do6_two_scores']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
@@ -165,6 +168,8 @@ def run_exercise():
                     for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
                         fp.write(sentence+"\n")
                     fp.close()
+                break #at first experiment
+        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

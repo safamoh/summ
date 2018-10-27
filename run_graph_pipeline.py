@@ -2,6 +2,7 @@ from __future__ import division
 import os
 import re
 import numpy as np
+#import scipy.stats as ss
 import random
 from itertools import izip
 from collections import OrderedDict
@@ -22,6 +23,7 @@ from graph_utils import fix_dendrogram
 from graph_utils import filter_graph
 from graph_utils import load_sim_matrix
 from graph_utils import add_vertex_to_graph
+from graph_utils import calc_percent_distribution
 
 from run_main_pipeline import run_pipeline
 
@@ -32,6 +34,7 @@ Perf=Performance_Tracker()
 #0v1#  JC  Sept 30, 2018  Add cluster selection
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 
 def run_random_walk_on_graph(topic_id):
@@ -60,6 +63,11 @@ def load_topic_matrix(topic_id):
     ###############################################
     return g,query_sentence,sims,query_node,query_index
 
+class NestedDict(dict):
+    def __getitem__(self, key):
+        if key in self: return self.get(key)
+        return self.setdefault(key, NestedDict())
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
@@ -68,9 +76,45 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
     #method='leading_eigenvector'
-
-
     #g=filter_graph(g)
+
+    if experiment=='do6_two_scores':
+        print ("Calculate random walk scores...")
+        g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+
+        print ("Get edge distributions")
+        cosim_values=[]
+        ws_values=[]
+        for i,e in enumerate(g.es): #FOR EACH EDGE
+            #edge weight#  weight=e['weight']
+
+            # Get nodes of edge
+            vertex1=g.vs[e.tuple[0]] #node1 idx
+            vertex2=g.vs[e.tuple[1]] #node2 idx
+            
+            # Get node walk scores
+            walk_score1,vertex1,rank1=g_random_walk_scores[vertex1['s_idx']]
+            walk_score2,vertex2,rank2=g_random_walk_scores[vertex2['s_idx']]
+            
+            #Get random walk score average
+            rws_avg=(walk_score1+walk_score2)/2
+            
+            #Get edge cos sim score (current weight)
+            edge_cosim=sims[vertex1['s_idx']][vertex2['s_idx']]
+            
+            #Store values for normalization
+            cosim_values+=[edge_cosim]
+            ws_values+=[rws_avg]
+        
+        #Calculate percent distributions
+        cosim_dist=calc_percent_distribution(cosim_values)
+        ws_dist=calc_percent_distribution(ws_values)
+        
+        #Use percent distributions to calculate new weight
+        for i,e in enumerate(g.es): #FOR EACH EDGE
+            weight=(cosim_dist[i]+ws_dist[i])/2
+            e['weight']=weight
+    
     
     communities=[]
     clusters=[]
@@ -369,7 +413,7 @@ def alg_sort_clusters_by_weight(cluster_weights):
     return ptr_tuple
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5):
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True):
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
 
     ###  Standard info
@@ -385,10 +429,15 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
 
     ##2/  Filter clusters by weight threshold
-    weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
-    ptr_tuple_top=[]
-    for i,weight in ptr_tuple:
-        if weight>weight_threshold:
+    if trim_low_weights:
+        weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
+        ptr_tuple_top=[]
+        for i,weight in ptr_tuple:
+            if weight>weight_threshold:
+                ptr_tuple_top+=[(i,weight)]
+    else:
+        ptr_tuple_top=[]
+        for i,weight in ptr_tuple:
             ptr_tuple_top+=[(i,weight)]
     
 
@@ -646,6 +695,19 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index):
     return
 
 #5)    Try Markov clustering. 
+
+#6)    
+def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index):
+    #make the edge is between two nodes is actually (cos sim + (random walk score)) , 
+    #then we insert this graph to the clustering, in other words, what if we add the random 
+    #walk scores to the cos sim matrix, then make a graph from this new matrix that will be 
+    #inserted to the clustering algorithim.
+    
+    #then (6) and yes if two edges can work in the clustering that will be good, but i am not sure
+    #>> blend the percentiles score as the weight
+    
+    print ("**NOTE:  clustering branch is done in run_clustering_on_graph experiment=do6_two_scores")
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=False)
 
 
 if __name__=='__main__':
