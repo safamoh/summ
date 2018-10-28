@@ -710,7 +710,7 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index):
     #>> blend the percentiles score as the weight
     
     print ("**NOTE:  clustering branch is done in run_clustering_on_graph experiment=do6_two_scores")
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=False)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
 
 if __name__=='__main__':
