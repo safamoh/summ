@@ -168,8 +168,8 @@ def run_exercise():
                     for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
                         fp.write(sentence+"\n")
                     fp.close()
-                break #at first experiment
-        break #break #at first topic
+#                break #at first experiment
+#        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

@@ -77,6 +77,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     #method='walktrap'
     #method='leading_eigenvector'
     #g=filter_graph(g)
+    print ("EXPERIMENT: "+str(experiment))
 
     if experiment=='do6_two_scores':
         print ("Calculate random walk scores...")
@@ -105,6 +106,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             #Store values for normalization
             cosim_values+=[edge_cosim]
             ws_values+=[rws_avg]
+           
         
         #Calculate percent distributions
         cosim_dist=calc_percent_distribution(cosim_values)
@@ -113,7 +115,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE
             weight=(cosim_dist[i]+ws_dist[i])/2
-            e['weight']=weight
+#            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
+            g.es[i]['weight']=weight
     
     
     communities=[]
@@ -232,12 +235,12 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
 
     print ("For topic: "+str(topic_id)+" Done clustering took: "+str(time_clustering)+" seconds")
     
-    if False:
+    if True:
         #Dview    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
         #Dview    g.write_pickle(fname="save_clustered_graph.dat")
         print ("Visualize clusters...")
         view_graph_clusters(g,clusters)
-
+        
     return g,clusters,cluster_weights,query_sentence,query_index
 
 

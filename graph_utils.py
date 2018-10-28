@@ -234,6 +234,8 @@ def calc_percent_distribution(vec):
     for rank in rankVec(vec): #1 is lowest
         rank=rank+1 #Start at 1 not 0
         pranks+=[rank/len(vec)]
+    print ("FIRST BUNCH RANK: "+str(vec[:10]))
+    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
     return pranks
 
 def test_rank():
@@ -241,8 +243,12 @@ def test_rank():
     print(rankVec(vec))
     return
 
+def markov_clustering():
+    return
+
 if __name__=='__main__':
     branches=['test_rank']
+    branches=['markov_clustering']
     for b in branches:
         globals()[b]()
 
