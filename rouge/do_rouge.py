@@ -104,12 +104,17 @@ def run_on_different_setups():
         exs+=['do2_local_walk']
         exs+=['do3_avg_cosims']
         exs+=['do4_median_weight']
+        exs+=['do5_markov_clustering']
         exs+=['do6_two_scores']
-        
-        sub_dirs=['fast_greedy','leading_eigenvector','walktrap']
         
         for cluster_type in sub_dirs:
             for experiment in exs:
+                
+                if experiment=='do5_markov_clustering':
+                    sub_dirs=['markov']
+                else:
+                    sub_dirs=['fast_greedy','leading_eigenvector','walktrap']
+                    
                 ex_name="ex_"+experiment
                     
                 local_system_dir=system_dir+"/"+ex_name+"/"+cluster_type

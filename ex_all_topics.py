@@ -15,6 +15,7 @@ from run_graph_pipeline import do1_select_query_cluster
 from run_graph_pipeline import do2_local_walk
 from run_graph_pipeline import do3_avg_cosims
 from run_graph_pipeline import do4_median_weight
+from run_graph_pipeline import do5_markov_clustering
 from run_graph_pipeline import do6_two_scores
 
 
@@ -145,13 +146,17 @@ def run_exercise():
             #tbd#  exs=['do4_median_weight']
             exs+=['do1_select_query_cluster']
             exs+=['do2_local_walk']
-            exs+=['do3_avg_cosims']
+            exs=['do3_avg_cosims']
             exs+=['do4_median_weight']
+            exs+=['do5_markov_clustering']
             exs+=['do6_two_scores']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
-                sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+                if experiment=='do5_markov_clustering':
+                    sub_branches=['markov']
+                else:
+                    sub_branches=['fast_greedy','leading_eigenvector','walktrap']
     
                 for sub_branch in sub_branches:
                     out_report_dir=output_directory+"/"+ex_name+"/"+sub_branch

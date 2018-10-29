@@ -29,6 +29,11 @@ from run_main_pipeline import run_pipeline
 from gensim import corpora
 from gensim import models
 from gensim import similarities
+from scipy.sparse import csr_matrix
+
+import markov_clustering as mc
+
+from igraph.clustering import VertexClustering
 
 
 Perf=Performance_Tracker()
@@ -38,6 +43,20 @@ Perf=Performance_Tracker()
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
+
+#igraph to scipy sparse matrix
+#https://github.com/igraph/python-igraph/issues/72
+def to_sparse(graph, weight_attr=None):
+    edges = graph.get_edgelist()
+    if weight_attr is None:
+        weights = [1] * len(edges)
+    else:
+        weights = graph.es[weight_attr]
+    if not graph.is_directed():
+        edges.extend([(v, u) for u, v in edges])
+        weights.extend(weights)
+    return csr_matrix((weights, zip(*edges)))
 
 
 def run_random_walk_on_graph(topic_id):
@@ -126,6 +145,36 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     clusters=[]
     print ("Running clustering ["+method+"] on graph...")
     Perf.start()
+    
+    markov_subgraphs=[]
+    if 'markov' in method:
+        print ("---> doing markov clustering")
+        matrix=to_sparse(g,weight_attr='weight')
+        result = mc.run_mcl(matrix)           # run MCL with default parameters
+        clusters = mc.get_clusters(result) 
+#D#        print ("GOT CLUSTERS: "+str(clusters))
+
+        #Initialize subgrpah
+        for idx,v in enumerate(g.vs):
+            g.vs[idx]['subgraph']=''
+
+        for cluster in clusters:
+            cluster_id=cluster[0]
+            indexes=cluster[1:]
+            if not indexes:continue
+            print ("markov cluster "+str(cluster_id)+" has: "+str(indexes))
+            
+            #Store subgraph index into back into igraph
+            for idx in indexes:
+                g.vs[idx]['subgraph']=cluster_id
+
+        #Add subgraph cluster indexes back into graph
+        print ("AT 0: "+str(g.vs[0]))
+        #cl = VertexClustering(g, attribute='subgroup') #'g.vs["subgroup"])
+        VC = VertexClustering(g)
+        clusters = VC.FromAttribute(g, 'subgraph')
+        #print ("GOT CLUSTER: "+str(cl))
+    
     if 'betweenness' in method:
         #cluster_count=15
         print ("**betweenness requires edge trimming.  Doing that now...")
@@ -178,6 +227,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     #> weight = average cosine similarity between query and each node in cluster
     #> reuse sim calcs where possible
     #> note: subgraph index not same as g
+    
     cluster_weights=[]
     if experiment=='do3_avg_cosims':
         #The weight of the cluster will be the average of two values: the average cosine similarity (the
@@ -767,7 +817,10 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topi
     return do_selection_by_round_robin(g,clusters,new_cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
 
+
 #5)    Try Markov clustering. 
+def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
 #6)    
 def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
