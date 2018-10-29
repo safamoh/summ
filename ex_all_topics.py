@@ -157,6 +157,7 @@ def run_exercise():
                     sub_branches=['markov']
                 else:
                     sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+                    sub_branches=['fast_greedy','leading_eigenvector']
     
                 for sub_branch in sub_branches:
                     out_report_dir=output_directory+"/"+ex_name+"/"+sub_branch
