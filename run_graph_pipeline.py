@@ -26,6 +26,9 @@ from graph_utils import add_vertex_to_graph
 from graph_utils import calc_percent_distribution
 
 from run_main_pipeline import run_pipeline
+from gensim import corpora
+from gensim import models
+from gensim import similarities
 
 
 Perf=Performance_Tracker()
@@ -235,7 +238,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
 
     print ("For topic: "+str(topic_id)+" Done clustering took: "+str(time_clustering)+" seconds")
     
-    if True:
+    if False:
         #Dview    output_clusters(g,communities,clusters,cluster_weights=cluster_weights)
         #Dview    g.write_pickle(fname="save_clustered_graph.dat")
         print ("Visualize clusters...")
@@ -262,6 +265,7 @@ def do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index
     #vc_index:   The index of a vertex in the sub-graph
     #s_idx:      The original index of the sentence/vertex in g
     rws_lookup={}
+    cluster_sizes=[]
     for i_cluster,weight in ptr_tuple:
         subgraph=clusters.subgraphs()[i_cluster]
         for vc_index, v in enumerate(subgraph.vs):
@@ -494,7 +498,8 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
                         got_next=True
 
                 if got_next:
-                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster]))
+                    cluster_size=len(clusters.subgraphs()[i_cluster].vs)
+                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster])+" cluster size: "+str(cluster_size))
                     sentence_cache+=[sentence]
 
                     cluster_ptr[i_cluster]+=1
@@ -573,7 +578,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ADDITIONAL SELECTION LOGICs:
 
-def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index):
+def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #1)    Consider only the cluster that has the query sentences and ignore all other clusters, then sort 
     #its sentences according to the global random walk scores. Then choose top 10 sentences for the summary 
     #(without the query sentence).  
@@ -610,7 +615,7 @@ def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_ind
     return top_sentences
 
 
-def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10):
+def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,topic_id=''):
     #2)    After finish the clustering, do local random walk algorithm for each cluster subgraph (you should 
     #include the query node within each cluster and make it the reset vertex in the algorithm) then sort 
     #the sentences in each cluster according its own random walk score (ignore the global random walk scores here).
@@ -675,7 +680,7 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
     return sentence_cache
 
 
-def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index):
+def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #3)    The weight of the cluster will be the average of two values: the average cosine similarity (the
     # existing one in the code now) AND the average value of cosine similarity between all pairs (without 
     #the query).
@@ -690,17 +695,82 @@ def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=target_sentences)
 
 
+class Local_Vectorizer():
+    def __init__(self,topic_id):
+        self.load_vectorizers(topic_id)
+        return
+
+    def load_vectorizers(self,topic_id):
+        tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+topic_id+'.mm'
+        dictionary_filename=TEMP_DATA_PATH+'doc_dict'+topic_id+'.dict'
+        
+        self.dictionary = corpora.Dictionary.load(dictionary_filename)
+        self.tfidf=models.TfidfModel.load(tfidf_filename)
+        return
+    
+    def corpus2vector(self,corpus):
+        norm_sentences=tokenize_sentences(corpus)
+        raw_corpus = [self.dictionary.doc2bow(t) for t in norm_sentences]
+        corpus_tfidf = self.tfidf[raw_corpus]
+        return corpus_tfidf
+
 #4)    The weight of a cluster will be as:
 #a.    Compute the average vector for all sentences in the cluster (each sentence is a vector, compute the average vector to get the median vector) 
 #b.    Then compute the cos sim between the query vector and the median vector.
 #c.    This score is the weight of the cluster.
-def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index):
-    return
+def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+    #Define:  average cluster vector == vector of all sentences in cluster
+    print ("This requires tf-idf model for calculating cluster vectors")
+    tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+topic_id+'.mm'
+    if not os.path.exists(tfidf_filename):
+        print ("Please run 'create_sim_matrix' / run_pipeline() to create the tfidf model")
+        file_missing=hard_stop
+    else:
+        print ("Loading models...")
+    
+        
+    #Calculate cluster vector based on sentences
+    Vectorizer=Local_Vectorizer(topic_id)
+    
+    ## /  Get cluster sentences
+    
+    c_sentences=[]
+    for subgraph in clusters.subgraphs():
+        local_sentences=[]
+        for vc_index, v in enumerate(subgraph.vs):
+            s_idx=v['s_idx']
+            sentence=v['label']
+            local_sentences+=[sentence]
+        #Add query sentence as first index before cluster corpus
+        d_sentences=[query_sentence]
+        d_sentences+=[" ".join(local_sentences)]
+
+        c_sentences+=[d_sentences]
+        
+    new_cluster_weights=[]
+    ## /  Calc average sentence vector
+    for cluster_id, corpus in enumerate(c_sentences): #where corpus is query_sentence and cluster text
+        #Calc average vector
+        corpus_tfidf=Vectorizer.corpus2vector(corpus)
+
+        #Calc similarity between query sentence and cluster text
+        index = similarities.MatrixSimilarity(corpus_tfidf)
+        #Look up similarities
+        sims = index[corpus_tfidf]
+    
+        print ("Cluster #"+str(cluster_id)+" COSIM between query and cluster text vector: "+str(sims[0][1]))
+        new_cluster_weights+=[sims[0][1]]
+        if False:
+            print ("  for sent1: "+str(corpus[0]))
+            print ("   vs sent2: "+str(corpus[1]))
+
+    return do_selection_by_round_robin(g,clusters,new_cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+
 
 #5)    Try Markov clustering. 
 
 #6)    
-def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index):
+def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #make the edge is between two nodes is actually (cos sim + (random walk score)) , 
     #then we insert this graph to the clustering, in other words, what if we add the random 
     #walk scores to the cos sim matrix, then make a graph from this new matrix that will be 
@@ -708,6 +778,7 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index):
     
     #then (6) and yes if two edges can work in the clustering that will be good, but i am not sure
     #>> blend the percentiles score as the weight
+    
     
     print ("**NOTE:  clustering branch is done in run_clustering_on_graph experiment=do6_two_scores")
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)

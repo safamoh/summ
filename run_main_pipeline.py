@@ -80,6 +80,9 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
 
     #STEP 3 : Index and vectorize
     #####################################################
+    tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+local_topic_id+'.mm'
+    dictionary_filename=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.dict'
+    dictionary_filename_txt=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.txt'
 
     #We create a dictionary, an index of all unique values: <class 'gensim.corpora.dictionary.Dictionary'>
     #the Dictionary is used as an index to convert words into integers.
@@ -89,8 +92,8 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     ##print("Dictionary (token:id):")
     ##print(dictionary.token2id)
     ##print("---------------------------------")
-    dictionary.save(TEMP_DATA_PATH+'doc_dict.dict') # store the dictionary, for future reference
-    dictionary.save_as_text(TEMP_DATA_PATH+'doc_txt_dict.txt',sort_by_word=False) # SAVE the dictionary as a text file,
+    dictionary.save(dictionary_filename) # store the dictionary, for future reference
+    dictionary.save_as_text(dictionary_filename_txt,sort_by_word=False) # SAVE the dictionary as a text file,
     #the format of doc_txt_dict.txt is: (id_1    word_1  document_frequency_1)
 
     #---------------------------------
@@ -119,6 +122,8 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
 
     # Transform Text with TF-IDF
     tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
+    tfidf.save(tfidf_filename)
+
     print "We initialize our TF-IDF transformation tool : %s"%type(tfidf)
    
     # corpus tf-idf

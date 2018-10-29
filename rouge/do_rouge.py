@@ -103,6 +103,7 @@ def run_on_different_setups():
         exs+=['do1_select_query_cluster']
         exs+=['do2_local_walk']
         exs+=['do3_avg_cosims']
+        exs+=['do4_median_weight']
         exs+=['do6_two_scores']
         
         sub_dirs=['fast_greedy','leading_eigenvector','walktrap']

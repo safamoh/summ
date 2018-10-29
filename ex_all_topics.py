@@ -41,7 +41,8 @@ def run_exercise():
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-    branch+=['experiments']
+#    branch+=['experiments']
+    branch=['experiments']
 
     
 
@@ -145,7 +146,7 @@ def run_exercise():
             exs+=['do1_select_query_cluster']
             exs+=['do2_local_walk']
             exs+=['do3_avg_cosims']
-            exs=[]
+            exs+=['do4_median_weight']
             exs+=['do6_two_scores']
             
             for experiment in exs:
@@ -165,15 +166,15 @@ def run_exercise():
                     print ("Doing selection")
                     fp=codecs.open(out_report_file,'w',encoding='utf-8')
                     the_function=globals()[experiment]
-                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index):
+                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index,topic_id=topic_id):
                         fp.write(sentence+"\n")
                     fp.close()
 #                break #at first experiment
+        print ("Done topic: "+str(topic_id))
 #        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic
-
 
 
     print ("Done run_exercise...")
