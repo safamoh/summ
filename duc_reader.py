@@ -124,6 +124,11 @@ def filter_out_sentence(sentence):
     token_count=len(re.findall(r'[ ]+',sentence)) #Count tokens
     if token_count<2:
         filter=True
+        
+    ## Filter:  Remove sentence which is part of table (Oct 30th)
+    if re.search(r'-----------.* .*----------',sentence): #Table
+        print ("[debug] filter table: "+str(sentence))
+        filter=True
 
     return filter
     

@@ -31,10 +31,10 @@ if not os.path.exists(output_directory):
 def run_exercise():
     global output_directory
     print ("For each topic, create sim matrix and do top n")
-    branch=['create_sim_matrix']
-
-
-
+    
+    
+    
+    branch=['create_sim_matrix']  #Must be run once
 
 #    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
@@ -42,8 +42,7 @@ def run_exercise():
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-#    branch+=['experiments']
-    branch=['experiments']
+    branch+=['experiments']
 
     
 
@@ -146,7 +145,7 @@ def run_exercise():
             #tbd#  exs=['do4_median_weight']
             exs+=['do1_select_query_cluster']
             exs+=['do2_local_walk']
-            exs=['do3_avg_cosims']
+            exs+=['do3_avg_cosims']
             exs+=['do4_median_weight']
             exs+=['do5_markov_clustering']
             exs+=['do6_two_scores']
@@ -156,7 +155,7 @@ def run_exercise():
                 if experiment=='do5_markov_clustering':
                     sub_branches=['markov']
                 else:
-                    sub_branches=['fast_greedy','leading_eigenvector','walktrap']
+                    sub_branches=['fast_greedy','leading_eigenvector','walktrap'] #Walktrap causing high cpu (Oct 29)
                     sub_branches=['fast_greedy','leading_eigenvector']
     
                 for sub_branch in sub_branches:
