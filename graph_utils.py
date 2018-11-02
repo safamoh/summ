@@ -109,6 +109,15 @@ def view_graph_clusters(g,clusters):
 
     return
 
+def iter_graph_edges(g):
+    for i,e in enumerate(g.es): #FOR EACH EDGE
+        weight=e['weight']
+
+        # Get nodes of edge
+        vertex1=g.vs[e.tuple[0]] #node1 idx
+        vertex2=g.vs[e.tuple[1]] #node2 idx
+    return
+
 def add_vertex_to_graph(g,**kwargs):
     g.add_vertices(1)
     idx=g.vcount()-1

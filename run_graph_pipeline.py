@@ -4,6 +4,7 @@ import re
 import numpy as np
 #import scipy.stats as ss
 import random
+import operator
 from itertools import izip
 from collections import OrderedDict
 
@@ -24,6 +25,7 @@ from graph_utils import filter_graph
 from graph_utils import load_sim_matrix
 from graph_utils import add_vertex_to_graph
 from graph_utils import calc_percent_distribution
+from graph_utils import iter_graph_edges
 
 from run_main_pipeline import run_pipeline
 from gensim import corpora
@@ -100,12 +102,20 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     #method='leading_eigenvector'
     #g=filter_graph(g)
     print ("EXPERIMENT: "+str(experiment))
+    
+    if 'do7_sum_nodes':
+        #after doing the graph by the cos sim matrix, rank the sentences according to total score.
+        clusters=[]
+        cluster_weights=[]
+        return g,clusters,cluster_weights,query_sentence,query_index
 
-    if experiment=='do6_two_scores':
+    elif 'do6' in experiment:
         print ("Calculate random walk scores...")
         g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
 
         print ("Get edge distributions")
+        query1_cosim_values=[]
+        query2_cosim_values=[]
         cosim_values=[]
         ws_values=[]
         for i,e in enumerate(g.es): #FOR EACH EDGE
@@ -125,11 +135,34 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             #Get edge cos sim score (current weight)
             edge_cosim=sims[vertex1['s_idx']][vertex2['s_idx']]
             
+            query_cosim1=sims[query_index][vertex1['s_idx']] #For do6_2
+            query_cosim2=sims[query_index][vertex2['s_idx']] #For do6_2
+            
             #Store values for normalization
+            query1_cosim_values+=[query_cosim1] #For do6_2
+            query2_cosim_values+=[query_cosim2] #For do6_2
             cosim_values+=[edge_cosim]
             ws_values+=[rws_avg]
            
+        #Calculate percent distributions
+        query1_cosim=calc_percent_distribution(query1_cosim_values) #For do6_2
+        query2_cosim=calc_percent_distribution(query2_cosim_values) #For do6_2
+        cosim_dist=calc_percent_distribution(cosim_values)
+        ws_dist=calc_percent_distribution(ws_values)
         
+        #Use percent distributions to calculate new weight
+        for i,e in enumerate(g.es): #FOR EACH EDGE
+            if experiment=='do6_two_scores_1':
+                weight=( max([cosim_dist[i],ws_dist[i]]))/2   #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
+            elif experiment=='do6_two_scores_2':
+                weight=(cosim_dist[i]+(query1_cosim[i]+query2_cosim[i])/2)/2   #  (do6_2): edge_weight=((cos sim) + [(node1_qcs+node2_qcs)/2])/2
+                print ("WEIGHT: "+str(weight))
+            else: #Standard do6_two_scores
+                weight=(cosim_dist[i]+ws_dist[i])/2
+
+#            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
+            g.es[i]['weight']=weight
+
         #Calculate percent distributions
         cosim_dist=calc_percent_distribution(cosim_values)
         ws_dist=calc_percent_distribution(ws_values)
@@ -139,6 +172,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             weight=(cosim_dist[i]+ws_dist[i])/2
 #            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
             g.es[i]['weight']=weight
+    else:
+        pass #Standard running no experiments
     
     
     communities=[]
@@ -822,6 +857,7 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topi
 def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
+
 #6)    
 def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #make the edge is between two nodes is actually (cos sim + (random walk score)) , 
@@ -835,6 +871,43 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
     
     print ("**NOTE:  clustering branch is done in run_clustering_on_graph experiment=do6_two_scores")
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+
+def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+def do6_two_scores_2(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+
+def do7_sum_nodes(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+    #after doing the graph by the cos sim matrix, rank the sentences according to total score.
+    
+    #Walk entire graph
+    node_sums={}
+    for i,e in enumerate(g.es): #FOR EACH EDGE
+        weight=e['weight']
+
+        # Get nodes of edge
+        vertex1=g.vs[e.tuple[0]] #node1 idx
+        vertex2=g.vs[e.tuple[1]] #node2 idx
+        
+        #Sum node on edge end of edge
+        if not vertex1['s_idx']==query_index:
+            try: node_sums[vertex1['s_idx']]+=weight
+            except: node_sums[vertex1['s_idx']]=weight
+
+        if not vertex2['s_idx']==query_index:
+            try: node_sums[vertex2['s_idx']]+=weight
+            except: node_sums[vertex2['s_idx']]=weight
+        
+    node_sums_sorted=sorted_x = sorted(node_sums.items(), key=operator.itemgetter(1),reverse=True) #by dict value
+    print ("[debug] TOP SCORES: "+str(node_sums_sorted[:10]))
+    
+    sentences=[]
+    c=0
+    for s_idx,tot_weight in node_sums_sorted:
+        c+=1
+        sentences+=[g.vs[s_idx]['label']]
+        if c==10:break
+    return sentences
 
 
 if __name__=='__main__':

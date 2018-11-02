@@ -127,7 +127,7 @@ def filter_out_sentence(sentence):
         
     ## Filter:  Remove sentence which is part of table (Oct 30th)
     if re.search(r'-----------.* .*----------',sentence): #Table
-        print ("[debug] filter table: "+str(sentence))
+#        print ("[query_indexdebug] filter table: "+str(sentence))
         filter=True
 
     return filter

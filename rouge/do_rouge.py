@@ -106,6 +106,9 @@ def run_on_different_setups():
         exs+=['do4_median_weight']
         exs+=['do5_markov_clustering']
         exs+=['do6_two_scores']
+        exs+=['do6_two_scores_1']
+        exs+=['do6_two_scores_2']
+        exs+=['do7_sum_nodes']
         
         for cluster_type in sub_dirs:
             for experiment in exs:

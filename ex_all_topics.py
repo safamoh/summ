@@ -17,6 +17,9 @@ from run_graph_pipeline import do3_avg_cosims
 from run_graph_pipeline import do4_median_weight
 from run_graph_pipeline import do5_markov_clustering
 from run_graph_pipeline import do6_two_scores
+from run_graph_pipeline import do6_two_scores_1
+from run_graph_pipeline import do6_two_scores_2
+from run_graph_pipeline import do7_sum_nodes
 
 
 #0v1#  Oct 1, 2018
@@ -149,6 +152,9 @@ def run_exercise():
             exs+=['do4_median_weight']
             exs+=['do5_markov_clustering']
             exs+=['do6_two_scores']
+            exs+=['do6_two_scores_1']
+            exs+=['do6_two_scores_2']
+            exs+=['do7_sum_nodes']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
