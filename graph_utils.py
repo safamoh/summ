@@ -256,11 +256,11 @@ def normalize_max_min(vec):
             pranks+[0]
         else:
             pranks+=[(item-the_min)/the_max]
-    print ("MAX: "+str(the_max))
-    print ("MIN: "+str(the_min))
-
-    print ("FIRST BUNCH RANK: "+str(vec[:10]))
-    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
+#    print ("MAX: "+str(the_max))
+#    print ("MIN: "+str(the_min))
+#
+#    print ("FIRST BUNCH RANK: "+str(vec[:10]))
+#    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
     return pranks
 
 def test_rank():
