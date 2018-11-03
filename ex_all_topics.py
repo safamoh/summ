@@ -22,10 +22,6 @@ from run_graph_pipeline import do6_two_scores_2
 from run_graph_pipeline import do7_sum_nodes
 
 
-#0v1#  Oct 1, 2018
-
-#Request:
-#Run for each topic
 
 output_directory=TEMP_DATA_PATH+"/Top_summary"
 if not os.path.exists(output_directory):
@@ -145,28 +141,29 @@ def run_exercise():
 #==========================================================================================
         if 'experiments' in branch:
             exs=[]
-            #tbd#  exs=['do4_median_weight']
-            exs+=['do1_select_query_cluster']
-            exs+=['do2_local_walk']
-            exs+=['do3_avg_cosims']
-            exs+=['do4_median_weight']
-            exs+=['do5_markov_clustering']
-            exs+=['do6_two_scores']
-            exs+=['do6_two_scores_2']
-            exs+=['do6_two_scores_1']
+            #exs+=['do1_select_query_cluster']
+            #exs+=['do2_local_walk']
+            #exs+=['do3_avg_cosims']
+            #exs+=['do4_median_weight']
+            #exs+=['do5_markov_clustering']
+            #exs+=['do6_two_scores']
+            #exs+=['do6_two_scores_1']
+            #exs+=['do6_two_scores_2']
             exs+=['do7_sum_nodes']
-            exs=['do6_two_scores_1']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
                 if experiment=='do5_markov_clustering':
                     sub_branches=['markov']
                 else:
-                    sub_branches=['fast_greedy','leading_eigenvector','walktrap'] #Walktrap causing high cpu (Oct 29)
-                    sub_branches=['fast_greedy','leading_eigenvector']
+                    sub_branches=['leading_eigenvector']
     
                 for sub_branch in sub_branches:
-                    out_report_dir=output_directory+"/"+ex_name+"/"+sub_branch
+                    if exs=="do7_sum_nodes":
+                        out_report_dir=output_directory+"/"+ex_name
+                    else:
+                        out_report_dir=output_directory+"/"+ex_name+"/"+sub_branch
+
                     out_report_file=out_report_dir+"/"+str(topic_id)+".txt"
                     if not os.path.exists(output_directory+"/"+ex_name):
                         os.mkdir(output_directory+"/"+ex_name)

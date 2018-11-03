@@ -29,11 +29,6 @@ LOCAL_DIR = os.path.abspath(os.path.dirname(__file__))+"/"
 
 pStemmer = PorterStemmer() #For vectorizing
 
-#0v4# JC Oct 10, 2018  Filter < 2 tokens
-#0v3# JC Sep 25, 2018  Filter small sentences.
-#0v2# JC Aug 31, 2018  Upgrade for random walk
-#0v1# JC Aug 27, 2018  Run pipeline setup
-
 
 FILES_TO_PROCESS=10000000
 VERSION=3

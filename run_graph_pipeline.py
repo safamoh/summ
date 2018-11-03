@@ -42,15 +42,11 @@ from igraph.clustering import VertexClustering
 
 Perf=Performance_Tracker()
 
-
-#0v1#  JC  Sept 30, 2018  Add cluster selection
-
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
 
 #igraph to scipy sparse matrix
 #https://github.com/igraph/python-igraph/issues/72
+
 def to_sparse(graph, weight_attr=None):
     edges = graph.get_edgelist()
     if weight_attr is None:
@@ -147,7 +143,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             ws_values+=[rws_avg]
            
         #Calculate percent distributions
-        if False: #Do rank based
+        if True: #Do rank based
             query1_cosim=calc_rank_percent_distribution(query1_cosim_values) #For do6_2
             query2_cosim=calc_rank_percent_distribution(query2_cosim_values) #For do6_2
             cosim_dist=calc_rank_percent_distribution(cosim_values)
@@ -161,21 +157,15 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE
             if experiment=='do6_two_scores_1':
-                weight=( max([cosim_dist[i],ws_dist[i]]))/2   #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
+                weight=max(cosim_dist[i],ws_dist[i])  #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
             elif experiment=='do6_two_scores_2':
                 weight=(cosim_dist[i]+(query1_cosim[i]+query2_cosim[i])/2)/2   #  (do6_2): edge_weight=((cos sim) + [(node1_qcs+node2_qcs)/2])/2
-                print ("WEIGHT: "+str(weight))
             else: #Standard do6_two_scores
                 weight=(cosim_dist[i]+ws_dist[i])/2
 
 #            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
             g.es[i]['weight']=weight
 
-        #Use percent distributions to calculate new weight
-        for i,e in enumerate(g.es): #FOR EACH EDGE
-            weight=(cosim_dist[i]+ws_dist[i])/2
-#            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
-            g.es[i]['weight']=weight
     else:
         pass #Standard running no experiments
     
@@ -436,8 +426,7 @@ def do_selection(g,clusters,cluster_weights,query_sentence,query_index):
     ##
     #  Grab top sentences from each cluster
     ############################################
-    weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
-
+    weight_threshold=0.0078   
     #Grab query sentence info
     query_node=g.vs.find(label=query_sentence)
     query_index=query_node.index
@@ -526,7 +515,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
     ##2/  Filter clusters by weight threshold
     if trim_low_weights:
-        weight_threshold=0.009   #; also consider a percentile value ie/ 90% of clusters
+        weight_threshold=0.0078   
         ptr_tuple_top=[]
         for i,weight in ptr_tuple:
             if weight>weight_threshold:
@@ -661,11 +650,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#COMMON FUNCTION:
 
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# ADDITIONAL SELECTION LOGICs:
 
 def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #1)    Consider only the cluster that has the query sentences and ignore all other clusters, then sort 
@@ -703,6 +688,7 @@ def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_ind
         if len(top_sentences)==10:break
     return top_sentences
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,topic_id=''):
     #2)    After finish the clustering, do local random walk algorithm for each cluster subgraph (you should 
@@ -767,6 +753,7 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
                     cluster_ptr[i_cluster]+=1
             if len(sentence_cache)==target_sentences:break
     return sentence_cache
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
@@ -802,6 +789,7 @@ class Local_Vectorizer():
         raw_corpus = [self.dictionary.doc2bow(t) for t in norm_sentences]
         corpus_tfidf = self.tfidf[raw_corpus]
         return corpus_tfidf
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #4)    The weight of a cluster will be as:
 #a.    Compute the average vector for all sentences in the cluster (each sentence is a vector, compute the average vector to get the median vector) 
@@ -855,12 +843,13 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topi
 
     return do_selection_by_round_robin(g,clusters,new_cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 #5)    Try Markov clustering. 
 def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #6)    
 def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
@@ -873,13 +862,20 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
     #>> blend the percentiles score as the weight
     
     
-    print ("**NOTE:  clustering branch is done in run_clustering_on_graph experiment=do6_two_scores")
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def do6_two_scores_2(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
 def do7_sum_nodes(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
     #after doing the graph by the cos sim matrix, rank the sentences according to total score.
@@ -913,6 +909,7 @@ def do7_sum_nodes(g,clusters,cluster_weights,query_sentence,query_index,topic_id
         if c==10:break
     return sentences
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 if __name__=='__main__':
     #branches=['select_top_cos_sims']

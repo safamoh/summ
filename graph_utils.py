@@ -229,7 +229,7 @@ def filter_graph(g,the_type=''):
         print ("FILTERING graph edge count to: "+str(g.ecount()))
     return g
 
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def rankVec(arg):
     p = np.unique(arg) #take unique value
     k = (p).argsort().argsort() #sort based on arguments in ascending order
@@ -246,6 +246,7 @@ def calc_rank_percent_distribution(vec):
 #    print ("FIRST BUNCH RANK: "+str(vec[:10]))
 #    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
     return pranks
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def normalize_max_min(vec):
     the_max=max(vec)
@@ -267,6 +268,7 @@ def test_rank():
     vec=[3, 1, 4, 15, 92]
     print(rankVec(vec))
     return
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def markov_clustering():
     return

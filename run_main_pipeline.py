@@ -201,7 +201,9 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     #        mean = matutils.unitvec(np.array(vectors).mean(axis=0))
     #        dists = dot(vectors, mean)
     
-    #If you multiply the BoW vector with the word embedding matrix and divide by the total number of words in the document then you have the average word2vec representation. This contains mostly the same information as BoW but in a lower dimensional encoding. You can actually train a model to recover which words were used in the document from the average word2vec vector. So, you aren't losing very much information by compressing the representation like this.
+    #If you multiply the BoW vector with the word embedding matrix and divide by the total number of words in the document then you have the average word2vec representation.
+    # This contains mostly the same information as BoW but in a lower dimensional encoding.
+    # You can actually train a model to recover which words were used in the document from the average word2vec vector. So, you aren't losing very much information by compressing the representation like this.
     
     #def intra_inter(model, test_docs, num_pairs=10000):
     #    # split each test document into two halves and compute topics for each half
