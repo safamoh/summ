@@ -155,7 +155,7 @@ def run_exercise():
             exs+=['do6_two_scores_2']
             exs+=['do6_two_scores_1']
             exs+=['do7_sum_nodes']
-#            exs=['do6_two_scores_1']
+            exs=['do6_two_scores_1']
             
             for experiment in exs:
                 ex_name="ex_"+experiment

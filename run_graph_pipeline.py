@@ -157,7 +157,6 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             query2_cosim=normalize_max_min(query2_cosim_values) #For do6_2
             cosim_dist=normalize_max_min(cosim_values)
             ws_dist=normalize_max_min(ws_values)
-        a=kk
         
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE
@@ -172,10 +171,6 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
 #            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
             g.es[i]['weight']=weight
 
-        #Calculate percent distributions
-        cosim_dist=calc_percent_distribution(cosim_values)
-        ws_dist=calc_percent_distribution(ws_values)
-        
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE
             weight=(cosim_dist[i]+ws_dist[i])/2
