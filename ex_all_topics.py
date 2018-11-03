@@ -152,9 +152,10 @@ def run_exercise():
             exs+=['do4_median_weight']
             exs+=['do5_markov_clustering']
             exs+=['do6_two_scores']
-            exs+=['do6_two_scores_1']
             exs+=['do6_two_scores_2']
+            exs+=['do6_two_scores_1']
             exs+=['do7_sum_nodes']
+#            exs=['do6_two_scores_1']
             
             for experiment in exs:
                 ex_name="ex_"+experiment

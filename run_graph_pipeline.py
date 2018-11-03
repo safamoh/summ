@@ -24,7 +24,9 @@ from graph_utils import fix_dendrogram
 from graph_utils import filter_graph
 from graph_utils import load_sim_matrix
 from graph_utils import add_vertex_to_graph
-from graph_utils import calc_percent_distribution
+from graph_utils import calc_rank_percent_distribution
+from graph_utils import normalize_max_min
+
 from graph_utils import iter_graph_edges
 
 from run_main_pipeline import run_pipeline
@@ -103,7 +105,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     #g=filter_graph(g)
     print ("EXPERIMENT: "+str(experiment))
     
-    if 'do7_sum_nodes':
+    if 'do7_sum_nodes' in experiment:
         #after doing the graph by the cos sim matrix, rank the sentences according to total score.
         clusters=[]
         cluster_weights=[]
@@ -145,10 +147,17 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             ws_values+=[rws_avg]
            
         #Calculate percent distributions
-        query1_cosim=calc_percent_distribution(query1_cosim_values) #For do6_2
-        query2_cosim=calc_percent_distribution(query2_cosim_values) #For do6_2
-        cosim_dist=calc_percent_distribution(cosim_values)
-        ws_dist=calc_percent_distribution(ws_values)
+        if False: #Do rank based
+            query1_cosim=calc_rank_percent_distribution(query1_cosim_values) #For do6_2
+            query2_cosim=calc_rank_percent_distribution(query2_cosim_values) #For do6_2
+            cosim_dist=calc_rank_percent_distribution(cosim_values)
+            ws_dist=calc_rank_percent_distribution(ws_values)
+        else:
+            query1_cosim=normalize_max_min(query1_cosim_values) #For do6_2
+            query2_cosim=normalize_max_min(query2_cosim_values) #For do6_2
+            cosim_dist=normalize_max_min(cosim_values)
+            ws_dist=normalize_max_min(ws_values)
+        a=kk
         
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE

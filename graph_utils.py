@@ -238,13 +238,29 @@ def rankVec(arg):
         dd[p[i]] = k[i]
     return np.array([dd[x] for x in arg])
 
-def calc_percent_distribution(vec):
+def calc_rank_percent_distribution(vec):
     pranks=[]
     for rank in rankVec(vec): #1 is lowest
         rank=rank+1 #Start at 1 not 0
         pranks+=[rank/len(vec)]
 #    print ("FIRST BUNCH RANK: "+str(vec[:10]))
 #    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
+    return pranks
+
+def normalize_max_min(vec):
+    the_max=max(vec)
+    the_min=min(vec)
+    pranks=[]
+    for item in vec:
+        if the_max==0:
+            pranks+[0]
+        else:
+            pranks+=[(item-the_min)/the_max]
+    print ("MAX: "+str(the_max))
+    print ("MIN: "+str(the_min))
+
+    print ("FIRST BUNCH RANK: "+str(vec[:10]))
+    print ("FIRST BUNCH RANK: "+str(pranks[:10]))
     return pranks
 
 def test_rank():

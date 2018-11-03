@@ -58,7 +58,7 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     print("---------------------------------")
     for i,sentence in enumerate(sentences):
         print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
-        #if i>2:break
+        if i>2:break
         
     #Add query as V1
     sentences.insert(0,query_sentence)
