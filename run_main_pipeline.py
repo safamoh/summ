@@ -12,9 +12,10 @@ from duc_reader import files2sentences
 from duc_reader import tokenize_sentences
 from duc_reader import get_query
 from duc_reader import TEMP_DATA_PATH
-from duc_reader import TOPIC_ID
-from duc_reader import LIMIT_TOPICS
 from duc_reader import get_sim_matrix_path
+#from duc_reader import TOPIC_ID
+#from duc_reader import LIMIT_TOPICS
+from duc_reader import get_list_of_all_topics
 
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
@@ -23,36 +24,46 @@ Perf=Performance_Tracker()
 
 
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
-    global TOPIC_ID, LIMIT_TOPICS
+def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id=''):
+    #STEP 1:  Build vectorizer
+    #STEP 2:  Do sim matrix
     Perf.start()
-    if use_specific_topic:
-        local_topic_id=use_specific_topic
-    else:
-        local_topic_id=TOPIC_ID
-    
-    options=['print_entire_graph']
-    options=[]
-    options=['print_sims']
-
     #0/  Load query sentence
     vector_model='tfidf'
+    tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+local_topic_id+'.mm'
+    
+    print ("########################################")
+    print ("#")
+    if create_all_topics_vectorizer:
+        print ("# Create vectorizer using all topics/sentences")
+        print ("# - saved as: "+tfidf_filename)
+        print ("# - run_pipeline called twice. First time builds it.  Second time tokenizes topic sentences for sim matrix")
+    if use_all_topics_vectorizer:
+        print ("# Use the all_topics vectorizer")
+        print ("# - assume this is second run.  Load topic sentences and tokenize them using vector")
+        print ("# - Then create sim matrix")
 
-    query_sentence=get_query(local_topic_id)
-    print ("Using query: "+str(query_sentence))
 
     #1/  LOAD
     #################################
-
-
     print ("1/  Loading sentences...")
-    if not LIMIT_TOPICS or use_all_topics:
-        requires_selection_of=sentence_properly
+    if create_all_topics_vectorizer:
         documents,sentences,sentences_topics=files2sentences(limit_topic='')
+        #Add all query sentences
+        for topic_id in get_list_of_all_topics():
+            query_sentence=get_query(topic_id)
+            sentences.insert(0,query_sentence)
+            sentences_topics.insert(0,topic_id)
+        print ("Done building sentences...")
     else:
         documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
+
+        #Add query as V1
+        query_sentence=get_query(local_topic_id)
+        print ("Using query: "+str(query_sentence))
+        sentences.insert(0,query_sentence)
+        sentences_topics.insert(0,local_topic_id)
 
     print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents. "+str(len(set(sentences_topics)))+" topics.")
     print("---------------------------------")
@@ -60,10 +71,9 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
         print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
         if i>2:break
         
-    #Add query as V1
-    sentences.insert(0,query_sentence)
-    sentences_topics.insert(0,local_topic_id)
 
+#    if create_all_topics_vectorizer or not use_all_topics_vectorizer: #Create specific vectorizer
+    print ("Creating vectorizer... using "+str(len(sentences))+" sentences")
     #2/  Normalize corpus
     ##########################################
 
@@ -77,10 +87,8 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     ##print("---------------------------------")
 
 
-
     #STEP 3 : Index and vectorize
     #####################################################
-    tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+local_topic_id+'.mm'
     dictionary_filename=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.dict'
     dictionary_filename_txt=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.txt'
 
@@ -114,112 +122,69 @@ def run_pipeline(verbose=True,use_all_topics=False,use_specific_topic=''):
     corpora.MmCorpus.serialize(TEMP_DATA_PATH+'doc_vectors.mm', raw_corpus) # store to disk
     print "Save the vectorized corpus as a .mm file"
 
-
-
     # STEP 4 : tfidf
     ###############################################
     corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
-
-    # Transform Text with TF-IDF
-    tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
-    tfidf.save(tfidf_filename)
-
-    print "We initialize our TF-IDF transformation tool : %s"%type(tfidf)
-   
-    # corpus tf-idf
-    corpus_tfidf = tfidf[corpus]
-    print "We convert our vectors corpus to TF-IDF space : %s"%type(corpus_tfidf)
-   
-
-
-    # STEP 5 : Create similarity matrix of all files
-    ###############################################
-   
-    index = similarities.MatrixSimilarity(tfidf[corpus])
-    #print "We compute similarities from the TF-IDF corpus : %s"%type(index)
-    index.save(TEMP_DATA_PATH+'sim_index.index')
-    index = similarities.MatrixSimilarity.load(TEMP_DATA_PATH+'sim_index.index')
     
-    sims = index[corpus_tfidf]
-    #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
-    np.save(get_sim_matrix_path(local_topic_id),sims)
-
-
-    # STEP 6:  Print sims 
-    ###############################################
-    if 'print_sims' in options:
-        i=0
-        for item in list(enumerate(sims)):
-            i+=1
-            #            if i>0:break
-            sent_num1=item[0]
-            for sent_num2,cosim_value in enumerate(item[1]):
-                idx="("+str(sent_num1)+","+str(sent_num2)+")"
-                cosim_str="%.9f" % cosim_value
-                if False:
-                    print ("AT: "+str(idx)+" sim: "+str(cosim_str))
-                    print ("  for sent1: "+str(sentences[sent_num1]))
-                    print ("   vs sent2: "+str(sentences[sent_num2]))
-
-            
-
-    print ("TOPIC ID: "+str(local_topic_id))
-    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
-    print ("Done run_pipeline in: "+str(Perf.end())+"s")
-
-    # STEP 7:  Vectorize sentences
-    #TBD
-    if False:
-        print ("SENTENCE 0: "+str(sentences[0]))
-        print ("Has normalize bow: "+str(raw_corpus[0]))
-        sent_vector0 = tfidf[raw_corpus[0]]
-        sent_vector1 = tfidf[raw_corpus[1]]
-        print ("Sentence 0 verctor: "+str(sent_vector0))
-        print ("Sentence 0 verctor type: "+str(type(sent_vector0)))
+    if use_all_topics_vectorizer: 
+        #LOAD GLOBAL MODEL
+        tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+'.mm'   #no topic id
+        print ("Use all_topics vectorizing model: "+str(tfidf_filename))
+        tfidf=models.TfidfModel.load(tfidf_filename)
+    else:
+        #SAVE TOPIC MODEL
+        # Transform Text with TF-IDF
+        tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
+        tfidf.save(tfidf_filename)
         
-        featureVec=sent_vector0
-        print ("Normalize vector before average?")
-        num_features=len(sent_vector0)
         
-        vectors=[]
-        vectors+=[matutils.unitvec(sent_vector0)]
-        vectors+=[matutils.unitvec(sent_vector0)]
-        vectors+=[matutils.unitvec(sent_vector1)]
-        print ("UNIT: "+str(vectors))
-        
-        if False:
-            #num_features=sent_vector0[0][0].shape  #     vector.shape (100,)
-            print ("FEATURES: "+str(num_features))
-            sumVec = np.zeros((num_features,), dtype="float32")
-            sumVec = np.add(featureVec)
-        
-            avgVec = np.divide(sumVec, 1)
-        else:
-    #        mean = matutils.unitvec(np.array(vectors).mean(axis=0)).astype(REAL)
-            mean = np.array(vectors).mean(axis=0)
-            print ("GOT MEAN: "+str(mean))
-    #        mean = matutils.unitvec(np.array(vectors).mean(axis=0))
-    #        dists = dot(vectors, mean)
+    if create_all_topics_vectorizer: 
+        print ("If created, then assume used on next call...")
+    else:
+        print ("Use tfidf model: "+str(tfidf_filename))
+       
+        # corpus tf-idf
+        corpus_tfidf = tfidf[corpus]
+        print "We convert our vectors corpus to TF-IDF space : %s"%type(corpus_tfidf)
     
-    #If you multiply the BoW vector with the word embedding matrix and divide by the total number of words in the document then you have the average word2vec representation.
-    # This contains mostly the same information as BoW but in a lower dimensional encoding.
-    # You can actually train a model to recover which words were used in the document from the average word2vec vector. So, you aren't losing very much information by compressing the representation like this.
+        # STEP 5 : Create similarity matrix of all files
+        ###############################################
+       
+        index = similarities.MatrixSimilarity(tfidf[corpus])
+        #print "We compute similarities from the TF-IDF corpus : %s"%type(index)
+        index.save(TEMP_DATA_PATH+'sim_index.index')
+        index = similarities.MatrixSimilarity.load(TEMP_DATA_PATH+'sim_index.index')
+        
+        sims = index[corpus_tfidf]
+        #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
+        np.save(get_sim_matrix_path(local_topic_id),sims)
     
-    #def intra_inter(model, test_docs, num_pairs=10000):
-    #    # split each test document into two halves and compute topics for each half
-    #    part1 = [model[id2word_wiki.doc2bow(tokens[: len(tokens) / 2])] for tokens in test_docs]
-    #    part2 = [model[id2word_wiki.doc2bow(tokens[len(tokens) / 2 :])] for tokens in test_docs]
-    #    
-    #    # print computed similarities (uses cossim)
-    #    print("average cosine similarity between corresponding parts (higher is better):")
-    #    print(np.mean([gensim.matutils.cossim(p1, p2) for p1, p2 in zip(part1, part2)]))
-    #
-    #    random_pairs = np.random.randint(0, len(test_docs), size=(num_pairs, 2))
-    #    print("average cosine similarity between 10,000 random parts (lower is better):")    
-    #    print(np.mean([gensim.matutils.cossim(part1[i[0]], part2[i[1]]) for i in random_pairs]))
-        
-    #    print ("Average: ____: "+str(avgVec))
-        
+    
+    
+        # STEP 6:  Print sims 
+        ###############################################
+        options=['print_sims']
+        options=[]
+    
+        if 'print_sims' in options:
+            i=0
+            j=0
+            for item in list(enumerate(sims)):
+                i+=1
+                #            if i>0:break
+                sent_num1=item[0]
+                for sent_num2,cosim_value in enumerate(item[1]):
+                    j+=1
+                    idx="("+str(sent_num1)+","+str(sent_num2)+")"
+                    cosim_str="%.9f" % cosim_value
+                    if True and j<3:
+                        print ("AT: "+str(idx)+" sim: "+str(cosim_str))
+                        print ("  for sent1: "+str(sentences[sent_num1]))
+                        print ("   vs sent2: "+str(sentences[sent_num2]))
+    
+        print ("TOPIC ID: "+str(local_topic_id))
+        print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+        print ("Done run_pipeline in: "+str(Perf.end())+"s")
 
     return
 

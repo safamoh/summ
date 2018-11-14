@@ -27,10 +27,17 @@ output_directory=TEMP_DATA_PATH+"/Top_summary"
 if not os.path.exists(output_directory):
     os.mkdir(output_directory)
 
+
 def run_exercise():
     global output_directory
-    print ("For each topic, create sim matrix and do top n")
     
+    # Options
+    ####################################
+    # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
+    vectorize_all_topics=True   #False will do individual topics
+
+    print ("Only 1 sim matrix create per topic")
+    print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
     
     
     branch=['create_sim_matrix']  #Must be run once
@@ -43,17 +50,25 @@ def run_exercise():
 #    branch+=['do_selection_by_round_robin']
     branch+=['experiments']
 
-    
+
 
     all_topics=get_list_of_all_topics()
     print ("Processing topics: "+str(all_topics))
     print (str(len(all_topics))+" topics found.")
     
+    if 'create_sim_matrix' in branch:
+        if vectorize_all_topics:
+            run_pipeline(create_all_topics_vectorizer=True)
+            
     for topic_id in all_topics:
+        print ("FOR TOPIC: "+str(topic_id)+"-------------")
 
         if 'create_sim_matrix' in branch:
-            print ("-----------> Creating sim matrix for topic: "+str(topic_id))
-            run_pipeline(use_specific_topic=topic_id)
+            if vectorize_all_topics:
+                print ("-----------> Creating sim matrix for topic: "+str(topic_id))
+                run_pipeline(local_topic_id=topic_id,use_all_topics_vectorizer=True,create_all_topics_vectorizer=False)
+            else:
+                run_pipeline(local_topic_id=topic_id)
     
 
 #==========================================================================================
