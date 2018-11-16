@@ -194,7 +194,7 @@ def run_exercise():
                     fp.close()
 #                break #at first experiment
         print ("Done topic: "+str(topic_id))
-        break #break #at first topic
+#        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic
