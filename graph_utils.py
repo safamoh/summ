@@ -116,6 +116,7 @@ def iter_graph_edges(g):
         # Get nodes of edge
         vertex1=g.vs[e.tuple[0]] #node1 idx
         vertex2=g.vs[e.tuple[1]] #node2 idx
+        yield vertex1,vertex2,weight
     return
 
 def add_vertex_to_graph(g,**kwargs):
@@ -151,6 +152,7 @@ def load_sim_matrix_to_igraph(local_topic_id=''):
 
 
     #Reload simulation matrix
+    print ("LOAD PRE-COMPUTED SIM MATRIX: "+str(get_sim_matrix_path))
     sims=np.load(get_sim_matrix_path(local_topic_id))
     
 
@@ -165,8 +167,35 @@ def load_sim_matrix_to_igraph(local_topic_id=''):
     s_idx=range(len(sentences)) #Index to sentenes 0...
     G.vs['s_idx']=s_idx
     G.vs['s_topic']=sentences_topics #For by topic query
+    
+    #OUTPUT SAMPLE SIMS
+    echo_sims(sims,sentences)
 
     return G,query_sentence,sims
+
+def echo_sims(sims,sentences):
+    # STEP 6:  Print sims 
+    ###############################################
+    options=[]
+    options=['print_sims']
+    print ("--> SAMPLE SIM NUMBERS:")
+
+    if 'print_sims' in options:
+        i=0
+        j=0
+        for item in list(enumerate(sims)):
+            i+=1
+            #            if i>0:break
+            sent_num1=item[0]
+            for sent_num2,cosim_value in enumerate(item[1]):
+                j+=1
+                idx="("+str(sent_num1)+","+str(sent_num2)+")"
+                cosim_str="%.9f" % cosim_value
+                if True and j<3:
+                    print ("AT: "+str(idx)+" sim: "+str(cosim_str))
+                    print ("  for sent1: "+str(sentences[sent_num1]))
+                    print ("   vs sent2: "+str(sentences[sent_num2]))
+    return
 
 def load_sim_matrix(local_topic_id,zero_node2node=True):
     #Reload simulation matrix

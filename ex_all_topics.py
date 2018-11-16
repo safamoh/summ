@@ -34,7 +34,7 @@ def run_exercise():
     # Options
     ####################################
     # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
-    vectorize_all_topics=True   #False will do individual topics
+    vectorize_all_topics=True #False will do individual topics
 
     print ("Only 1 sim matrix create per topic")
     print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
@@ -42,14 +42,13 @@ def run_exercise():
     
     branch=['create_sim_matrix']  #Must be run once
 
-#    branch+=['do_random_walk']
+    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-    branch+=['experiments']
-
+#    branch+=['experiments']
 
 
     all_topics=get_list_of_all_topics()
@@ -195,7 +194,7 @@ def run_exercise():
                     fp.close()
 #                break #at first experiment
         print ("Done topic: "+str(topic_id))
-#        break #break #at first topic
+        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

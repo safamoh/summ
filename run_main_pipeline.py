@@ -163,8 +163,8 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
     
         # STEP 6:  Print sims 
         ###############################################
-        options=['print_sims']
         options=[]
+        options=['print_sims']
     
         if 'print_sims' in options:
             i=0

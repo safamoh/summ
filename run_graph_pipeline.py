@@ -589,12 +589,24 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def calc_random_walk_with_restart(g,query_index):
+    #0v2# Add weight as a factor  g.es["weight"]
+    
+    #DEBUG LOOK AT GRAPH
+    if False:
+        c=0
+        for v1,v2,weight in iter_graph_edges(g):
+            c+=1
+            print ("V1: "+v1['label'])
+            print ("V2: "+v2['label'])
+            print ("weight: "+str(weight))
+            if c>10:break
+        
     echo_top_scores=6
     if echo_top_scores:
         print ("---> Random walk top scores:")
     
     ## Calc random walk
-    random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index)
+    random_walk_with_restart=g.personalized_pagerank(reset_vertices=query_index,weights=g.es['weight'])
     sorted_scores = sorted(zip(random_walk_with_restart, g.vs), key=lambda x: x[0],reverse=True) #G.vs is node id list
 
     ## Index by index (for O(n) look up of node)
