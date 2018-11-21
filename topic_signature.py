@@ -11,7 +11,7 @@ from duc_reader import files2sentences
 #0v1# JC  Nov 20, 2018  Setup base likelihood calculation
 
 
-def load_entire_corpus():
+def load_entire_corpus_words():
     documents,sentences,sentences_topics=files2sentences(limit_topic='')
     all_corpus=" ".join(sentences)
     word_tokens = nltk.wordpunct_tokenize(" ".join(sentences).lower())
@@ -23,7 +23,7 @@ def bigram_counts():
     #Likehood on bigrams allows for next term prediction
     bgm = nltk.collocations.BigramAssocMeasures() #<-- likelihood a part
 
-    finder = nltk.collocations.BigramCollocationFinder.from_words(load_entire_corpus())
+    finder = nltk.collocations.BigramCollocationFinder.from_words(load_entire_corpus_words())
     scored = finder.score_ngrams(bgm.likelihood_ratio)
 
     # Group bigrams by first word in bigram.                                        
@@ -86,43 +86,59 @@ def loglikefun(document,tdm_count,total_words):
     
     return ratios
 
-
-def loglikelyhood():
-    #news.TDM <- TermDocumentMatrix(Doc.corpus, control = list(tokenize = BigramTokenizer)) 
-    #news.TDM <- as.matrix(news.TDM)
-    ##find all corpus total words freqancies
-    #TotalWords <- rowSums(news.TDM)
+def loglikelyhood(fore_words,back_words,cutoff=10.83):
     topic_signatures=[]
 
-    cutoff=10.83
+    fore_count_words,fore_word_length=word_counter(fore_words)
+    back_count_words,back_word_length=word_counter(back_words)
     
-    branches=[]
-    branches=['count_all_words']
+    ratios={}
+    for word in set(fore_words):
+        i_words=fore_count_words[word]
+        i_size=fore_word_length
+        
+        #L1 <- dbinom(I.words, size = sum(I.words), prob = I.words/sum(I.words))
+        l1=binom.pmf(i_words,i_size,i_words/i_size)
 
-    #1/  Count all words
-    print ("Counting words...")
-    if 'count_all_words' in branches:
-        tdm_count,total_words=word_counter(load_entire_corpus())
+        #L2 <- dbinom(B.words, size = sum(B.words), prob = B.words/sum(B.words))
+        b_words=back_count_words[word]
+        b_size=back_word_length
+        l2=binom.pmf(b_words,b_size,b_words/b_size)
     
-    #2/  For each subset of document/topic
+        #L3 <- dbinom(I.words, size = sum(I.words), prob =  (I.words+B.words)/(sum(I.words)+sum(B.words)))
+        prob=(i_words+b_words)/(i_size+b_size)
+        l3=binom.pmf(i_words,i_size,prob)
+
+        #L4 <- dbinom(B.words, size = sum(B.words), prob = (I.words+B.words)/(sum(I.words)+sum(B.words)) )
+        prob=(i_words+b_words)/(i_size+b_size)
+        l4=binom.pmf(b_words,b_size,prob)
+        
+        ratios[word]=2*(log(l1)+log(l2)-log(l3)-log(l4))
+        
+        if ratios[word]>cutoff:
+            topic_signatures+=[word]
+
+    return topic_signatures
+
+
+def sample_calc_likelyhood():
     documents,sentences,sentences_topics=files2sentences(limit_topic='')
-    print ("Calculating log likelyhood...")
-    for doc in documents:
-        print ("YO: "+str(doc))
-        ratios=loglikefun(doc,tdm_count,total_words)
-        print ("[debug] ALL RATIOS: "+str(ratios))
-        
-        for word in ratios:
-            if ratios[word]>cutoff: topic_signatures+=[word]
-        
-        print ("[debug] topic signatures: "+str(topic_signatures))
-        break
+    foreground_text=documents[0].lower()
+
+    foreground_words=nltk.wordpunct_tokenize(foreground_text)
+    background_words=load_entire_corpus_words()
+    
+    topic_signatures=loglikelyhood(foreground_words,background_words)
+    
+    print ("GOT SIGNATURES: "+str(topic_signatures))
 
     return
 
 if __name__=='__main__':
     branches=['bigram_counts']
     branches=['loglikelyhood']
+    branches=['sample_calc_likelyhood']
+
     for b in branches:
         globals()[b]()
 

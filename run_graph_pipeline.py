@@ -165,6 +165,14 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
 
 #            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
             g.es[i]['weight']=weight
+            
+            #NOV 21:
+            #Store weight at vertex if between query_index
+            if experiment=='do6_two_scores_1':
+                if e.tuple[0]==query_index:
+                    g.vs[e.tuple[1]]['edge_weight']=weight
+                if e.tuple[1]==query_index:
+                    g.vs[e.tuple[0]]['edge_weight']=weight
 
     else:
         pass #Standard running no experiments
@@ -498,7 +506,7 @@ def alg_sort_clusters_by_weight(cluster_weights):
     return ptr_tuple
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True):
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,experiment=''):
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
 
     ###  Standard info
@@ -530,16 +538,22 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     #        i_cluster:  The index of the sub-graph (cluster)
     #        vc_index:   The index of a vertex in the sub-graph
     #        s_idx:      The original index of the sentence/vertex in g
-    rws_lookup={}
+    score_lookup={}
     for i_cluster,weight in ptr_tuple_top:
         subgraph=clusters.subgraphs()[i_cluster]
         for vc_index, v in enumerate(subgraph.vs):
             s_idx=v['s_idx']
             sentence=v['label']
+
+            if experiment=='do6_two_scores_1':
+                edge_weight=v['edge_weight'] #For special case
+            else:
+                edge_weight=0
+
             walk_score,vertex,rank=g_random_walk_scores[s_idx]
             #Store lookup between vertex index and walk scores
-            if not i_cluster in rws_lookup: rws_lookup[i_cluster]=[]
-            rws_lookup[i_cluster]+=[(vc_index,s_idx,walk_score,sentence)]
+            if not i_cluster in score_lookup: score_lookup[i_cluster]=[]
+            score_lookup[i_cluster]+=[(vc_index,s_idx,walk_score,sentence,edge_weight)]
     
 
     ##4/  Random walk sort within each cluster
@@ -550,10 +564,16 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
         #print ("---- Sort cluster sentences by walk score ----")
         cluster_ptr[i_cluster]=0        #Initialize sentence pointer in each cluster
         subgraph=clusters.subgraphs()[i_cluster]
-        rws_sorted=sorted(rws_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
+
+        if experiment=='do6_two_scores_1':
+            print ("SORTING BY edge weight (max(cos-sim),rws-edge))")
+            score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[4],reverse=True) #Sort by edge weight
+        else:
+            print ("SORTING BY RWS")
+            score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
         
         #Save sorted sentences for round-robin lookup
-        sorted_sentences_in_cluster[i_cluster]=rws_sorted
+        sorted_sentences_in_cluster[i_cluster]=score_sorted
         
 
     ##5/  Round Robin Selection
@@ -561,18 +581,18 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     sentence_cache=[] #Top sentences to collect
     while len(sentence_cache)<target_sentences: #while need more sentences
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
-            rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
+            score_sorted2=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
 
-            if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
-                vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
+            if cluster_ptr[i_cluster]<len(score_sorted2):                      #If pointer within length of array
+                vc_index,s_idx,walk_score,sentence,edge_weight=score_sorted2[cluster_ptr[i_cluster]]
 
-            if cluster_ptr[i_cluster]<len(rws_sorted):                      #If pointer within length of array
+            if cluster_ptr[i_cluster]<len(score_sorted2):                      #If pointer within length of array
                 got_next=True
                 if s_idx==query_index: #exception when query index
                     got_next=False
                     cluster_ptr[i_cluster]+=1
-                    if cluster_ptr[i_cluster]<len(rws_sorted):      #Case where only 1 sentence
-                        vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
+                    if cluster_ptr[i_cluster]<len(score_sorted2):      #Case where only 1 sentence
+                        vc_index,s_idx,walk_score,sentence,edge_weight=score_sorted2[cluster_ptr[i_cluster]]
                         got_next=True
 
                 if got_next:
@@ -878,7 +898,7 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,experiment='do6_two_scores_1')
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

@@ -36,19 +36,17 @@ def run_exercise():
     # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
     vectorize_all_topics=True #False will do individual topics
 
-    print ("Only 1 sim matrix create per topic")
-    print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
     
-    
-    branch=['create_sim_matrix']  #Must be run once
+    branch=[]
+#    branch=['create_sim_matrix']  #Must be run once
 
-    branch+=['do_random_walk']
+#    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-#    branch+=['experiments']
+    branch+=['experiments']
 
 
     all_topics=get_list_of_all_topics()
@@ -58,6 +56,10 @@ def run_exercise():
     if 'create_sim_matrix' in branch:
         if vectorize_all_topics:
             run_pipeline(create_all_topics_vectorizer=True)
+    else:
+        print ("Only 1 sim matrix create per topic")
+        print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
+    
             
     for topic_id in all_topics:
         print ("FOR TOPIC: "+str(topic_id)+"-------------")
@@ -161,9 +163,9 @@ def run_exercise():
             #exs+=['do4_median_weight']
             #exs+=['do5_markov_clustering']
             #exs+=['do6_two_scores']
-            #exs+=['do6_two_scores_1']
+            exs+=['do6_two_scores_1']
             #exs+=['do6_two_scores_2']
-            exs+=['do7_sum_nodes']
+            #exs+=['do7_sum_nodes']
             
             for experiment in exs:
                 ex_name="ex_"+experiment
