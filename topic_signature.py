@@ -94,14 +94,16 @@ def loglikelyhood(fore_words,back_words,cutoff=10.83):
     print ("[debug] start loglikelyhood calc...")
     topic_signatures=[]
 
+    print ("[debug] count words...")
     fore_count_words,fore_word_length=word_counter(fore_words)
     back_count_words,back_word_length=word_counter(back_words)
     
+    print ("[debug] doing calcs...")
     ratios={}
     c=0
     for word in set(fore_words):
         c+=1
-        if not c%10000: print "AT "+str(c)+" / "+str(len(set(fore_words)))
+        if not c%5000: print "AT "+str(c)+" / "+str(len(set(fore_words)))
         i_words=fore_count_words[word]
         i_size=fore_word_length
         

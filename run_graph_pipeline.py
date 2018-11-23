@@ -166,6 +166,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
         topic_signatures={}
         if ts_branch and topic_id:
             print ("Creating topic signature for topic id: "+str(topic_id))
+            print ("**loading twice in same session (maybe) so consider catching")
             topic_signatures=get_topic_topic_signatures(topic_id)
 
 
@@ -263,6 +264,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     try:
                         node_query_topic_sig_score= len(the_shared)/(len(node0_shared)+len(node1_shared))
                     except: node_query_topic_sig_score=0
+                    
+                    weight=max(cosim_dist[i],ws_dist[i],node_query_topic_sig_score)
                                 
 
                 else:bad_setup=stopp
