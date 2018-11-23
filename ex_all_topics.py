@@ -21,6 +21,7 @@ from run_graph_pipeline import do6_two_scores_1
 from run_graph_pipeline import do6_two_scores_2
 from run_graph_pipeline import do7_sum_nodes
 
+from topic_signature import get_topic_topic_signatures
 
 
 output_directory=TEMP_DATA_PATH+"/Top_summary"
@@ -34,11 +35,13 @@ def run_exercise():
     # Options
     ####################################
     # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
-    vectorize_all_topics=True #False will do individual topics
+    vectorize_all_topics=False#True #False will do individual topics
+    cosim_topic_signatures=True #Default -- set by ts1
+
+    branch=[]
 
     
-    branch=[]
-#    branch=['create_sim_matrix']  #Must be run once
+    branch=['create_sim_matrix']  #Must be run once
 
 #    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
@@ -48,17 +51,37 @@ def run_exercise():
 #    branch+=['do_selection_by_round_robin']
     branch+=['experiments']
 
+    #Topic signature branches
+    #########################################
+    # [ ]  Set use of topic signatures here
+    #> Run only 1 ts1/ts2/ts3... option at a time.
+    #########################################
+    print ("NOTE:  for ts1, ts3 must have created topic signatures sim matrix")
+    ts_branch=[]
+    ts_branch=['ts1']
+
+    if 'ts1' in ts_branch:
+        print ("Use topic signatures in sim matrix")
+        branch+=['create_sim_matrix']
+        cosim_topic_signatures=True
+    elif ts_branch:
+        print ("Create topic signatures for each topic")
+        branch+=['create_topic_signatures']
+    else:
+        print ("(not using topic signatures)")
+
 
     all_topics=get_list_of_all_topics()
     print ("Processing topics: "+str(all_topics))
     print (str(len(all_topics))+" topics found.")
     
-    if 'create_sim_matrix' in branch:
-        if vectorize_all_topics:
-            run_pipeline(create_all_topics_vectorizer=True)
+    if 'create_sim_matrix' in branch and vectorize_all_topics:
+        run_pipeline(create_all_topics_vectorizer=True)
     else:
-        print ("Only 1 sim matrix create per topic")
-        print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
+        print ("Recreate sim matrix files after toggling:")
+        print ("a)  vectorize_all_topics")
+        print ("b)  topic signature branch 1")
+        print ("**because only stores 1 instance of sim matrix")
     
             
     for topic_id in all_topics:
@@ -67,10 +90,9 @@ def run_exercise():
         if 'create_sim_matrix' in branch:
             if vectorize_all_topics:
                 print ("-----------> Creating sim matrix for topic: "+str(topic_id))
-                run_pipeline(local_topic_id=topic_id,use_all_topics_vectorizer=True,create_all_topics_vectorizer=False)
+                run_pipeline(local_topic_id=topic_id,use_all_topics_vectorizer=True,create_all_topics_vectorizer=False,cosim_topic_signatures=cosim_topic_signatures)
             else:
-                run_pipeline(local_topic_id=topic_id)
-    
+                run_pipeline(local_topic_id=topic_id,cosim_topic_signatures=cosim_topic_signatures)
 
 #==========================================================================================
         if 'do_random_walk' in branch:
@@ -167,6 +189,9 @@ def run_exercise():
             #exs+=['do6_two_scores_2']
             #exs+=['do7_sum_nodes']
             
+            if ts_branch:
+                print (">>> TOPIC SIGNATURE BRANCH: "+str(ts_branch))
+            
             for experiment in exs:
                 ex_name="ex_"+experiment
                 if experiment=='do5_markov_clustering':
@@ -187,16 +212,21 @@ def run_exercise():
                         os.mkdir(out_report_dir)
     
                     print ("Experiment: "+str(experiment)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch,experiment=experiment)
+                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch,experiment=experiment,ts_branch=ts_branch)
                     print ("Doing selection")
                     fp=codecs.open(out_report_file,'w',encoding='utf-8')
                     the_function=globals()[experiment]
-                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index,topic_id=topic_id):
+                    for sentence in the_function(g,clusters,cluster_weights,query_sentence,query_index,topic_id=topic_id,ts_branch=ts_branch):
                         fp.write(sentence+"\n")
                     fp.close()
 #                break #at first experiment
+
+
+
+
+
         print ("Done topic: "+str(topic_id))
-#        break #break #at first topic
+        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

@@ -3,6 +3,7 @@ import os
 import re
 import numpy as np
 #import scipy.stats as ss
+import nltk
 import random
 import operator
 from itertools import izip
@@ -39,6 +40,7 @@ import markov_clustering as mc
 
 from igraph.clustering import VertexClustering
 
+from topic_signature import get_topic_topic_signatures
 
 Perf=Performance_Tracker()
 
@@ -60,6 +62,7 @@ def to_sparse(graph, weight_attr=None):
 
 
 def run_random_walk_on_graph(topic_id):
+    a=norws
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
     if not os.path.exists(get_sim_matrix_path(topic_id)):
@@ -73,13 +76,16 @@ def run_random_walk_on_graph(topic_id):
     return calc_random_walk_with_restart(g,query_index),query_index #sorted_scores
 
 
-def load_topic_matrix(topic_id):
+def load_topic_matrix(topic_id,ts_branch=[]):
     #STEP 1:  LOAD GRAPH ##########################
     #> check that graph exists
-    if not os.path.exists(get_sim_matrix_path(topic_id)):
+    if ts_branch:
+        pass
+    elif not os.path.exists(get_sim_matrix_path(topic_id)):
         print (">> SIM MATRIX DOES NOT EXIST for: "+topic_id+": "+str(get_sim_matrix_path(topic_id)))
         run_pipeline()
-    g,query_sentence,sims=load_sim_matrix_to_igraph(topic_id)
+
+    g,query_sentence,sims=load_sim_matrix_to_igraph(topic_id,ts_branch=ts_branch)
     query_node=g.vs.find(label=query_sentence)
     query_index=query_node.index
     ###############################################
@@ -92,15 +98,15 @@ class NestedDict(dict):
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
+def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_branch=[]):
     if not topic_id:topic_required=no_globals
-    g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id)
+    g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id,ts_branch=[])
     #method='betweenness'   #talking to much time, we will skip it
     #method='walktrap'
     #method='leading_eigenvector'
     #g=filter_graph(g)
     print ("EXPERIMENT: "+str(experiment))
-    
+     
     if 'do7_sum_nodes' in experiment:
         #after doing the graph by the cos sim matrix, rank the sentences according to total score.
         clusters=[]
@@ -154,9 +160,114 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
             cosim_dist=normalize_max_min(cosim_values)
             ws_dist=normalize_max_min(ws_values)
         
+
         #Use percent distributions to calculate new weight
+        #Nov 22:  New branches for topic_signatures
+        topic_signatures={}
+        if ts_branch and topic_id:
+            print ("Creating topic signature for topic id: "+str(topic_id))
+            topic_signatures=get_topic_topic_signatures(topic_id)
+
+
+        #Calculate query_sentence signature words
+        if 'ts4' in ts_branch:
+            query_sentence_words=nltk.word_tokenize(query_sentence.lower())
+            query_topic_signature_words=[]
+            for word in query_sentence_words:
+                if word in topic_signatures:
+                    query_topic_signature_words+=[word]
+
         for i,e in enumerate(g.es): #FOR EACH EDGE
-            if experiment=='do6_two_scores_1':
+            sentence0_words=nltk.word_tokenize( g.vs[e.tuple[0]]['label'].lower() )
+            sentence1_words=nltk.word_tokenize( g.vs[e.tuple[1]]['label'].lower() )
+            if ts_branch and topic_id:
+                if 'ts1' in ts_branch:
+                    #Standard method
+                    weight=max(cosim_dist[i],ws_dist[i]) 
+                elif 'ts2' in ts_branch:
+                    #Edge-weight= MAX( cos-sim, rws-edge, topics_sig_edge)
+                    #Where topic_sig_edge between two nodes = 
+                    #shared topic signature words/ the sum of all topic signature words 
+                    #in the two sentences.
+                    shared_words=[]
+                    topic_signature_words=[]
+                    for word in list(set(sentence0_words)): #unique
+                        if word in topic_signatures:
+                            topic_signature_words+=[word]
+                    for word in list(set(sentence1_words)):
+                        if word in topic_signatures: #Already exists so shared
+                            if word in topic_signature_words: #SHARED
+                                shared_words+=[word]
+                            topic_signature_words+=[word]
+                    try:
+                        topics_sig_edge=len(shared_words)/len(list(set(topic_signature_words)))
+                    except: topics_sig_edge
+                    #Edge-weight= MAX( cos-sim, rws-edge, topics_sig_edge)
+                    weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    
+                    
+                elif 'ts3' in ts_branch or 'ts5' in ts_branch:
+                    #Edge-weight= MAX( cos-sim, rws-edge, topics_sig_edge)
+                    #Where topic_sig_edge = (node1_topic_sig score+ node2_topic_sig score)/2
+                    #Where node1_topic_sig_score= #of topic signature in node1/#of all tokens in node1
+                    
+                    #Node 1
+                    node1_topic_sig_count=0
+                    for word in sentence0_words:
+                        if word in topic_signatures:
+                            node1_topic_sig_count+=1
+                    if not sentence0_words:
+                        node1_topic_sig_score=0
+                    else:
+                        node1_topic_sig_score=node1_topic_sig_count/len(sentence0_words)
+
+                    node2_topic_sig_count=0
+                    for word in sentence1_words:
+                        if word in topic_signatures:
+                            node2_topic_sig_count+=1
+                    if not sentence1_words:
+                        node2_topic_sig_score=0
+                    else:
+                        node2_topic_sig_score=node2_topic_sig_count/len(sentence1_words)
+                        
+                    topics_sig_edge=(node1_topic_sig_score+node2_topic_sig_score)/2
+
+                    weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    
+                    if 'ts5' in ts_branch:
+                        #> store node_query_topics_sig_score for use in selection post clustering
+                        g.vs[e.tuple[0]]['topic_sig_score']=node1_topic_sig_score
+                        g.vs[e.tuple[1]]['topic_sig_score']=node2_topic_sig_score
+                    
+                elif 'ts4' in ts_branch:
+                    #4)    We might make the topic signature related to the query somehow, 
+                    #So first we calculate the query's topic signature words.
+                    #Then, a node_query_topic_sig_score= How many query's topic signature words is in that node. 
+
+                    #(shared topic signature words/ the sum of all topic signature words in the #two sentences.) 
+                    
+                    the_shared=[]
+
+                    node0_shared=[]
+                    for word in list(set(sentence0_words)): #unique
+                        if word in topic_signatures:
+                            if word in query_topic_signature_words:
+                                node0_shared+=[word]
+                    node1_shared=[]
+                    for word in list(set(sentence1_words)): #unique
+                        if word in topic_signatures:
+                            if word in query_topic_signature_words:
+                                the_shared+=[word]
+                                node1_shared+=[word]
+
+                    try:
+                        node_query_topic_sig_score= len(the_shared)/(len(node0_shared)+len(node1_shared))
+                    except: node_query_topic_sig_score=0
+                                
+
+                else:bad_setup=stopp
+
+            elif experiment=='do6_two_scores_1':
                 weight=max(cosim_dist[i],ws_dist[i])  #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
             elif experiment=='do6_two_scores_2':
                 weight=(cosim_dist[i]+(query1_cosim[i]+query2_cosim[i])/2)/2   #  (do6_2): edge_weight=((cos sim) + [(node1_qcs+node2_qcs)/2])/2
@@ -181,6 +292,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     communities=[]
     clusters=[]
     print ("Running clustering ["+method+"] on graph...")
+    print ("###########################################")
     Perf.start()
     
     markov_subgraphs=[]
@@ -506,7 +618,7 @@ def alg_sort_clusters_by_weight(cluster_weights):
     return ptr_tuple
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,experiment=''):
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,experiment='',ts_branch=[]):
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
 
     ###  Standard info
@@ -514,7 +626,21 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     query_index=query_node.index
 
     ##/  Random walk with restart calculation
-    g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+    if 'ts5' in ts_branch:
+        #print ("ame as #3, but after clustering, we will rank the sentences according to its 
+        #node_query_topics_sig_score instead of global rws scores
+        #g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
+        #g.vs[e.tuple[0]]['topic_sig_score']=node1_topic_sig_score
+        #g.vs[e.tuple[1]]['topic_sig_score']=node2_topic_sig_score
+        
+        #> Transform topic_sig_scores
+        node_query_topics_sig_score={}
+        for vc_index, v in enumerate(g.vs):
+            s_idx=v['s_idx']
+            sentence=v['label']
+            node_query_topics_sig_score[s_idx]=v['topic_sig_score']
+    else:
+        g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
     
 
     ##1/  Sort clusters by weight
@@ -550,7 +676,10 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
             else:
                 edge_weight=0
 
-            walk_score,vertex,rank=g_random_walk_scores[s_idx]
+            if 'ts5' in ts_branch:
+                walk_score=node_query_topics_sig_score[s_idx]
+            else:
+                walk_score,vertex,rank=g_random_walk_scores[s_idx]
             #Store lookup between vertex index and walk scores
             if not i_cluster in score_lookup: score_lookup[i_cluster]=[]
             score_lookup[i_cluster]+=[(vc_index,s_idx,walk_score,sentence,edge_weight)]
@@ -565,9 +694,12 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
         cluster_ptr[i_cluster]=0        #Initialize sentence pointer in each cluster
         subgraph=clusters.subgraphs()[i_cluster]
 
-        if experiment=='do6_two_scores_1':
+        if False: #REMOVE Nov22 as no improvement  experiment=='do6_two_scores_1':
             print ("SORTING BY edge weight (max(cos-sim),rws-edge))")
             score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[4],reverse=True) #Sort by edge weight
+        elif 'ts5' in ts_branch:
+            print ("SORTING BY node_query_topics_sig_score")
+            score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
         else:
             print ("SORTING BY RWS")
             score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
@@ -684,7 +816,7 @@ def select_top_cos_sims(topic_id='d301i',top_n=10,verbose=True):
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     #1)    Consider only the cluster that has the query sentences and ignore all other clusters, then sort 
     #its sentences according to the global random walk scores. Then choose top 10 sentences for the summary 
     #(without the query sentence).  
@@ -722,7 +854,7 @@ def do1_select_query_cluster(g,clusters,cluster_weights,query_sentence,query_ind
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,topic_id=''):
+def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,topic_id='',ts_branch=[]):
     #2)    After finish the clustering, do local random walk algorithm for each cluster subgraph (you should 
     #include the query node within each cluster and make it the reset vertex in the algorithm) then sort 
     #the sentences in each cluster according its own random walk score (ignore the global random walk scores here).
@@ -788,7 +920,7 @@ def do2_local_walk(g,clusters,cluster_weights,query_sentence,query_index,target_
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do3_avg_cosims(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     #3)    The weight of the cluster will be the average of two values: the average cosine similarity (the
     # existing one in the code now) AND the average value of cosine similarity between all pairs (without 
     #the query).
@@ -827,7 +959,7 @@ class Local_Vectorizer():
 #a.    Compute the average vector for all sentences in the cluster (each sentence is a vector, compute the average vector to get the median vector) 
 #b.    Then compute the cos sim between the query vector and the median vector.
 #c.    This score is the weight of the cluster.
-def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     #Define:  average cluster vector == vector of all sentences in cluster
     print ("This requires tf-idf model for calculating cluster vectors")
     tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+topic_id+'.mm'
@@ -879,12 +1011,12 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topi
 
 
 #5)    Try Markov clustering. 
-def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #6)    
-def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     #make the edge is between two nodes is actually (cos sim + (random walk score)) , 
     #then we insert this graph to the clustering, in other words, what if we add the random 
     #walk scores to the cos sim matrix, then make a graph from this new matrix that will be 
@@ -897,19 +1029,19 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,experiment='do6_two_scores_1')
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def do6_two_scores_2(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do6_two_scores_2(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
-def do7_sum_nodes(g,clusters,cluster_weights,query_sentence,query_index,topic_id=''):
+def do7_sum_nodes(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
     #after doing the graph by the cos sim matrix, rank the sentences according to total score.
     
     #Walk entire graph

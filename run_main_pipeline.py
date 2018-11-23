@@ -2,6 +2,7 @@ from __future__ import division
 import numpy as np
 import random
 from itertools import izip
+import nltk
 
 from gensim import corpora
 from gensim import models
@@ -17,6 +18,8 @@ from duc_reader import get_sim_matrix_path
 #from duc_reader import LIMIT_TOPICS
 from duc_reader import get_list_of_all_topics
 
+from topic_signature import get_topic_topic_signatures
+
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
 
@@ -24,8 +27,7 @@ Perf=Performance_Tracker()
 
 
 
-
-def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id=''):
+def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id='',cosim_topic_signatures=False):
     #STEP 1:  Build vectorizer
     #STEP 2:  Do sim matrix
     Perf.start()
@@ -43,6 +45,12 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         print ("# Use the all_topics vectorizer")
         print ("# - assume this is second run.  Load topic sentences and tokenize them using vector")
         print ("# - Then create sim matrix")
+    if cosim_topic_signatures:
+        print ("# Creating topic signatures")
+        print ("# Possible for single or more topics")
+        print ("# ALSO, use topic signature in place of sentence for cosim calc")
+    topic_signatures={}
+    ts_sentences=[]
 
 
     #1/  LOAD
@@ -56,6 +64,30 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
             sentences.insert(0,query_sentence)
             sentences_topics.insert(0,topic_id)
         print ("Done building sentences...")
+    elif cosim_topic_signatures:
+        if not local_topic_id:
+            print ("Expect topic id for calculating topic signature")
+            stopp=expect_topic_id
+        topic_signatures=get_topic_topic_signatures(local_topic_id)
+
+        documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
+        for sentence in sentences:
+            ts_sentence=''
+            words=nltk.wordpunct_tokenize(sentence)
+            for word in words:
+                if word.lower() in topic_signatures:
+                    ts_sentence+=word+" "
+            ts_sentences+=[ts_sentence.strip()]
+
+        #Add query as V1
+        query_sentence=get_query(local_topic_id)
+        print ("Using query: "+str(query_sentence))
+        ts_sentences.insert(0,query_sentence)
+        sentences_topics.insert(0,local_topic_id)
+        
+        #Swap topic_signatures for regular
+        sentences=ts_sentences
+        
     else:
         documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
 
@@ -157,7 +189,7 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         
         sims = index[corpus_tfidf]
         #print "We get a similarity matrix for all sentences in the corpus %s"% type(sims)
-        np.save(get_sim_matrix_path(local_topic_id),sims)
+        np.save(get_sim_matrix_path(local_topic_id,cosim_topic_signatures=cosim_topic_signatures),sims)
     
     
     

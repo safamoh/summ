@@ -66,9 +66,12 @@ LIMIT_TOPICS=True      #Look at subset of data
 #
 #############################################
 
-def get_sim_matrix_path(local_topic_id):
+def get_sim_matrix_path(local_topic_id,cosim_topic_signatures=False):
     global TEMP_DATA_PATH
-    smp=TEMP_DATA_PATH+"_"+local_topic_id+"_sim_matrix.npy"
+    if cosim_topic_signatures:
+        smp=TEMP_DATA_PATH+"_"+local_topic_id+"_TSIG_sim_matrix.npy"
+    else:
+        smp=TEMP_DATA_PATH+"_"+local_topic_id+"_sim_matrix.npy"
     return smp
 
 def walk_directory(folders,include_dir=False):

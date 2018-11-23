@@ -47,7 +47,11 @@ def word_counter(words):
     wcount={}
     for word in words:
         try:wcount[word]+=1
-        except:wcount[word]=1
+        except:
+            try:
+                wcount[word]=1
+            except:
+                print ("COULD NOT COUNT WORD: "+str(word))
     return wcount,len(words)
 
 def loglikefun(document,tdm_count,total_words):
@@ -87,13 +91,17 @@ def loglikefun(document,tdm_count,total_words):
     return ratios
 
 def loglikelyhood(fore_words,back_words,cutoff=10.83):
+    print ("[debug] start loglikelyhood calc...")
     topic_signatures=[]
 
     fore_count_words,fore_word_length=word_counter(fore_words)
     back_count_words,back_word_length=word_counter(back_words)
     
     ratios={}
+    c=0
     for word in set(fore_words):
+        c+=1
+        if not c%10000: print "AT "+str(c)+" / "+str(len(set(fore_words)))
         i_words=fore_count_words[word]
         i_size=fore_word_length
         
@@ -133,6 +141,25 @@ def sample_calc_likelyhood():
     print ("GOT SIGNATURES: "+str(topic_signatures))
 
     return
+
+def get_topic_topic_signatures(topic_id):
+    #** potential speed-up by reusing background word list
+    print ("[Start calculating topic signatures] for: "+str(topic_id)+"...")
+
+    documents,sentences,sentences_topics=files2sentences(limit_topic='')
+    
+    foreground_words=[]
+    background_words=[]
+
+    #Include query sentence?
+    for i,sentence in enumerate(sentences):
+        if sentences_topics[i]==topic_id:
+            foreground_words+=nltk.word_tokenize(sentence)
+        background_words+=nltk.word_tokenize(sentence)
+    
+    print ("[done topic signatures] for: "+str(topic_id))
+    return loglikelyhood(foreground_words, background_words)
+
 
 if __name__=='__main__':
     branches=['bigram_counts']

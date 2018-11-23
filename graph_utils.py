@@ -127,10 +127,11 @@ def add_vertex_to_graph(g,**kwargs):
     return g,idx
 
 
-def load_sim_matrix_to_igraph(local_topic_id=''):
+def load_sim_matrix_to_igraph(local_topic_id='',ts_branch=[]):
     global TEMP_DATA_PATH,TOPIC_ID,LIMIT_TOPICS
     #LOAD STATE
-    #####################################################
+    ###
+    ##################################################
     
     if not local_topic_id:
         local_topic_id=TOPIC_ID
@@ -152,9 +153,10 @@ def load_sim_matrix_to_igraph(local_topic_id=''):
 
 
     #Reload simulation matrix
-    print ("LOAD PRE-COMPUTED SIM MATRIX: "+str(get_sim_matrix_path))
-    sims=np.load(get_sim_matrix_path(local_topic_id))
-    
+    if 'ts1' in ts_branch:
+        sims=np.load(get_sim_matrix_path(local_topic_id,cosim_topic_signatures=True))
+    else:
+        sims=np.load(get_sim_matrix_path(local_topic_id))
 
     #STEP A:  Zero node-to-node simularity diagonal to 0
     np.fill_diagonal(sims, 0)
