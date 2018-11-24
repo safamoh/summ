@@ -123,7 +123,10 @@ def loglikelyhood(fore_words,back_words,cutoff=10.83):
         prob=(i_words+b_words)/(i_size+b_size)
         l4=binom.pmf(b_words,b_size,prob)
         
-        ratios[word]=2*(log(l1)+log(l2)-log(l3)-log(l4))
+        try: ratios[word]=2*(log(l1)+log(l2)-log(l3)-log(l4))
+        except:
+            #word is not mentioned
+            ratios[word]=0
         
         if ratios[word]>cutoff:
             topic_signatures+=[word]
