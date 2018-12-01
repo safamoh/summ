@@ -41,7 +41,7 @@ def run_exercise():
     branch=[]
 
     
-    branch=['create_sim_matrix']  #Must be run once
+#    branch=['create_sim_matrix']  #Must be run once
 
 #    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
@@ -59,10 +59,10 @@ def run_exercise():
     print ("NOTE:  for ts1, ts3 must have created topic signatures sim matrix")
     ts_branch=[]
     ts_branch=['ts4']
-    ts_branch=['ts5']
     ts_branch=['ts2'] #ok
     ts_branch=['ts3'] #ok
     ts_branch=['ts1'] #ok
+    ts_branch=['ts5']
 
 
     if 'ts1' in ts_branch:
@@ -231,7 +231,7 @@ def run_exercise():
 
 
         print ("Done topic: "+str(topic_id))
-#        break #break #at first topic
+        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

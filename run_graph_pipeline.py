@@ -171,7 +171,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
 
         #Calculate query_sentence signature words
-        if 'ts4' in ts_branch:
+        if 'ts4' in ts_branch or 'ts5' in ts_branch:
             query_sentence_words=nltk.word_tokenize(query_sentence.lower())
             query_topic_signature_words=[]
             for word in query_sentence_words:
@@ -235,12 +235,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
                     weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
                     
-                    if 'ts5' in ts_branch:
-                        #> store node_query_topics_sig_score for use in selection post clustering
-                        g.vs[e.tuple[0]]['topic_sig_score']=node1_topic_sig_score
-                        g.vs[e.tuple[1]]['topic_sig_score']=node2_topic_sig_score
                     
-                elif 'ts4' in ts_branch:
+                if 'ts4' in ts_branch or 'ts5' in ts_branch:
                     #4)    We might make the topic signature related to the query somehow, 
                     #So first we calculate the query's topic signature words.
                     #Then, a node_query_topic_sig_score= How many query's topic signature words is in that node. 
@@ -266,9 +262,28 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     except: node_query_topic_sig_score=0
                     
                     weight=max(cosim_dist[i],ws_dist[i],node_query_topic_sig_score)
-                                
 
-                else:bad_setup=stopp
+                    if 'ts5' in ts_branch:
+                        #> store node_query_topics_sig_score for use in selection post clustering
+                        try:
+                            g.vs[e.tuple[0]]['node_query_topics_sig_score']=len(node0_shared)/(len(the_shared))
+                        except:
+                            g.vs[e.tuple[0]]['node_query_topics_sig_score']=0
+                        try:
+                            g.vs[e.tuple[1]]['node_query_topics_sig_score']=len(node1_shared)/(len(the_shared))
+                        except:
+                            g.vs[e.tuple[1]]['node_query_topics_sig_score']=0
+
+                        if i<10:
+                            print
+                            print ("[ts5 sample] Sentence: "+str(sentence0_words))
+                            print ("[ts5 sample] topic words: "+str(node0_shared))
+                            print ("[ts5 sample] Sentence: "+str(sentence1_words))
+                            print ("[ts5 sample] topic words: "+str(node1_shared))
+                            print ("[ts5 sample] node_query_topics_sig_score: "+str(g.vs[e.tuple[0]]['node_query_topics_sig_score']))
+                            print ("[ts5 topic sig edge score]: "+str(topics_sig_edge))
+                            print ("[ts5 weight (max)]: "+str(weight))
+
 
             elif experiment=='do6_two_scores_1':
                 weight=max(cosim_dist[i],ws_dist[i])  #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
@@ -641,7 +656,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
         for vc_index, v in enumerate(g.vs):
             s_idx=v['s_idx']
             sentence=v['label']
-            node_query_topics_sig_score[s_idx]=v['topic_sig_score']
+            node_query_topics_sig_score[s_idx]=v['node_query_topics_sig_score']
     else:
         g_random_walk_scores=calc_random_walk_with_restart(g, query_index)
     
@@ -702,7 +717,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
             score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[4],reverse=True) #Sort by edge weight
         elif 'ts5' in ts_branch:
             print ("SORTING BY node_query_topics_sig_score")
-            score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
+            score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by node_query_topics_sig_score
         else:
             print ("SORTING BY RWS")
             score_sorted=sorted(score_lookup[i_cluster], key=lambda x:x[2],reverse=True) #Sort by walk score
