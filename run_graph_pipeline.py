@@ -243,36 +243,38 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
                     #(shared topic signature words/ the sum of all topic signature words in the #two sentences.) 
                     
-                    the_shared=[]
-
-                    node0_shared=[]
+                    node0_query_shared=[]
+                    node0_topic_sig_words=[]
                     for word in list(set(sentence0_words)): #unique
                         if word in topic_signatures:
+                            node0_topic_sig_words+=[word]
                             if word in query_topic_signature_words:
-                                node0_shared+=[word]
-                    node1_shared=[]
+                                node0_query_shared+=[word]
+                    node1_query_shared=[]
+                    node1_topic_sig_words=[]
                     for word in list(set(sentence1_words)): #unique
                         if word in topic_signatures:
+                            node1_topic_sig_words+=[word]
                             if word in query_topic_signature_words:
-                                the_shared+=[word]
-                                node1_shared+=[word]
-
+                                node1_query_shared+=[word]
+                                
                     try:
-                        node_query_topic_sig_score= len(the_shared)/(len(node0_shared)+len(node1_shared))
-                    except: node_query_topic_sig_score=0
+                        node0_query_topic_sig_score=len(node0_query_shared)/(len(node0_topic_sig_words)+len(node1_topic_sig_words))
+                    except:
+                        node0_query_topic_sig_score=0
+                    try:
+                        node1_query_topic_sig_score=len(node1_query_shared)/(len(node1_topic_sig_words)+len(node1_topic_sig_words))
+                    except:
+                        node1_query_topic_sig_score=0
+
+                    query_topic_sig_edge=(node0_query_topic_sig_score+node1+node1_query_topic_sig_score)/2
                     
-                    weight=max(cosim_dist[i],ws_dist[i],node_query_topic_sig_score)
+                    weight=max(cosim_dist[i],ws_dist[i],query_topic_sig_edge)
 
                     if 'ts5' in ts_branch:
                         #> store node_query_topics_sig_score for use in selection post clustering
-                        try:
-                            g.vs[e.tuple[0]]['node_query_topics_sig_score']=len(node0_shared)/(len(the_shared))
-                        except:
-                            g.vs[e.tuple[0]]['node_query_topics_sig_score']=0
-                        try:
-                            g.vs[e.tuple[1]]['node_query_topics_sig_score']=len(node1_shared)/(len(the_shared))
-                        except:
-                            g.vs[e.tuple[1]]['node_query_topics_sig_score']=0
+                        g.vs[e.tuple[0]]['node_query_topics_sig_score']=node0_query_topic_sig_score
+                        g.vs[e.tuple[1]]['node_query_topics_sig_score']=node1_query_topic_sig_score
 
                         if i<10:
                             print

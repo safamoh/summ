@@ -1,0 +1,39 @@
+Matplotlib not present
+Visualization not supported to missing libraries.
+NOTE:  for ts1, ts3 must have created topic signatures sim matrix
+Create topic signatures for each topic
+Processing topics: ['d354c', 'd313e', 'd370i', 'd413a', 'd346h', 'd301i', 'd331f', 'd408c', 'd321f', 'd435f', 'd398e', 'd332h', 'd699a', 'd632i', 'd434b', 'd446j', 'd401e', 'd385g', 'd389h', 'd442g', 'd311i', 'd307b', 'd376e', 'd438g', 'd374a', 'd383j', 'd350a', 'd694j', 'd393f', 'd357i', 'd347b', 'd345j', 'd366i', 'd324e', 'd695c', 'd436j', 'd683j', 'd391h', 'd428e', 'd654f', 'd426a', 'd431h', 'd633g', 'd400b', 'd360f', 'd422c', 'd404g', 'd671g', 'd343c', 'd407b']
+50 topics found.
+Recreate sim matrix files after toggling:
+a)  vectorize_all_topics
+b)  topic signature branch 1
+**because only stores 1 instance of sim matrix
+FOR TOPIC: d354c-------------
+>>> TOPIC SIGNATURE BRANCH: ['ts5']
+Experiment: do6_two_scores_1 For topic: d354c doing clustering: leading_eigenvector and selection report to: C:\scripts-18\duc\summ/../data//Top_summary/ex_do6_two_scores_1/leading_eigenvector/d354c.txt
+FOR TOPIC: d354c got query:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+Using query:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+--> SAMPLE SIM NUMBERS:
+AT: (0,0) sim: 0.000000000
+  for sent1:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+   vs sent2:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+AT: (0,1) sim: 0.067748949
+  for sent1:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+   vs sent2: A FEW years ago, when I used to cover Opec conferences for the Financial Times, a bizarre event took place at one of the Geneva price-fixing meetings of the cartel.
+EXPERIMENT: do6_two_scores_1
+Calculate random walk scores...
+---> Random walk top scores:
+RWS Rank #0 is: 0.152092306993 sentence:  What types of dangers do journalists find themselves in and how are these situations related to their work?  Are journalists specifically targetted?  Are they endangered by the type of situations they are covering or by the content of their reports? 
+RWS Rank #1 is: 0.00380253698332 sentence: Among those arrested were three journalists  sent to cover the event.
+RWS Rank #2 is: 0.003290232835 sentence: 'Dominic,' he said, 'you journalists are such strange people.
+RWS Rank #3 is: 0.00320790219199 sentence: Two journalists were killed Sunday by government forces while a third died  Saturday night after being shot by military troops.
+RWS Rank #4 is: 0.00307123513614 sentence: However they also took about eight journalists hostage on Sunday.
+RWS Rank #5 is: 0.00301184607156 sentence: In 1982, only nine journalists were killed.
+Get edge distributions
+Creating topic signature for topic id: d354c
+**loading twice in same session (maybe) so consider catching
+[Start calculating topic signatures] for: d354c...
+[done topic signatures] for: d354c
+[debug] start loglikelyhood calc...
+[debug] count words...
+[debug] doing calcs...
