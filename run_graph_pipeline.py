@@ -1023,14 +1023,14 @@ def do4_median_weight(g,clusters,cluster_weights,query_sentence,query_index,topi
             print ("  for sent1: "+str(corpus[0]))
             print ("   vs sent2: "+str(corpus[1]))
 
-    return do_selection_by_round_robin(g,clusters,new_cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+    return do_selection_by_round_robin(g,clusters,new_cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,ts_branch=ts_branch)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 #5)    Try Markov clustering. 
 def do5_markov_clustering(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,ts_branch=ts_branch)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #6)    
@@ -1044,16 +1044,16 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
     #>> blend the percentiles score as the weight
     
     
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,ts_branch=ts_branch)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,experiment='do6_two_scores_1')
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,experiment='do6_two_scores_1',ts_branch=ts_branch)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do6_two_scores_2(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,ts_branch=ts_branch)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
