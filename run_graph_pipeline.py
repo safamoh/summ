@@ -194,16 +194,19 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     #in the two sentences.
                     shared_words=[]
                     topic_signature_words=[]
-                    for word in list(set(sentence0_words)): #unique
+#unique                    for word in list(set(sentence0_words)): #unique
+                    for word in sentence0_words:
                         if word in topic_signatures:
                             topic_signature_words+=[word]
-                    for word in list(set(sentence1_words)):
+#unique                    for word in list(set(sentence1_words)):
+                    for word in sentence1_words:
                         if word in topic_signatures: #Already exists so shared
                             if word in topic_signature_words: #SHARED
                                 shared_words+=[word]
                             topic_signature_words+=[word]
                     try:
-                        topics_sig_edge=len(shared_words)/len(list(set(topic_signature_words)))
+#unique                        topics_sig_edge=len(shared_words)/len(list(set(topic_signature_words)))
+                        topics_sig_edge=len(shared_words)/len(topic_signature_words)
                     except: topics_sig_edge
 
                     #Edge-weight= MAX( cos-sim, rws-edge, topics_sig_edge)
@@ -252,14 +255,14 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     
                     node0_query_shared=[]
                     node0_topic_sig_words=[]
-                    for word in list(set(sentence0_words)): #unique
+                    for word in sentence0_words:
                         if word in topic_signatures:
                             node0_topic_sig_words+=[word]
                             if word in query_topic_signature_words:
                                 node0_query_shared+=[word]
                     node1_query_shared=[]
                     node1_topic_sig_words=[]
-                    for word in list(set(sentence1_words)): #unique
+                    for word in sentence1_words: #unique
                         if word in topic_signatures:
                             node1_topic_sig_words+=[word]
                             if word in query_topic_signature_words:
