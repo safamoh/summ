@@ -292,9 +292,9 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                             print
                             print ("[ts5 sample] query topic sigs: "+str(query_topic_signature_words))
                             print ("[ts5 sample] Sentence: "+str(sentence0_words))
-                            print ("[ts5 sample] topic words: "+str(node0_topic_sig_words))
+                            print ("[ts5 sample] node0 topic words: "+str(node0_topic_sig_words))
                             print ("[ts5 sample] Sentence: "+str(sentence1_words))
-                            print ("[ts5 sample] topic words: "+str(node1_topic_sig_words))
+                            print ("[ts5 sample] node1 topic words: "+str(node1_topic_sig_words))
                             print ("[ts5 sample] node_query_topics_sig_score: "+str(g.vs[e.tuple[0]]['node_query_topics_sig_score']))
                             print ("[ts5 topic sig edge score]: "+str(topics_sig_edge))
                             #print ("[ts5 weight (max)]: "+str(weight))

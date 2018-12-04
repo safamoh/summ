@@ -93,6 +93,9 @@ def loglikefun(document,tdm_count,total_words):
 def loglikelyhood(fore_words,back_words,cutoff=10.83):
     print ("[debug] start loglikelyhood calc...")
     topic_signatures=[]
+    
+    fore_words=[x.lower() for x in fore_words]
+    back_words=[x.lower() for x in back_words]
 
     print ("[debug] count words...")
     fore_count_words,fore_word_length=word_counter(fore_words)
@@ -131,14 +134,9 @@ def loglikelyhood(fore_words,back_words,cutoff=10.83):
         if ratios[word]>cutoff:
             topic_signatures+=[word]
             
-        if False:
+        if True:
             print ("TOPIC WORD: "+str(word)+" ratio: "+str(ratios[word])+" fore: "+str(fore_count_words[word])+" back: "+str(back_count_words[word]))
-            if word=='are':
-                print ("ARE DETAILS:")
-                print ("L1: "+str(l1))
-                print ("L2: "+str(l2))
-                print ("L3: "+str(l3))
-                print ("L4: "+str(l4))
+            print ("--> L1: "+str(l1)+" L2: "+str(l2)+" L3: "+str(l3)+" L4: "+str(l4)+" i_words: "+str(i_words)+" i_size: "+str(i_size)+" b_words: "+str(b_words)+" b_size: "+str(b_size))
 
     return topic_signatures
 
