@@ -130,6 +130,8 @@ def loglikelyhood(fore_words,back_words,cutoff=10.83):
         
         if ratios[word]>cutoff:
             topic_signatures+=[word]
+            
+        print ("TOPIC WORD: "+str(word)+" ratio: "+str(ratios[word])+" fore: "+str(fore_count_words[word])+" back: "+str(back_count_words[word]))
 
     return topic_signatures
 

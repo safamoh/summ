@@ -178,6 +178,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                 if word in topic_signatures:
                     query_topic_signature_words+=[word]
 
+
+        topic_sig_values_list=[] ## Collect for normalized distribution -- for max
         for i,e in enumerate(g.es): #FOR EACH EDGE
             sentence0_words=nltk.word_tokenize( g.vs[e.tuple[0]]['label'].lower() )
             sentence1_words=nltk.word_tokenize( g.vs[e.tuple[1]]['label'].lower() )
@@ -203,8 +205,11 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     try:
                         topics_sig_edge=len(shared_words)/len(list(set(topic_signature_words)))
                     except: topics_sig_edge
+
                     #Edge-weight= MAX( cos-sim, rws-edge, topics_sig_edge)
-                    weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    topic_sig_values_list+=[topics_sig_edge]
+                    #BELOW#  weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    weight=-1 #redefined below
                     
                     
                 elif 'ts3' in ts_branch or 'ts5' in ts_branch:
@@ -233,7 +238,9 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                         
                     topics_sig_edge=(node1_topic_sig_score+node2_topic_sig_score)/2
 
-                    weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    topic_sig_values_list+=[topics_sig_edge]
+                    #BELOW# weight=max(cosim_dist[i],ws_dist[i],topics_sig_edge)
+                    weight=-1
                     
                     
                 if 'ts4' in ts_branch or 'ts5' in ts_branch:
@@ -267,9 +274,11 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     except:
                         node1_query_topic_sig_score=0
 
-                    query_topic_sig_edge=(node0_query_topic_sig_score+node1+node1_query_topic_sig_score)/2
+                    query_topic_sig_edge=(node0_query_topic_sig_score+node1_query_topic_sig_score)/2
                     
-                    weight=max(cosim_dist[i],ws_dist[i],query_topic_sig_edge)
+                    topic_sig_values_list+=[query_topic_sig_edge]
+                    #BELOW# weight=max(cosim_dist[i],ws_dist[i],query_topic_sig_edge)
+                    weight=-1
 
                     if 'ts5' in ts_branch:
                         #> store node_query_topics_sig_score for use in selection post clustering
@@ -278,13 +287,14 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
                         if i<10:
                             print
+                            print ("[ts5 sample] query topic sigs: "+str(query_topic_signature_words))
                             print ("[ts5 sample] Sentence: "+str(sentence0_words))
-                            print ("[ts5 sample] topic words: "+str(node0_shared))
+                            print ("[ts5 sample] topic words: "+str(node0_topic_sig_words))
                             print ("[ts5 sample] Sentence: "+str(sentence1_words))
-                            print ("[ts5 sample] topic words: "+str(node1_shared))
+                            print ("[ts5 sample] topic words: "+str(node1_topic_sig_words))
                             print ("[ts5 sample] node_query_topics_sig_score: "+str(g.vs[e.tuple[0]]['node_query_topics_sig_score']))
                             print ("[ts5 topic sig edge score]: "+str(topics_sig_edge))
-                            print ("[ts5 weight (max)]: "+str(weight))
+                            #print ("[ts5 weight (max)]: "+str(weight))
 
 
             elif experiment=='do6_two_scores_1':
@@ -293,6 +303,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                 weight=(cosim_dist[i]+(query1_cosim[i]+query2_cosim[i])/2)/2   #  (do6_2): edge_weight=((cos sim) + [(node1_qcs+node2_qcs)/2])/2
             else: #Standard do6_two_scores
                 weight=(cosim_dist[i]+ws_dist[i])/2
+
 
 #            print ("WEIGHT from: "+str(g.es[i]['weight'])+" to: "+str(weight)+" via: "+str(cosim_dist[i])+" and "+str(ws_dist[i]))
             g.es[i]['weight']=weight
@@ -304,6 +315,31 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                     g.vs[e.tuple[1]]['edge_weight']=weight
                 if e.tuple[1]==query_index:
                     g.vs[e.tuple[0]]['edge_weight']=weight
+
+
+
+        ## Calc topic signature weight using distribution values
+        #######
+        if ts_branch and topic_id:
+            if 'ts2' in ts_branch or 'ts3' in ts_branch or 'ts4' in ts_branch or 'ts5' in ts_branch:
+                ts_dist=calc_rank_percent_distribution(topics_sig_values_list)
+            for i,e in enumerate(g.es): #FOR EACH EDGE
+                if 'ts2' in ts_branch or 'ts3' in ts_branch or 'ts4' in ts_branch or 'ts5' in ts_branch:
+                    weight=max(cosim_dist[i],ws_dist[i],ts_dist)
+                    
+                    #STORE WEIGHTS (like above)
+                    ######
+                    g.es[i]['weight']=weight
+                
+                    #NOV 21:
+                    #Store weight at vertex if between query_index
+                    if experiment=='do6_two_scores_1':
+                        if e.tuple[0]==query_index:
+                            g.vs[e.tuple[1]]['edge_weight']=weight
+                        if e.tuple[1]==query_index:
+                            g.vs[e.tuple[0]]['edge_weight']=weight
+        #########
+
 
     else:
         pass #Standard running no experiments

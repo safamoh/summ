@@ -61,8 +61,9 @@ def run_exercise():
     ts_branch=['ts4']
     ts_branch=['ts2'] #ok
     ts_branch=['ts3'] #ok
-    ts_branch=['ts1'] #ok
     ts_branch=['ts5']
+
+    ts_branch=['ts1'] #Creates sim matrix too
 
 
     if 'ts1' in ts_branch:
