@@ -328,7 +328,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                 ts_dist=calc_rank_percent_distribution(topic_sig_values_list)
             for i,e in enumerate(g.es): #FOR EACH EDGE
                 if 'ts2' in ts_branch or 'ts3' in ts_branch or 'ts4' in ts_branch or 'ts5' in ts_branch:
-                    weight=max(cosim_dist[i],ws_dist[i],ts_dist)
+                    weight=max(cosim_dist[i],ws_dist[i],ts_dist[i])
                     
                     #STORE WEIGHTS (like above)
                     ######
