@@ -30,8 +30,8 @@ Perf=Performance_Tracker()
 
 
 def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id='',cosim_topic_signatures=False):
-    from ex_all_topics import GLOBAL_TOKENIZE_TOPIC_SIGNATURES
-    global GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+    from ex_all_topics import GLOBAL_STEM_TOPIC_SIGNATURES
+    global GLOBAL_STEM_TOPIC_SIGNATURES
 
     #STEP 1:  Build vectorizer
     #STEP 2:  Do sim matrix
@@ -73,12 +73,12 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         if not local_topic_id:
             print ("Expect topic id for calculating topic signature")
             stopp=expect_topic_id
-        topic_signatures=get_topic_topic_signatures(local_topic_id,stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+        topic_signatures=get_topic_topic_signatures(local_topic_id,stem=GLOBAL_STEM_TOPIC_SIGNATURES)
 
         documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
         for sentence in sentences:
             #Get topic signature sentence (could be stemmed version)
-            words=pre_tokenize_docs([sentence],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            words=pre_tokenize_docs([sentence],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
             ts_sentences+=[" ".join(words)]
 
         #Add query as V1

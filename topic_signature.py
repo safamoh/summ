@@ -162,7 +162,6 @@ def pre_tokenize_docs(documents,stem=False):
         else:
             stemmed_words=[]
             for word in filtered_words:
-                temp=pStemmer.stem(word)
                 stemmed_words+=[pStemmer.stem(word)]
             all_words+=stemmed_words
 #D#        print ("[debug info] finished doc length: "+str(len(stemmed_words)))

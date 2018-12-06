@@ -101,8 +101,7 @@ class NestedDict(dict):
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_branch=[]):
-    from ex_all_topics import GLOBAL_TOKENIZE_TOPIC_SIGNATURES
-    global GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+    from ex_all_topics import GLOBAL_STEM_TOPIC_SIGNATURES
 
     if not topic_id:topic_required=no_globals
     g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id,ts_branch=[])
@@ -172,12 +171,12 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
         if ts_branch and topic_id:
             print ("Creating topic signature for topic id: "+str(topic_id))
             print ("**loading twice in same session (maybe) so consider catching")
-            topic_signatures=get_topic_topic_signatures(topic_id,stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            topic_signatures=get_topic_topic_signatures(topic_id,stem=GLOBAL_STEM_TOPIC_SIGNATURES)
 
 
         #Calculate query_sentence signature words
         if 'ts4' in ts_branch or 'ts5' in ts_branch:
-            query_sentence_words=pre_tokenize_docs([query_sentence],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            query_sentence_words=pre_tokenize_docs([query_sentence],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
             query_topic_signature_words=[]
             for word in query_sentence_words:
                 if word in topic_signatures:
@@ -186,14 +185,12 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
         topic_sig_values_list=[] ## Collect for normalized distribution -- for max
         for i,e in enumerate(g.es): #FOR EACH EDGE
-            sentence0_words=nltk.word_tokenize( g.vs[e.tuple[0]]['label'].lower() )
-            sentence1_words=nltk.word_tokenize( g.vs[e.tuple[1]]['label'].lower() )
             #Get sentence words at each node
             sentence0=g.vs[e.tuple[0]]['label']
             sentence1=g.vs[e.tuple[1]]['label']
 
-            sentence0_words=pre_tokenize_docs([sentence0],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
-            sentence1_words=pre_tokenize_docs([sentence1],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            sentence0_words=pre_tokenize_docs([sentence0],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
+            sentence1_words=pre_tokenize_docs([sentence1],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
 
             if ts_branch and topic_id:
                 if 'ts1' in ts_branch:

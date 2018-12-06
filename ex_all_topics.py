@@ -26,7 +26,7 @@ output_directory=TEMP_DATA_PATH+"/Top_summary"
 if not os.path.exists(output_directory):
     os.mkdir(output_directory)
     
-GLOBAL_TOKENIZE_TOPIC_SIGNATURES=False
+GLOBAL_STEM_TOPIC_SIGNATURES=True
 
 
 def run_exercise():
@@ -233,7 +233,7 @@ def run_exercise():
 
 
         print ("Done topic: "+str(topic_id))
-        break #break #at first topic
+#        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic
