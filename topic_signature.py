@@ -5,18 +5,17 @@ import collections
 from math import log
 from scipy.stats import binom
 
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from nltk.tokenize import RegexpTokenizer
+
 from duc_reader import files2sentences
 
 
 #0v1# JC  Nov 20, 2018  Setup base likelihood calculation
 
-
-def load_entire_corpus_words():
-    documents,sentences,sentences_topics=files2sentences(limit_topic='')
-    all_corpus=" ".join(sentences)
-    word_tokens = nltk.wordpunct_tokenize(" ".join(sentences).lower())
-    print ("[verbose] using "+str(len(word_tokens))+" words.")
-    return word_tokens
+pStemmer = PorterStemmer() #For vectorizing
+STOPWORDS= set(stopwords.words('english'))
 
 
 def bigram_counts():
@@ -134,27 +133,67 @@ def loglikelyhood(fore_words,back_words,cutoff=10.83):
         if ratios[word]>cutoff:
             topic_signatures+=[word]
             
-        if True:
+        if False:
             print ("TOPIC WORD: "+str(word)+" ratio: "+str(ratios[word])+" fore: "+str(fore_count_words[word])+" back: "+str(back_count_words[word]))
             print ("--> L1: "+str(l1)+" L2: "+str(l2)+" L3: "+str(l3)+" L4: "+str(l4)+" i_words: "+str(i_words)+" i_size: "+str(i_size)+" b_words: "+str(b_words)+" b_size: "+str(b_size))
 
     return topic_signatures
 
+def pre_tokenize_docs(documents,stem=False):
+    global STOPWORDS
+    #** see duc_reader -> tokenize_sentences for inspiration
+    all_words=[]
+    for doc in documents:
+        #Doc.corpus <- tm_map(Doc.corpus, content_transformer(tolower))
+        doc=doc.lower()
+        #Doc.corpus <- tm_map(Doc.corpus, stripWhitespace)
+        #Doc.corpus <- tm_map(Doc.corpus, removePunctuation)
+        tokenizer = RegexpTokenizer(r'\w+')
+        tokens = tokenizer.tokenize(doc)
+        #Doc.corpus <- tm_map(Doc.corpus, removeWords, my_stopwords)
+
+        #SLOW?
+        filtered_words = filter(lambda token: token not in STOPWORDS, tokens)
+
+        #Doc.corpus <- tm_map(Doc.corpus, stemDocument)
+        
+        if not stem:
+            all_words+=filtered_words
+        else:
+            stemmed_words=[]
+            for word in filtered_words:
+                temp=pStemmer.stem(word)
+                stemmed_words+=[pStemmer.stem(word)]
+            all_words+=stemmed_words
+#D#        print ("[debug info] finished doc length: "+str(len(stemmed_words)))
+    return all_words
+
+
+def load_entire_corpus_words():
+    print ("[debug]  Loading corpus...")
+    documents,sentences,sentences_topics=files2sentences(limit_topic='')
+    #all_corpus=" ".join(sentences)
+    #word_tokens = nltk.wordpunct_tokenize(" ".join(sentences).lower())
+    print ("[debug]  tokenizing corpus...")
+    word_tokens=pre_tokenize_docs(documents)
+    print ("[verbose] using "+str(len(word_tokens))+" words.")
+    return word_tokens
+
 
 def sample_calc_likelyhood():
     documents,sentences,sentences_topics=files2sentences(limit_topic='')
-    foreground_text=documents[0].lower()
 
-    foreground_words=nltk.wordpunct_tokenize(foreground_text)
+    foreground_words=pre_tokenize_docs([documents[0]])
     background_words=load_entire_corpus_words()
     
+    print ("[debug] calc loglikelyhood... (base words: "+str(len(background_words)))
     topic_signatures=loglikelyhood(foreground_words,background_words)
     
     print ("GOT SIGNATURES: "+str(topic_signatures))
-
     return
 
-def get_topic_topic_signatures(topic_id):
+
+def get_topic_topic_signatures(topic_id,stem=False):
     #** potential speed-up by reusing background word list
     print ("[Start calculating topic signatures] for: "+str(topic_id)+"...")
 
@@ -165,9 +204,11 @@ def get_topic_topic_signatures(topic_id):
 
     #Include query sentence?
     for i,sentence in enumerate(sentences):
+        clean_words=pre_tokenize_docs([sentence],stem=stem)
         if sentences_topics[i]==topic_id:
-            foreground_words+=nltk.word_tokenize(sentence)
-        background_words+=nltk.word_tokenize(sentence)
+            foreground_words+=clean_words
+            #foreground_words+=nltk.word_tokenize(sentence)
+        background_words+=clean_words
     
     print ("[done topic signatures] for: "+str(topic_id))
     return loglikelyhood(foreground_words, background_words)

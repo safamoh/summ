@@ -22,12 +22,17 @@ from topic_signature import get_topic_topic_signatures
 
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
+from topic_signature import pre_tokenize_docs
 
 Perf=Performance_Tracker()
 
 
 
+
 def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id='',cosim_topic_signatures=False):
+    from ex_all_topics import GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+    global GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+
     #STEP 1:  Build vectorizer
     #STEP 2:  Do sim matrix
     Perf.start()
@@ -68,21 +73,19 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         if not local_topic_id:
             print ("Expect topic id for calculating topic signature")
             stopp=expect_topic_id
-        topic_signatures=get_topic_topic_signatures(local_topic_id)
+        topic_signatures=get_topic_topic_signatures(local_topic_id,stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
 
         documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
         for sentence in sentences:
-            ts_sentence=''
-            words=nltk.wordpunct_tokenize(sentence)
-            for word in words:
-                if word.lower() in topic_signatures:
-                    ts_sentence+=word+" "
-            ts_sentences+=[ts_sentence.strip()]
+            #Get topic signature sentence (could be stemmed version)
+            words=pre_tokenize_docs([sentence],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            ts_sentences+=[" ".join(words)]
 
         #Add query as V1
         query_sentence=get_query(local_topic_id)
-        print ("Using query: "+str(query_sentence))
-        ts_sentences.insert(0,query_sentence)
+        clean_query_sentence=" ".join(pre_tokenize_docs([query_sentence]))
+        print ("Using query: "+str(clean_query_sentence))
+        ts_sentences.insert(0,clean_query_sentence)
         sentences_topics.insert(0,local_topic_id)
         
         #Swap topic_signatures for regular

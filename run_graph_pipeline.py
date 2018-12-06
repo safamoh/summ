@@ -41,6 +41,8 @@ import markov_clustering as mc
 from igraph.clustering import VertexClustering
 
 from topic_signature import get_topic_topic_signatures
+from topic_signature import pre_tokenize_docs
+
 
 Perf=Performance_Tracker()
 
@@ -99,6 +101,9 @@ class NestedDict(dict):
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_branch=[]):
+    from ex_all_topics import GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+    global GLOBAL_TOKENIZE_TOPIC_SIGNATURES
+
     if not topic_id:topic_required=no_globals
     g,query_sentence,sims,query_node,query_index=load_topic_matrix(topic_id,ts_branch=[])
     #method='betweenness'   #talking to much time, we will skip it
@@ -167,12 +172,12 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
         if ts_branch and topic_id:
             print ("Creating topic signature for topic id: "+str(topic_id))
             print ("**loading twice in same session (maybe) so consider catching")
-            topic_signatures=get_topic_topic_signatures(topic_id)
+            topic_signatures=get_topic_topic_signatures(topic_id,stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
 
 
         #Calculate query_sentence signature words
         if 'ts4' in ts_branch or 'ts5' in ts_branch:
-            query_sentence_words=nltk.word_tokenize(query_sentence.lower())
+            query_sentence_words=pre_tokenize_docs([query_sentence],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
             query_topic_signature_words=[]
             for word in query_sentence_words:
                 if word in topic_signatures:
@@ -183,6 +188,13 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
         for i,e in enumerate(g.es): #FOR EACH EDGE
             sentence0_words=nltk.word_tokenize( g.vs[e.tuple[0]]['label'].lower() )
             sentence1_words=nltk.word_tokenize( g.vs[e.tuple[1]]['label'].lower() )
+            #Get sentence words at each node
+            sentence0=g.vs[e.tuple[0]]['label']
+            sentence1=g.vs[e.tuple[1]]['label']
+
+            sentence0_words=pre_tokenize_docs([sentence0],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+            sentence1_words=pre_tokenize_docs([sentence1],stem=GLOBAL_TOKENIZE_TOPIC_SIGNATURES)
+
             if ts_branch and topic_id:
                 if 'ts1' in ts_branch:
                     #Standard method
@@ -279,7 +291,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
 
                     query_topic_sig_edge=(node0_query_topic_sig_score+node1_query_topic_sig_score)/2
                     
-                    topic_sig_values_list+=[query_topic_sig_edge]
+                    topic_sig_values_list+=[query_topic_sig_edge] #<-- store for distribution calc below
                     #BELOW# weight=max(cosim_dist[i],ws_dist[i],query_topic_sig_edge)
                     weight=-1
 
@@ -291,12 +303,13 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
                         if i<10:
                             print
                             print ("[ts5 sample] query topic sigs: "+str(query_topic_signature_words))
-                            print ("[ts5 sample] Sentence: "+str(sentence0_words))
+                            print ("[ts5 sample] Sentence0: "+str(sentence0_words))
                             print ("[ts5 sample] node0 topic words: "+str(node0_topic_sig_words))
-                            print ("[ts5 sample] Sentence: "+str(sentence1_words))
+                            print ("[ts5 sample] node0_query_topics_sig_score: "+str(g.vs[e.tuple[0]]['node_query_topics_sig_score']))
+
+                            print ("[ts5 sample] Sentence1: "+str(sentence1_words))
                             print ("[ts5 sample] node1 topic words: "+str(node1_topic_sig_words))
-                            print ("[ts5 sample] node_query_topics_sig_score: "+str(g.vs[e.tuple[0]]['node_query_topics_sig_score']))
-                            print ("[ts5 topic sig edge score]: "+str(topics_sig_edge))
+                            print ("[ts5 sample] node1_query_topics_sig_score: "+str(g.vs[e.tuple[1]]['node_query_topics_sig_score']))
                             #print ("[ts5 weight (max)]: "+str(weight))
 
 

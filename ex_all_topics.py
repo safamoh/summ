@@ -21,12 +21,12 @@ from run_graph_pipeline import do6_two_scores_1
 from run_graph_pipeline import do6_two_scores_2
 from run_graph_pipeline import do7_sum_nodes
 
-from topic_signature import get_topic_topic_signatures
-
 
 output_directory=TEMP_DATA_PATH+"/Top_summary"
 if not os.path.exists(output_directory):
     os.mkdir(output_directory)
+    
+GLOBAL_TOKENIZE_TOPIC_SIGNATURES=False
 
 
 def run_exercise():
@@ -60,11 +60,11 @@ def run_exercise():
     ts_branch=[]
 
     ts_branch=['ts2'] #ok
-    ts_branch=['ts1'] #Creates sim matrix too
     ts_branch=['ts3'] #ok
-
     ts_branch=['ts4']
     ts_branch=['ts5']
+
+    ts_branch=['ts1'] #Creates sim matrix too
 
 
     if 'ts1' in ts_branch:
