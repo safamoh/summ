@@ -65,9 +65,10 @@ def run_exercise():
     ts_branch=['ts5']
 
     ts_branch=['ts1'] #Creates sim matrix too
+    ts_branch=['ts6'] #Combine ts with tf-idf
 
 
-    if 'ts1' in ts_branch:
+    if 'ts1' in ts_branch or 'ts6' in branch:
         print ("Use topic signatures in sim matrix")
         branch+=['create_sim_matrix']
         cosim_topic_signatures=True
@@ -233,7 +234,7 @@ def run_exercise():
 
 
         print ("Done topic: "+str(topic_id))
-#        break #break #at first topic
+        break #break #at first topic
 #                    break #at first cluster
 #                break #at first experiment
 #        break #break #at first topic

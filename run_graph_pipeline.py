@@ -193,7 +193,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment='',ts_br
             sentence1_words=pre_tokenize_docs([sentence1],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
 
             if ts_branch and topic_id:
-                if 'ts1' in ts_branch:
+                if 'ts1' in ts_branch or 'ts6' in ts_branch:
                     #Standard method
                     weight=max(cosim_dist[i],ws_dist[i]) 
                 elif 'ts2' in ts_branch:

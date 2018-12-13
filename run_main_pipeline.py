@@ -28,7 +28,6 @@ Perf=Performance_Tracker()
 
 
 
-
 def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id='',cosim_topic_signatures=False):
     from ex_all_topics import GLOBAL_STEM_TOPIC_SIGNATURES
     global GLOBAL_STEM_TOPIC_SIGNATURES
@@ -55,8 +54,62 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         print ("# Possible for single or more topics")
         print ("# ALSO, use topic signature in place of sentence for cosim calc")
     topic_signatures={}
-    ts_sentences=[]
 
+    ts_sentences=[]
+    ts_encoded_sentences_list=[]
+    if cosim_topic_signatures:
+        print ("Append topic signatures to end of feature vectors")
+
+        if not local_topic_id:
+            print ("Expect topic id for calculating topic signature")
+            stopp=expect_topic_id
+            
+        #Calc topic signatures for topic_id
+        topic_signatures=get_topic_topic_signatures(local_topic_id,stem=GLOBAL_STEM_TOPIC_SIGNATURES)
+        
+        #Create encoder for ts word --> integer based on integer
+        c=0
+        ts_encoder={}
+        for ts in topic_signatures:
+            if not ts in ts_encoder:
+                ts_encoder[ts]=c
+                c+=1
+        
+        #Get corpus
+        documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
+        
+        #Create topic signature "sentences" -- but not used for tf-idf
+        for sentence in sentences:
+            #Get topic signature sentence (could be stemmed version)
+            words=pre_tokenize_docs([sentence],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
+            ts_words=[]
+            ts_encoded_words=[]
+            for word in words:
+                if word in topic_signatures:
+                    ts_words+=[word]
+                    ts_encoded_words+=[str(ts_encoder[word])]
+                
+            ts_sentences+=[" ".join(words)]
+            ts_encoded_sentences_list+=[ts_encoded_words]
+
+        #Add query as V1
+        query_sentence=get_query(local_topic_id)
+
+        words=pre_tokenize_docs([query_sentence])
+        clean_query_sentence=""
+        clean_query_encoded_sentence_list=[]
+        for word in words:
+            if word in topic_signatures:
+                clean_query_sentence+=word+" "
+                clean_query_encoded_sentence_list+=[ts_encoder[word]]
+
+        ts_sentences.insert(0,clean_query_sentence.strip())
+        ts_encoded_sentences_list.insert(0,clean_query_encoded_sentence_list)
+        sentences_topics.insert(0,local_topic_id)
+        
+        #Swap topic_signatures for regular
+        sentences=ts_sentences
+        
 
     #1/  LOAD
     #################################
@@ -69,28 +122,7 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
             sentences.insert(0,query_sentence)
             sentences_topics.insert(0,topic_id)
         print ("Done building sentences...")
-    elif cosim_topic_signatures:
-        if not local_topic_id:
-            print ("Expect topic id for calculating topic signature")
-            stopp=expect_topic_id
-        topic_signatures=get_topic_topic_signatures(local_topic_id,stem=GLOBAL_STEM_TOPIC_SIGNATURES)
 
-        documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
-        for sentence in sentences:
-            #Get topic signature sentence (could be stemmed version)
-            words=pre_tokenize_docs([sentence],stem=GLOBAL_STEM_TOPIC_SIGNATURES)
-            ts_sentences+=[" ".join(words)]
-
-        #Add query as V1
-        query_sentence=get_query(local_topic_id)
-        clean_query_sentence=" ".join(pre_tokenize_docs([query_sentence]))
-        print ("Using query: "+str(clean_query_sentence))
-        ts_sentences.insert(0,clean_query_sentence)
-        sentences_topics.insert(0,local_topic_id)
-        
-        #Swap topic_signatures for regular
-        sentences=ts_sentences
-        
     else:
         documents,sentences,sentences_topics=files2sentences(limit_topic=local_topic_id)
 
@@ -144,7 +176,7 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
     # compile corpus (vectors number of times each elements appears)
     #The "compile corpus" section actually converts each sentence into a list of integers ("integer" bag-of-words)
     #This raw_corpus is then fed into the tfidf model.
-    raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences]
+    raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences] #aka common_corpus
 
     #Then convert tokenized documents to vectors: <type 'list'>
     print "Then convert tokenized documents to vectors: %s"% type(raw_corpus)
@@ -181,11 +213,58 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         # corpus tf-idf
         corpus_tfidf = tfidf[corpus]
         print "We convert our vectors corpus to TF-IDF space : %s"%type(corpus_tfidf)
-    
+        
+        ##  Review tf-idf stats
+        print ("SAMPLE STATUS/FORMATS:")
+        print ("SENTENCE AT 1: "+str(sentences[0]))
+        print ("CORPUS AT 1: "+str(corpus[0]))
+        temp_tfidf = tfidf[corpus[0]]
+        print ("TFIDF AT 1: "+str(temp_tfidf))
+        print ("TOPIC SIGS AT 1: "+str(ts_sentences[0]))
+        
+
+        if cosim_topic_signatures:
+            ## ADD TOPIC SIGNATURES AS HIGH-WEIGHT TF-IDF VECTOR SIGNATURES
+            max_index=0
+            max_tfidf=0
+            for sentence_tfidf in corpus_tfidf:
+                for index,vv in sentence_tfidf:
+                    if int(index)>max_index: max_index=int(index)
+                    if float(vv)>max_tfidf:
+                        max_tfidf=vv
+            print ("Max index: "+str(max_index))
+            print ("Max tf-idf "+str(max_tfidf))
+            
+            ##  ADD TOPIC SIGNATURES AS WEIGHTS
+            new_tf_encoder={}
+            new_tf_encoder_num=max_index
+
+            new_corpus_tfidf=[]
+            c=-1
+            for sentence_tfidf in corpus_tfidf: #sentence_tfidf is [(0,0.3230),(3L,0.3222)]
+                c+=1
+                ts_features=[]
+                for topic_signature_word_num in ts_encoded_sentences_list[c]:
+                    if not topic_signature_word_num in new_tf_encoder:
+                        new_tf_encoder_num+=1
+                        new_tf_encoder[topic_signature_word_num]=new_tf_encoder_num
+                    ts_index=new_tf_encoder[topic_signature_word_num]
+                    ts_value=max_tfidf
+                    ts_features+=[(ts_index,ts_value)]
+                    
+                if False and ts_features:
+                    print (">>> add ts feature values: "+str(ts_features))
+
+                ## Combine tfidf sentence values with topic signature feature values
+                new_corpus_tfidf+=[sentence_tfidf+ts_features]
+                
+            corpus_tfidf=new_corpus_tfidf
+
+
         # STEP 5 : Create similarity matrix of all files
         ###############################################
        
-        index = similarities.MatrixSimilarity(tfidf[corpus])
+        index = similarities.MatrixSimilarity(corpus_tfidf)
         #print "We compute similarities from the TF-IDF corpus : %s"%type(index)
         index.save(TEMP_DATA_PATH+'sim_index.index')
         index = similarities.MatrixSimilarity.load(TEMP_DATA_PATH+'sim_index.index')
