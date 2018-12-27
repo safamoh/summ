@@ -21,6 +21,7 @@ import string
 import numpy as np
 import igraph
 
+#0v2# Dec 27, 2018  Added support for 2006, 2007 data input
 
 ENC='utf-8'
 sys.stdout = codecs.getwriter(ENC)(sys.stdout) #Allow special characters to be printed
@@ -33,22 +34,57 @@ pStemmer = PorterStemmer() #For vectorizing
 FILES_TO_PROCESS=10000000
 VERSION=3
 
+##########################
+#  GLOBAL DATA SOURCES
+##########################
+DOCS_SOURCE='2005'
+DOCS_SOURCE='2006'
+DOCS_SOURCE='2007'
 
-# SET BASE FOLDER OF INPUT FILES:
-DOCS_PATH=LOCAL_DIR+"../data/2005/DUC2005_Summarization_Documents/duc2005_docs.tar/duc2005_docs"
-TOPIC_FILENAME=LOCAL_DIR+"../data/2005/duc2005_topics.sgml"
-TEMP_DATA_PATH=LOCAL_DIR+"../data/"
+if DOCS_SOURCE=='2005': #org default
+    TEMP_DATA_PATH=LOCAL_DIR+"../data/"
 
-if not os.path.exists(DOCS_PATH):
-    DOCS_PATH="/Users/safaalballaa/Desktop/duc/2005/DUC2005_Summarization_Documents"
-    TOPIC_FILENAME="/Users/safaalballaa/Desktop/duc/2005/duc2005_topics.sgml"
-    TEMP_DATA_PATH="/Users/safaalballaa/Desktop/resulted_files/"
-    if not os.path.exists(DOCS_PATH):
-        print ("Input directory invalid: "+str(DOCS_PATH))
-        hard_stop=bad_dir_inputs
-if not os.path.exists(TEMP_DATA_PATH):
-    print ("Error in configuration of temp directory: "+str(TEMP_DATA_PATH))
+    # SET BASE FOLDER OF INPUT FILES:
+    DOCS_PATH=LOCAL_DIR+"../data/2005/DUC2005_Summarization_Documents/duc2005_docs.tar/duc2005_docs"
+    TOPIC_FILENAME=LOCAL_DIR+"../data/2005/duc2005_topics.sgml"
     
+    if not os.path.exists(DOCS_PATH):
+        TEMP_DATA_PATH="/Users/safaalballaa/Desktop/resulted_files/"
+        DOCS_PATH="/Users/safaalballaa/Desktop/duc/2005/DUC2005_Summarization_Documents"
+        TOPIC_FILENAME="/Users/safaalballaa/Desktop/duc/2005/duc2005_topics.sgml"
+        if not os.path.exists(DOCS_PATH):
+            print ("Input directory invalid: "+str(DOCS_PATH))
+            hard_stop=bad_dir_inputs
+elif DOCS_SOURCE=='2006':
+    # SET BASE FOLDER OF INPUT FILES:
+    TEMP_DATA_PATH=LOCAL_DIR+"../data/models_2006" #** NEW
+
+    DOCS_PATH=LOCAL_DIR+"../data/2006/DUC2006_Summarization_Documents/duc2006_docs"
+    TOPIC_FILENAME=LOCAL_DIR+"../data/2006/duc2006_topics.sgml"
+    
+    if not os.path.exists(DOCS_PATH):
+        TEMP_DATA_PATH="/Users/safaalballaa/Desktop/resulted_files/2006"
+        DOCS_PATH="/Users/safaalballaa/Desktop/duc/2006/DUC2006_Summarization_Documents/duc2006_docs"
+        TOPIC_FILENAME="/Users/safaalballaa/Desktop/duc/2006/duc2006_topics.sgml"
+elif DOCS_SOURCE=='2007':
+    TEMP_DATA_PATH=LOCAL_DIR+"../data/models_2007" #** NEW
+
+    DOCS_PATH=LOCAL_DIR+"../data/2007/DUC2007_Summarization_Documents/duc2007_testdocs/main"
+    TOPIC_FILENAME=LOCAL_DIR+"../data/2007/duc2007_topics.sgml"
+    
+    if not os.path.exists(DOCS_PATH):
+        TEMP_DATA_PATH="/Users/safaalballaa/Desktop/resulted_files/2007"
+        DOCS_PATH="/Users/safaalballaa/Desktop/duc/2007/DUC2007_Summarization_Documents/duc2007_testdocs/main"
+        TOPIC_FILENAME="/Users/safaalballaa/Desktop/duc/2007/duc2007_topics.sgml"
+
+
+## VALIDATE DATA SOURCES
+if not os.path.exists(DOCS_PATH):
+    print ("Input directory invalid: "+str(DOCS_PATH))
+    hard_stop=bad_dir_inputs
+try: os.mkdir(TEMP_DATA_PATH)
+except:pass
+        
 
 
 
@@ -89,22 +125,47 @@ def walk_directory(folders,include_dir=False):
                     yield path
                     
 def xml2text(xml_filename,text_tag='TEXT'):
+    #0v2#  Dec 27, 2018
+    #>  2006 has TEXT nested under BODY tag.
+    #>  If no TEXT found then use <P> tags
+
     #sum_utilities.py
     blob=''
+    p_blob='' #Just collect paragraph details
     with open(xml_filename, 'r') as xml:
         xmlstring = ''.join(xml.readlines())
         parser = etree.XMLParser(recover=True)
         root = etree.fromstring(xmlstring, parser=parser)
         tree = etree.ElementTree(root)
-        for text in root:
-            if text.tag == text_tag:
-                content=etree.tostring(text)
+        for node in root:
+            if node.tag == text_tag:
+                content=etree.tostring(node)
                 content=re.sub(r'\<.{0,1}TEXT\>','',content)
                 content=re.sub(r'\<.{0,1}P\>','',content)
                 blob+=content
+
+            for node2 in node:
+                if node.tag == 'BODY': #Process nested tag
+                    if node2.tag == text_tag:
+                        content=etree.tostring(node2)
+                        content=re.sub(r'\<.{0,1}TEXT\>','',content)
+                        content=re.sub(r'\<.{0,1}P\>','',content)
+                        blob+=content
+
+                else: #Process text where NO BODY
+                    if node2.tag == 'P':
+                        content=etree.tostring(node2)
+                        content=re.sub(r'\<.{0,1}TEXT\>','',content)
+                        content=re.sub(r'\<.{0,1}P\>','',content)
+                        p_blob+=content
+
+            
     blob=re.sub(r'\n',' ',blob)
+    
+    if not blob.strip():
+        print ("Using non-body paragraph text: "+xml_filename)
+        blob=p_blob
     #print "FOR FILE: "+str(xml_filename)
-    #print ("BLOB: "+str(blob))
     return blob
                     
 def clean_sentence(sentence):
@@ -130,20 +191,36 @@ def filter_out_sentence(sentence):
 
     return filter
     
-def files2sentences(limit_topic='',limit=0):
+def files2sentences(limit_topic='',limit=0,verbose=True):
     #>update to grab DUC id
-    global DOCS_PATH,ENC,FILES_TO_PROCESS
+    global DOCS_PATH,ENC,FILES_TO_PROCESS,DOCS_SOURCE
+    
+    #DOCS_SOURCE==2005, 2006, 
+    
+    if verbose:
+        print ("SOURCING SENTENCES FOR YEAR: "+str(DOCS_SOURCE))
+        print ("SOURCING SENTENCES FROM: "+str(DOCS_PATH))
+        if limit_topic:
+            print ("**LIMITING TOPIC TO: "+str(limit_topic))
+    
+    
     sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
    # print ("[debug] using training documents at: "+str(DOCS_PATH))
 
     # get list of filenames in the directory
     filenames=[]
     document_topics=[]
+    c=0
     for path in walk_directory([DOCS_PATH]):
+        c+=1
+        if c==1 and verbose:
+            print ("Sample first file: "+str(path))
 
         temp=re.sub(r'.*[\\\/]','',path)
         topic_duc=re.split(r'\/',path)[-2]
-        if not re.search(r'd\d+\w',topic_duc): topic_doc=''
+        if not re.search(r'[dD]\d+\w',topic_duc): #2005 is d2322, 2006 is D05555E
+            print ("SKIPPING TOPIC ID: "+str(topic_duc))
+            topic_doc=''
         
         
         #Don't open if topic is restrictive
@@ -161,6 +238,9 @@ def files2sentences(limit_topic='',limit=0):
     for filename in filenames:
         try:
             doc_text=xml2text(filename) #Catch enabled
+            
+            if not doc_text.strip():
+                print ("No content found in: "+str(filename))
             documents+=[doc_text]
         except:
             print ("[error] could not process input xml: "+str(filename))
@@ -231,9 +311,17 @@ def get_query(topic_id):
 
 #######################################################################
 
+def test_different_sources():
+    source=['']
+    print ("Change top years as required")
+    documents,sentences,sentence_topics=files2sentences()
+    print ("FOUND SENTENCE COUNT: "+str(len(sentences)))
+    print ("FOUND TOPIC COUNT: "+str(len(list(set(sentence_topics)))))
+    return
+
 
 if __name__=='__main__':
-    branches=[]
+    branches=['test_different_sources']
     for b in branches:
         globals()[b]()
 
