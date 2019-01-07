@@ -718,7 +718,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
     ##2/  Filter clusters by weight threshold
     if trim_low_weights:
-        weight_threshold=0.0078   
+        weight_threshold=0.0095   
         ptr_tuple_top=[]
         for i,weight in ptr_tuple:
             if weight>weight_threshold:
@@ -1099,7 +1099,7 @@ def do6_two_scores(g,clusters,cluster_weights,query_sentence,query_index,topic_i
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def do6_two_scores_1(g,clusters,cluster_weights,query_sentence,query_index,topic_id='',ts_branch=[]):
-    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,trim_low_weights=True,experiment='do6_two_scores_1',ts_branch=ts_branch)
+    return do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=12,trim_low_weights=True,experiment='do6_two_scores_1',ts_branch=ts_branch)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

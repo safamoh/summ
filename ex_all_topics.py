@@ -41,15 +41,15 @@ def run_exercise():
     branch=[]
 
     
-#    branch=['create_sim_matrix']  #Must be run once
+    branch=['create_sim_matrix']  #Must be run once
 
-    branch+=['do_random_walk']
+#    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-    #branch+=['experiments']
+    branch+=['experiments']
 
     #Topic signature branches
     #########################################
