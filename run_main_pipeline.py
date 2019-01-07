@@ -220,10 +220,10 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         print ("CORPUS AT 1: "+str(corpus[0]))
         temp_tfidf = tfidf[corpus[0]]
         print ("TFIDF AT 1: "+str(temp_tfidf))
-        print ("TOPIC SIGS AT 1: "+str(ts_sentences[0]))
         
 
         if cosim_topic_signatures:
+            print ("TOPIC SIGS AT 1: "+str(ts_sentences[0]))
             ## ADD TOPIC SIGNATURES AS HIGH-WEIGHT TF-IDF VECTOR SIGNATURES
             max_index=0
             max_tfidf=0
