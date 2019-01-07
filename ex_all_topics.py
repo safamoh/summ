@@ -35,21 +35,21 @@ def run_exercise():
     # Options
     ####################################
     # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
-    vectorize_all_topics=False#True #False will do individual topics
-    cosim_topic_signatures=True #Default -- set by ts1
+    vectorize_all_topics=True #False will do individual topics
+    cosim_topic_signatures=False #Default -- set by ts1
 
     branch=[]
 
     
 #    branch=['create_sim_matrix']  #Must be run once
 
-#    branch+=['do_random_walk']
+    branch+=['do_random_walk']
 #    branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
 #    branch+=['do_selection_by_round_robin']
 #    branch+=['do_selection_by_round_robin']
-    branch+=['experiments']
+    #branch+=['experiments']
 
     #Topic signature branches
     #########################################
@@ -59,13 +59,13 @@ def run_exercise():
     print ("NOTE:  for ts1, ts3 must have created topic signatures sim matrix")
     ts_branch=[]
 
-    ts_branch=['ts2'] #ok
-    ts_branch=['ts3'] #ok
-    ts_branch=['ts4']
-    ts_branch=['ts5']
+    #ts_branch=['ts2'] #ok
+    #ts_branch=['ts3'] #ok
+    #ts_branch=['ts4']
+    #ts_branch=['ts5']
 
-    ts_branch=['ts1'] #Creates sim matrix too
-    ts_branch=['ts6'] #Combine ts with tf-idf
+    #ts_branch=['ts1'] #Creates sim matrix too
+    #ts_branch=['ts6'] #Combine ts with tf-idf
 
 
     if 'ts1' in ts_branch or 'ts6' in branch:
