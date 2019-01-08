@@ -37,8 +37,8 @@ VERSION=3
 ##########################
 #  GLOBAL DATA SOURCES
 ##########################
-DOCS_SOURCE='2005'
-#DOCS_SOURCE='2006'
+#DOCS_SOURCE='2005'
+DOCS_SOURCE='2006'
 #DOCS_SOURCE='2007'
 
 if DOCS_SOURCE=='2005': #org default
@@ -225,8 +225,9 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
         
         #Don't open if topic is restrictive
         if limit_topic and not limit_topic.lower()==topic_duc:
-#            print ("Skipping unrelated topic: "+path)
+            print ("Skipping unrelated topic: "+path)
             continue
+
 
         document_topics+=[topic_duc]
         filenames+=[path]
@@ -255,7 +256,7 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
             if not filter_out_sentence(sentence):
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
-    #print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+#    print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents. topic count: "+str(len(sentence_topics)))
     return documents,sentences,sentence_topics
 
 def get_list_of_all_topics():
@@ -263,8 +264,10 @@ def get_list_of_all_topics():
     documents,sentences,sentence_topics=files2sentences()
     unique_topics=list(set(sentence_topics))
     for topic_id in unique_topics:
-        if re.search(r'^d\d',topic_id):
+        if re.search(r'[dD]\d+\w',topic_id):
             custom_topic_list+=[topic_id]
+        else:
+            print ("[warning] skipping topic: "+str(topic_id))
     return custom_topic_list
 
 def tokenize_sentences(sentences):
