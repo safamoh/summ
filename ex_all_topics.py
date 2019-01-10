@@ -26,6 +26,10 @@ from run_graph_pipeline import do7_sum_nodes
 output_directory=TEMP_DATA_PATH+"/Top_summary"
 if not os.path.exists(output_directory):
     os.mkdir(output_directory)
+if not os.path.exists(output_directory+"/random_walk"):
+    os.mkdir(output_directory+"/random_walk")
+if not os.path.exists(output_directory+"/cos_sim"):
+    os.mkdir(output_directory+"/cos_sim")
 
 
 def run_exercise():
