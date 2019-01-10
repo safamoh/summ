@@ -6,6 +6,7 @@ from pyrouge import Rouge155
 sys.path.insert(0,"..")
 from duc_reader import get_list_of_all_topics
 from duc_reader import TEMP_DATA_PATH
+from duc_reader import DOCS_SOURCE
 
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))+"/"
@@ -25,7 +26,16 @@ print ("Rouge install ok!")
 #Gold summaries:  model
 
 
+#PATTERN SETUP
+#2005
+#2006 Sample first file: C:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+#- topic: D\d\d\d\d.
+#- file: A-Z....\.\d\d\d\d
+
+
 def run_on_different_setups():
+
+        
     system_dir = TEMP_DATA_PATH+"Top_summary"
     print ("Getting list of topics...")
     all_topics=get_list_of_all_topics()
@@ -41,8 +51,8 @@ def run_on_different_setups():
     #branches=['do3_avg_cosims']
     #branches=['do4_median_weight']
     #branches=['do5_markov_clustering']
-    branches=['do6_two_scores']
-    #branches=['do6_two_scores_1']
+#    branches=['do6_two_scores']
+    branches=['do6_two_scores_1']
     #branches=['do6_two_scores_2']
     #branches=['do7_sum_nodes']
     
@@ -223,17 +233,35 @@ def run_on_different_setups():
 #==========================================================================================
 
 def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[]):
+    upgrade_as=needed_stop
     for topic_id in all_topics:
-        topic_digits=re.sub(r'\D','',topic_id)
         rouge_output_filename=output_filename_base+topic_id+".txt"
         print ("Running rouge on specific topic: "+topic_id+" output: "+str(rouge_output_filename))
 
         r.system_dir = system_dir
-        r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
-        r.system_filename_pattern = 'd('+topic_digits+')..txt'
-        r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+        r.model_dir = TEMP_DATA_PATH+DOCS_SOURCE+"/results/rouge/models" #(/duc/2005/results/ROUGE/models)
+        if not os.path.exists(r.model_dir):
+            os.makedirs(r.model_dir)
+    
+        if DOCS_SOURCE=='2005':
+            topic_digits=re.sub(r'\D','',topic_id)
+            r.system_filename_pattern = 'd('+topic_digits+')..txt'
+            r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+        elif DOCS_SOURCE=='2006':
+            validate_search=hard_stop
+            topic_digits=re.sub(r'\D','',topic_id)
+            r.system_filename_pattern = 'd('+topic_digits+')..txt'
+            r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+        elif DOCS_SOURCE=='2007':
+            validate_search=hard_stop
+            topic_digits=re.sub(r'\D','',topic_id)
+            r.system_filename_pattern = 'd('+topic_digits+')..txt'
+            r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+        else: requires_setup=hard_stop
+
 
         output = r.convert_and_evaluate()
+        print ("OUTPUT: "+str(output))
 
         fp=open(rouge_output_filename,'w')
         fp.write(output)
@@ -249,9 +277,29 @@ def run_on_all_topics(system_dir=''):
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
 
     r.system_dir = system_dir
-    r.model_dir = TEMP_DATA_PATH+"2005/results/rouge/models" #(/duc/2005/results/ROUGE/models)
-    r.system_filename_pattern = 'd(\d+)..txt'
-    r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+    if DOCS_SOURCE=='2005':
+        the_dir=TEMP_DATA_PATH+DOCS_SOURCE+"/results/rouge/models" #(/duc/2005/results/ROUGE/models)
+    elif DOCS_SOURCE=='2006':
+        the_dir=TEMP_DATA_PATH+"../"+DOCS_SOURCE+"/nisteval/rouge/peers" #(/duc/2005/results/ROUGE/models)
+    elif DOCS_SOURCE=='2007':
+        the_dir=TEMP_DATA_PATH+"../"+DOCS_SOURCE+"/maineval/rouge/peers" #(/duc/2005/results/ROUGE/models)
+
+    if not os.path.exists(the_dir):
+        print ("Please update this path to point to gold-standard rouge models: "+str(the_dir))
+
+    print ("gold standard models: "+str(the_dir))
+    r.model_dir = the_dir
+
+    if DOCS_SOURCE=='2005':
+        r.system_filename_pattern = 'd(\d+)..txt'
+        r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+    elif DOCS_SOURCE=='2006':
+        r.system_filename_pattern = 'D(\d+)..txt'
+        r.model_filename_pattern = 'D#ID#.*[A-Z]' #D311.M.250.I.D
+    elif DOCS_SOURCE=='2007':
+        r.system_filename_pattern = 'D(\d+)..txt'
+        r.model_filename_pattern = 'D#ID#.*[A-Z]'
+    else: requires_setup=hard_stop
     
     print ("Using user trained summaries from: "+str(r.system_dir))
     print ("Using gold system trained summaries from: "+str(r.model_dir))

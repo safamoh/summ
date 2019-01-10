@@ -37,8 +37,8 @@ VERSION=3
 ##########################
 #  GLOBAL DATA SOURCES
 ##########################
-#DOCS_SOURCE='2005'
-#DOCS_SOURCE='2006' #ok
+DOCS_SOURCE='2005' #rouge ok
+DOCS_SOURCE='2006' #ok
 DOCS_SOURCE='2007'
 
 if DOCS_SOURCE=='2005': #org default
@@ -79,6 +79,9 @@ elif DOCS_SOURCE=='2007':
 
 
 ## VALIDATE DATA SOURCES
+if not re.search(r'\/$',TEMP_DATA_PATH): #patch ensure / at end
+    TEMP_DATA_PATH=TEMP_DATA_PATH+"/"
+        
 if not os.path.exists(DOCS_PATH):
     print ("Input directory invalid: "+str(DOCS_PATH))
     hard_stop=bad_dir_inputs

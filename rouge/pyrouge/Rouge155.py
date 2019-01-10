@@ -494,6 +494,10 @@ class Rouge155(object):
         model_filenames = [
             f for f in os.listdir(model_dir) if pattern.match(f)]
         if not model_filenames:
+            files=os.listdir(model_dir)
+            if not files:
+                print ("Bad model directory: "+str(model_dir))
+            print ("Potential files: "+str(files))
             raise Exception(
                 "Could not find any model summaries for the system"
                 " summary with ID {}. Specified model filename pattern was: "
