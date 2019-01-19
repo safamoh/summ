@@ -71,61 +71,64 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         print ("Sample sentence.  Topic: "+str(sentences_topics[i])+": "+sentence)
         if i>2:break
         
-
-#    if create_all_topics_vectorizer or not use_all_topics_vectorizer: #Create specific vectorizer
-    print ("Creating vectorizer... using "+str(len(sentences))+" sentences")
-    #2/  Normalize corpus
-    ##########################################
-
-    ##print("---------------------------------")
-    ##print("list of sentences:")
-    ##print sentences
-    ##print("---------------------------------")
-    ##print("Tokenize sentences (After using PorterStemmer):")
-    norm_sentences=tokenize_sentences(sentences)
-    ##print norm_sentences
-    ##print("---------------------------------")
-
-
-    #STEP 3 : Index and vectorize
-    #####################################################
-    dictionary_filename=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.dict'
-    dictionary_filename_txt=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.txt'
-
-    #We create a dictionary, an index of all unique values: <class 'gensim.corpora.dictionary.Dictionary'>
-    #the Dictionary is used as an index to convert words into integers.
-    dictionary = corpora.Dictionary(norm_sentences)
-    ##print (dictionary)
-    ##print("---------------------------------")
-    ##print("Dictionary (token:id):")
-    ##print(dictionary.token2id)
-    ##print("---------------------------------")
-    dictionary.save(dictionary_filename) # store the dictionary, for future reference
-    dictionary.save_as_text(dictionary_filename_txt,sort_by_word=False) # SAVE the dictionary as a text file,
-    #the format of doc_txt_dict.txt is: (id_1    word_1  document_frequency_1)
-
-    #---------------------------------
-
-    # compile corpus (vectors number of times each elements appears)
-    #The "compile corpus" section actually converts each sentence into a list of integers ("integer" bag-of-words)
-    #This raw_corpus is then fed into the tfidf model.
-    raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences]
-
-    #Then convert tokenized documents to vectors: <type 'list'>
-    print "Then convert tokenized documents to vectors: %s"% type(raw_corpus)
     
+    if use_all_topics_vectorizer and local_topic_id:
+        print ("Don't need to prepare dictionary for topic (using all topics vectorizer)")
+    else:
+        #    if create_all_topics_vectorizer or not use_all_topics_vectorizer: #Create specific vectorizer
+        print ("Creating vectorizer... using "+str(len(sentences))+" sentences")
+        #2/  Normalize corpus
+        ##########################################
     
-    #each document is a list of sentence (vectors) --> (id of the word, tf in this doc)
-    ##print("raw_corpus:")
-    ##print raw_corpus 
-    #Save the vectorized corpus as a .mm file
-    corpora.MmCorpus.serialize(TEMP_DATA_PATH+'doc_vectors.mm', raw_corpus) # store to disk
-    print "Save the vectorized corpus as a .mm file"
+        ##print("---------------------------------")
+        ##print("list of sentences:")
+        ##print sentences
+        ##print("---------------------------------")
+        ##print("Tokenize sentences (After using PorterStemmer):")
+        norm_sentences=tokenize_sentences(sentences)
+        ##print norm_sentences
+        ##print("---------------------------------")
+    
+        #STEP 3 : Index and vectorize
+        #####################################################
+        dictionary_filename=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.dict'
+        dictionary_filename_txt=TEMP_DATA_PATH+'doc_dict'+local_topic_id+'.txt'
+    
+        #We create a dictionary, an index of all unique values: <class 'gensim.corpora.dictionary.Dictionary'>
+        #the Dictionary is used as an index to convert words into integers.
+        dictionary = corpora.Dictionary(norm_sentences)
+        ##print (dictionary)
+        ##print("---------------------------------")
+        ##print("Dictionary (token:id):")
+        ##print(dictionary.token2id)
+        ##print("---------------------------------")
+        dictionary.save(dictionary_filename) # store the dictionary, for future reference
+        dictionary.save_as_text(dictionary_filename_txt,sort_by_word=False) # SAVE the dictionary as a text file,
+        #the format of doc_txt_dict.txt is: (id_1    word_1  document_frequency_1)
+    
+        #---------------------------------
+    
+        # compile corpus (vectors number of times each elements appears)
+        #The "compile corpus" section actually converts each sentence into a list of integers ("integer" bag-of-words)
+        #This raw_corpus is then fed into the tfidf model.
+        raw_corpus = [dictionary.doc2bow(t) for t in norm_sentences]
+    
+        #Then convert tokenized documents to vectors: <type 'list'>
+        print "Then convert tokenized documents to vectors: %s"% type(raw_corpus)
+        
+        
+        #each document is a list of sentence (vectors) --> (id of the word, tf in this doc)
+        ##print("raw_corpus:")
+        ##print raw_corpus 
+        #Save the vectorized corpus as a .mm file
+        corpora.MmCorpus.serialize(TEMP_DATA_PATH+'doc_vectors.mm', raw_corpus) # store to disk
+        print "Save the vectorized corpus as a .mm file"
+    
+        # STEP 4 : tfidf
+        ###############################################
+        corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
+    
 
-    # STEP 4 : tfidf
-    ###############################################
-    corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
-    
     if use_all_topics_vectorizer: 
         #LOAD GLOBAL MODEL
         tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+'.mm'   #no topic id
@@ -136,7 +139,6 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         # Transform Text with TF-IDF
         tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
         tfidf.save(tfidf_filename)
-        
         
     if create_all_topics_vectorizer: 
         print ("If created, then assume used on next call...")
