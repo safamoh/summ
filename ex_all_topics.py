@@ -35,7 +35,7 @@ if not os.path.exists(output_directory+"/cos_sim"):
     os.mkdir(output_directory+"/cos_sim")
 
 ## GLOBAL CONFIG
-USE_SKLEARN_VECTORIZER=True #Rather then gensim tf-idf
+USE_SKLEARN_VECTORIZER=False #True #Rather then gensim tf-idf
 
 
 def run_exercise():

@@ -131,9 +131,9 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         corpora.MmCorpus.serialize(TEMP_DATA_PATH+'doc_vectors.mm', raw_corpus) # store to disk
         print "Save the vectorized corpus as a .mm file"
     
-        # STEP 4 : tfidf
-        ###############################################
-        corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
+    # STEP 4 : tfidf
+    ###############################################
+    corpus = corpora.MmCorpus(TEMP_DATA_PATH+'doc_vectors.mm')
     
 
     if use_all_topics_vectorizer: 
