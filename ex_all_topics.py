@@ -21,6 +21,9 @@ from run_graph_pipeline import do6_two_scores_1
 from run_graph_pipeline import do6_two_scores_2
 from run_graph_pipeline import do7_sum_nodes
 
+from run_main_pipeline_sklearn import run_pipeline_sklearn_create_vectorizer
+from run_main_pipeline_sklearn import run_pipeline_sklearn_create_sims
+
 
 
 output_directory=TEMP_DATA_PATH+"/Top_summary"
@@ -30,6 +33,9 @@ if not os.path.exists(output_directory+"/random_walk"):
     os.mkdir(output_directory+"/random_walk")
 if not os.path.exists(output_directory+"/cos_sim"):
     os.mkdir(output_directory+"/cos_sim")
+
+## GLOBAL CONFIG
+USE_SKLEARN_VECTORIZER=True #Rather then gensim tf-idf
 
 
 def run_exercise():
@@ -61,18 +67,23 @@ def run_exercise():
     
     if 'create_sim_matrix' in branch:
         if vectorize_all_topics:
-            run_pipeline(create_all_topics_vectorizer=True)
+            if USE_SKLEARN_VECTORIZER:
+                run_pipeline_sklearn_create_vectorizer()
+            else:
+                run_pipeline(create_all_topics_vectorizer=True)
             
     for topic_id in all_topics:
         print ("FOR TOPIC: "+str(topic_id)+"-------------")
 
         if 'create_sim_matrix' in branch:
-            if vectorize_all_topics:
-                print ("-----------> Creating sim matrix for topic: "+str(topic_id))
-                run_pipeline(local_topic_id=topic_id,use_all_topics_vectorizer=True,create_all_topics_vectorizer=False)
+            if USE_SKLEARN_VECTORIZER:
+                run_pipeline_sklearn_create_sims(topic_id)
             else:
-                run_pipeline(local_topic_id=topic_id)
-    
+                if vectorize_all_topics:
+                    print ("-----------> Creating sim matrix for topic: "+str(topic_id))
+                    run_pipeline(local_topic_id=topic_id,use_all_topics_vectorizer=True,create_all_topics_vectorizer=False)
+                else:
+                    run_pipeline(local_topic_id=topic_id)
 
 #==========================================================================================
         if 'do_random_walk' in branch:

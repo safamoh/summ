@@ -37,9 +37,9 @@ VERSION=3
 ##########################
 #  GLOBAL DATA SOURCES
 ##########################
-DOCS_SOURCE='2005' #rouge ok
 DOCS_SOURCE='2006' #ok
 DOCS_SOURCE='2007'
+DOCS_SOURCE='2005' #rouge ok
 
 if DOCS_SOURCE=='2005': #org default
     TEMP_DATA_PATH=LOCAL_DIR+"../data/"

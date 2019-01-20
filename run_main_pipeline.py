@@ -20,15 +20,22 @@ from duc_reader import get_list_of_all_topics
 from igraph import plot  #pycairo  #pycairo-1.17.1-cp27-cp27m-win_amd64.whl https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
 from performance import Performance_Tracker 
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel
+
+from run_main_pipeline_sklearn import cosine_sim_algs
+from run_main_pipeline_sklearn import print_sims
+
 Perf=Performance_Tracker()
 
-
-
-
 def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_vectorizer=False,local_topic_id=''):
+    global USE_SKLEARN_MODELS
+    
     #STEP 1:  Build vectorizer
     #STEP 2:  Do sim matrix
     Perf.start()
+
     #0/  Load query sentence
     vector_model='tfidf'
     tfidf_filename=TEMP_DATA_PATH+'tfidf_model_'+local_topic_id+'.mm'
@@ -162,32 +169,7 @@ def run_pipeline(verbose=True,create_all_topics_vectorizer=False,use_all_topics_
         np.save(get_sim_matrix_path(local_topic_id),sims)
     
     
-    
-        # STEP 6:  Print sims 
-        ###############################################
-        options=[]
-        options=['print_sims']
-    
-        if 'print_sims' in options:
-            i=0
-            j=0
-            for item in list(enumerate(sims)):
-                i+=1
-                #            if i>0:break
-                sent_num1=item[0]
-                for sent_num2,cosim_value in enumerate(item[1]):
-                    j+=1
-                    idx="("+str(sent_num1)+","+str(sent_num2)+")"
-                    cosim_str="%.9f" % cosim_value
-                    if True and j<3:
-                        print ("AT: "+str(idx)+" sim: "+str(cosim_str))
-                        print ("  for sent1: "+str(sentences[sent_num1]))
-                        print ("   vs sent2: "+str(sentences[sent_num2]))
-    
-        print ("TOPIC ID: "+str(local_topic_id))
-        print ("Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
-        print ("Done run_pipeline in: "+str(Perf.end())+"s")
-
+        print_sims(sims,sentences)
     return
 
 

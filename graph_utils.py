@@ -152,7 +152,7 @@ def load_sim_matrix_to_igraph(local_topic_id=''):
 
 
     #Reload simulation matrix
-    print ("LOAD PRE-COMPUTED SIM MATRIX: "+str(get_sim_matrix_path))
+    print ("LOAD PRE-COMPUTED SIM MATRIX: "+str(get_sim_matrix_path(local_topic_id)))
     sims=np.load(get_sim_matrix_path(local_topic_id))
     
 
@@ -178,7 +178,7 @@ def echo_sims(sims,sentences):
     ###############################################
     options=[]
     options=['print_sims']
-    print ("--> SAMPLE SIM NUMBERS:")
+    print ("--> SAMPLE SIM NUMBERS (**note: node 2 node sims forced to 0 not 1.000):")
 
     if 'print_sims' in options:
         i=0
@@ -195,6 +195,11 @@ def echo_sims(sims,sentences):
                     print ("AT: "+str(idx)+" sim: "+str(cosim_str))
                     print ("  for sent1: "+str(sentences[sent_num1]))
                     print ("   vs sent2: "+str(sentences[sent_num2]))
+
+#if same expect 0  -forced above                   if sentences[sent_num1]==sentences[sent_num2] and float(cosim_value)<0.9:
+#if same expect 0                        print ("Low sim on similar sentences stop")
+#if same expect 0                        a=hard_stop_check_logic
+
     return
 
 def load_sim_matrix(local_topic_id,zero_node2node=True):
