@@ -35,11 +35,13 @@ if not os.path.exists(output_directory+"/cos_sim"):
     os.mkdir(output_directory+"/cos_sim")
 
 ## GLOBAL CONFIG
-USE_SKLEARN_VECTORIZER=False #True #Rather then gensim tf-idf
+USE_SKLEARN_VECTORIZER=True #Rather then gensim tf-idf
 
 
-def run_exercise():
+def run_exercise(force_topic_id='',branch_removal=[]):
     global output_directory
+    
+    #Allow call from external
     
     # Options
     ####################################
@@ -60,8 +62,17 @@ def run_exercise():
 #    branch+=['do_selection_by_round_robin']
     branch+=['experiments']
 
+    ##Customize branches if called via grid search
+    for bb in branch_removal:
+        try: branch.remove(bb)
+        except:pass
 
-    all_topics=get_list_of_all_topics()
+
+    if force_topic_id:
+        all_topics=[force_topic_id]
+    else:
+        all_topics=get_list_of_all_topics()
+
     print ("Processing topics: "+str(all_topics))
     print (str(len(all_topics))+" topics found.")
     

@@ -199,6 +199,8 @@ class Rouge155(object):
                         will be saved.
 
         """
+        print ("[debug 2] input dir: "+str(input_dir))
+        print ("[debug 2] output dir: "+str(output_dir))
         DirectoryProcessor.process(input_dir, output_dir, Rouge155.convert_text_to_rouge_format)
 
     @staticmethod

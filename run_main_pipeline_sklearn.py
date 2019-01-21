@@ -136,7 +136,11 @@ class Custom_Vectorizer():
         self.vectorizer_path=TEMP_DATA_PATH+'vectorizer_model.joblib'
         return
     def initialize(self):
-        self.vectorizer=TfidfVectorizer()
+#        self.vectorizer=TfidfVectorizer()
+
+        self.vectorizer=TfidfVectorizer(ngram_range=(1,1))
+#trigrams        self.vectorizer=TfidfVectorizer(ngram_range=(1,3))
+#        self.vectorizer=TfidfVectorizer(ngram_range=(1,2))
         return
     def fit(self,input_docs):
         #'Trains' vectorizer

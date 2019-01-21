@@ -577,7 +577,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
                 if got_next:
                     cluster_size=len(clusters.subgraphs()[i_cluster].vs)
-                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster])+" cluster size: "+str(cluster_size))
+                    print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster])+" cluster size: "+str(cluster_size)+">> "+str(sentence))
                     sentence_cache+=[sentence]
 
                     cluster_ptr[i_cluster]+=1

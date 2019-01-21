@@ -1,7 +1,7 @@
 import re
 import os
 import sys
-from pyrouge import Rouge155
+from rouge.pyrouge import Rouge155
 
 sys.path.insert(0,"..")
 from duc_reader import get_list_of_all_topics
@@ -272,7 +272,7 @@ def run_one_topic_at_a_time(system_dir='',output_filename_base='',all_topics=[])
     return
 #==========================================================================================
 
-def run_on_all_topics(system_dir=''):
+def run_on_all_topics(system_dir='',topic_regex='\d+'):
     print ("[debug run rouge system dir]: "+str(system_dir))
     all_topic_output_filename=OUTPUT_ROUGE_DIR+"/rouge_all_topics.txt"
 
@@ -291,13 +291,14 @@ def run_on_all_topics(system_dir=''):
     r.model_dir = the_dir
 
     if DOCS_SOURCE=='2005':
-        r.system_filename_pattern = 'd(\d+)..txt'
+        r.system_filename_pattern = 'd('+topic_regex+')..txt'
         r.model_filename_pattern = 'D#ID#.[A-Z]' #D311.M.250.I.D
+#        r.model_filename_pattern = 'D'+topic_regex+'.[A-Z]' #D311.M.250.I.D
     elif DOCS_SOURCE=='2006':
-        r.system_filename_pattern = 'D(\d+)..txt'
+        r.system_filename_pattern = 'D('+topic_regex+')..txt'
         r.model_filename_pattern = 'D#ID#.*[A-Z]' #D311.M.250.I.D
     elif DOCS_SOURCE=='2007':
-        r.system_filename_pattern = 'D(\d+)..txt'
+        r.system_filename_pattern = 'D('+topic_regex+')..txt'
         r.model_filename_pattern = 'D#ID#.*[A-Z]'
     else: requires_setup=hard_stop
     
