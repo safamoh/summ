@@ -37,9 +37,9 @@ VERSION=3
 ##########################
 #  GLOBAL DATA SOURCES
 ##########################
-DOCS_SOURCE='2006' #ok
 DOCS_SOURCE='2007'
 DOCS_SOURCE='2005' #rouge ok
+DOCS_SOURCE='2006' #ok
 
 if DOCS_SOURCE=='2005': #org default
     TEMP_DATA_PATH=LOCAL_DIR+"../data/"
@@ -136,6 +136,7 @@ def xml2text(xml_filename,text_tag='TEXT'):
     #sum_utilities.py
     blob=''
     p_blob='' #Just collect paragraph details
+    headline_content=''
     with open(xml_filename, 'r') as xml:
         xmlstring = ''.join(xml.readlines())
         parser = etree.XMLParser(recover=True)
@@ -144,10 +145,10 @@ def xml2text(xml_filename,text_tag='TEXT'):
         for node in root:
             #0v3
             if node.tag == 'HEADLINE':
-                content=etree.tostring(node)
-                content=re.sub(r'\<.{0,1}HEADLINE\>','',content)
-                content=re.sub(r'\<.{0,1}P\>','',content)
-                blob+=content+"." #Include end-of-line
+                headline_content=etree.tostring(node)
+                headline_content=re.sub(r'\<.{0,1}HEADLINE\>','',headline_content)
+                headline_content=re.sub(r'\<.{0,1}P\>','',headline_content)
+                headline_content+=". " #Include end-of-line
 
             if node.tag == text_tag:
                 content=etree.tostring(node)
@@ -176,6 +177,10 @@ def xml2text(xml_filename,text_tag='TEXT'):
     if not blob.strip():
         print ("Using non-body paragraph text: "+xml_filename)
         blob=p_blob
+        
+    #Prepend headline content
+    blob=headline_content+blob
+    
     #print "FOR FILE: "+str(xml_filename)
     return blob
                     
