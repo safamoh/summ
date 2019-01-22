@@ -9,6 +9,7 @@ from ex_all_topics import run_exercise
 from rouge.do_rouge import run_on_all_topics
 from duc_reader import TEMP_DATA_PATH
 
+LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))+"/"
 
 def get_fscore():
     filename_rouge_all_topics='./rouge/rouge_results/rouge_all_topics.txt'
@@ -37,11 +38,14 @@ def run_rouge(topic_id):
     ## Copy db file
     is_windows = sys.platform.startswith('win')
     if is_windows:
-        from_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_JC.db'
+        from_path=LOCAL_PATH+'rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_JC.db'
     else:
-        from_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_SAFA.db'
-    to_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db'
-    shutil.copy(from_path,to_path)
+        from_path=LOCAL_PATH+'rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_SAFA.db'
+    try:
+        to_path=LOCAL_PATH+'rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db'
+        shutil.copy(from_path,to_path)
+    except:
+        print ("[warning] Could not copy: "+from_path)
 
 
     ## Run rouge for specific topic...
