@@ -1,11 +1,14 @@
 import re
+import sys
 import os
 import codecs
+import shutil
 
 
 from ex_all_topics import run_exercise
 from rouge.do_rouge import run_on_all_topics
 from duc_reader import TEMP_DATA_PATH
+
 
 def get_fscore():
     filename_rouge_all_topics='./rouge/rouge_results/rouge_all_topics.txt'
@@ -29,13 +32,45 @@ def rouge_analysis(topic_ids):
     avgf=get_fscore()
     return avgf
 
+def run_rouge(topic_id):
+    
+    ## Copy db file
+    is_windows = sys.platform.startswith('win')
+    if is_windows:
+        from_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_JC.db'
+    else:
+        from_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_SAFA.db'
+    to_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db'
+    shutil.copy(from_path,to_path)
+
+
+    ## Run rouge for specific topic...
+    #run_on_different_setups()
+    topic_digits=re.sub(r'\D',r'',str(topic_id))
+    print ("Running rouge for topic digits: "+str(topic_digits))
+    system_dir = TEMP_DATA_PATH+"Top_summary"
+    local_system_dir=system_dir+"/ex_do6_two_scores_1/leading_eigenvector"
+
+    run_on_all_topics(system_dir=local_system_dir,topic_regex=topic_digits)
+    print ("**WATCH THAT SUMMARIES ACTUALLY IN: "+str(local_system_dir))
+    return
+
 
 def run_grid_search():
-    branches=['pipeline']
-    branches=['rouge']
-    branches=['analysis']
-
     topic_id='d354c'
+    run_id='a_3'
+    run_comment='Standard run gold'
+
+    log_file='grid_log.tsv'
+    try: fp=open(log_file,'a')
+    except: fp=open(log_file,'w')
+
+    branches=['pipeline']
+    branches=['analysis']
+    branches=['rouge']
+
+    branches=['pipeline','analysis','rouge']
+
     
     if 'pipeline' in branches:
         branch_removal=['create_sim_matrix']
@@ -43,19 +78,13 @@ def run_grid_search():
         run_exercise(force_topic_id=topic_id,branch_removal=branch_removal)
     
     if 'rouge' in branches:
-        ## Run rouge for specific topic...
-        #run_on_different_setups()
-        topic_digits=re.sub(r'\D',r'',str(topic_id))
-        print ("Running rouge for topic digits: "+str(topic_digits))
-        system_dir = TEMP_DATA_PATH+"Top_summary"
-        local_system_dir=system_dir+"/ex_do6_two_scores_1/leading_eigenvector"
-
-        run_on_all_topics(system_dir=local_system_dir,topic_regex=topic_digits)
-        print ("**WATCH THAT SUMMARIES ACTUALLY IN: "+str(local_system_dir))
+        run_rouge(topic_id)
         
     if 'analysis' in branches:
         avgf=rouge_analysis([topic_id])
+        fp.write(run_id+"\t"+str(topic_id)+"\t"+avgf+"\t"+run_comment+"\n")
     
+    fp.close()
     print ("Done grid search")
     return
 
