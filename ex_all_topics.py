@@ -35,7 +35,7 @@ if not os.path.exists(output_directory+"/cos_sim"):
     os.mkdir(output_directory+"/cos_sim")
 
 ## GLOBAL CONFIG
-USE_SKLEARN_VECTORIZER=True #Rather then gensim tf-idf
+USE_SKLEARN_VECTORIZER=False #Rather then gensim tf-idf
 
 
 def run_exercise(force_topic_id='',branch_removal=[]):
@@ -53,6 +53,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
     
     
     branch=['create_sim_matrix']  #Must be run once
+    branch=[]
 
     branch+=['do_random_walk']
     branch+=['select_top_cos_sims']
