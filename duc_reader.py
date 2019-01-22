@@ -181,6 +181,12 @@ def xml2text(xml_filename,text_tag='TEXT'):
     #Prepend headline content
     blob=headline_content+blob
     
+    # POST CLEAN ERRONEOUS TAGS
+    blob=re.sub(r'\<.{0,1}ANNOTATION\>','',blob)
+    blob=re.sub(r' _ ',' ',blob) #
+    blob=re.sub(r'\s+',' ',blob) #single spaced max
+    
+    
     #print "FOR FILE: "+str(xml_filename)
     return blob
                     
