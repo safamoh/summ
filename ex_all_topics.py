@@ -53,7 +53,6 @@ def run_exercise(force_topic_id='',branch_removal=[]):
     
     
     branch=['create_sim_matrix']  #Must be run once
-    branch=[]
 
     branch+=['do_random_walk']
     branch+=['select_top_cos_sims']

@@ -42,6 +42,8 @@ from igraph.clustering import VertexClustering
 
 Perf=Performance_Tracker()
 
+#0v8# Jan 21, 2019  Require min 7 words for summary
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #igraph to scipy sparse matrix
@@ -558,6 +560,9 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
     ##5/  Round Robin Selection
     print ("Doing round robin selection")
+    min_length=4
+    print ("0v8  require min sentence summary length of: "+str(min_length))
+    
     sentence_cache=[] #Top sentences to collect
     while len(sentence_cache)<target_sentences: #while need more sentences
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
@@ -574,6 +579,11 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
                     if cluster_ptr[i_cluster]<len(rws_sorted):      #Case where only 1 sentence
                         vc_index,s_idx,walk_score,sentence=rws_sorted[cluster_ptr[i_cluster]]
                         got_next=True
+                        
+                #0v8# Require min length of 7
+                if got_next and len(re.split(r'\s+',sentence))<min_length:
+                    print ("#0v8# Skipping short sentence: "+str(sentence))
+                    got_next=False
 
                 if got_next:
                     cluster_size=len(clusters.subgraphs()[i_cluster].vs)

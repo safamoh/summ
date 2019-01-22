@@ -11,3 +11,4 @@ rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db
 /rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db
 *.db
 grid_log.tsv
+*exc.db

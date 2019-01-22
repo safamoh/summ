@@ -63,9 +63,11 @@ def run_rouge(topic_id):
 
 
 def run_grid_search():
-    topic_id='d354c'
-    run_id='a_3'
-    run_comment='Standard run gold'
+    topic_id='d408c' #dates missing
+    topic_id='d436j'
+    topic_id='d694j'
+    run_id='a'
+    run_comment='std low score min length 4 words #0v8# run_graph_pipeline'
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')
