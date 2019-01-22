@@ -74,10 +74,11 @@ def run_grid_search():
     
     #2006
     topic_id='d0602b'
+    topic_id='d0613d'
     branch_removal=['create_sim_matrix'] # if know already exists
 
     run_id='2006a'
-    run_comment='std low score'
+    run_comment='std low score -- Add . before </P> min length 5 not 4'
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')

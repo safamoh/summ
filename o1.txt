@@ -1,0 +1,276 @@
+Matplotlib not present
+Visualization not supported to missing libraries.
+Rouge install ok!
+Done rouge
+[] recall topics expect proper sim matrix & year setup
+Only 1 sim matrix create per topic
+**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'
+Processing topics: ['d0613d']
+1 topics found.
+########################################
+#
+# Create vectorizer using all topics/sentences
+# - saved as: c:\scripts-18\duc\summ/../data/models_2006/tfidf_model_.mm
+# - run_pipeline called twice. First time builds it.  Second time tokenizes topic sentences for sim matrix
+1/  Loading sentences...
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[warning long sentence]: [84] WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Greenhouse gas emissions - blamed for global warming - may cause the collapse of the West Antarctic Ice Sheet and raise the average global sea level by four to six metres, beginning as early as the next century, a new scientific study predicted recently.
+[warning long sentence]: [99] Other SUVs already on the market include the Acura SLX ($38,300), Chevrolet Blazer ($21,600), the monstrous Chevrolet/GMC Suburban ($25,500), Dodge Durango ($27,000), available with an optional 5.9-liter V-8, the biggest engine in its class; GMC Jimmy ($21,800), Honda CR-V ($18,300), Honda Passport ($$23,800), Infiniti QX4 ($35,550), Isuzu Rodeo ($17,900), Isuzu Trooper ($27,800), Jeep Wrangler ($14,200), Land Rover Discovery ($34,500), Land Rover Range Rover ($56,000), Mitsubishi Montero ($33,500), Mitsubishi Montero Sport ($18,100), Nissan Pathfinder ($23,900), Oldsmobile Bravada ($30,700), Subaru Forester ($18,700), Subaru Outback ($24,500), Toyota 4Runner ($20,500), Toyota RAV4 ($15,400) and Toyota Land Cruiser ($45,900) Oh yes, what's a Quigley?
+[warning long sentence]: [82] While those decisions were being made on July 25 in the 77 seconds between 4:43:13 p.m. , when the controller spotted the fire, and 4:44:30, when the last sound was recorded, amateur photographers on the highways below were capturing the flight's death throes: a Concorde filled with German tourists hoping to be on a supersonic rendezvous with a New York cruise ship was seen fatally crippled, spewing flames and smoke as it roared low over the suburbs and farms north of Paris.
+[warning long sentence]: [91] The stamping factory in Flint is among the least efficient of all, and under great pressure from GM to improve its results or face closure.``They have 14 stamping facilities and they probably need 9 or 10,'' said David Bradley, an analyst at J.P. Morgan and Co. A successful introduction of the new pickup truck is considered vital to GM, which earns up to half its worldwide profits just from sales in North America of full-size pickup trucks and the Suburban, Yukon and Tahoe sport utility vehicles, which share the same underbodies.
+[warning long sentence]: [84] WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Greenhouse gas emissions - blamed for global warming - may cause the collapse of the West Antarctic Ice Sheet and raise the average global sea level by four to six metres, beginning as early as the next century, a new scientific study predicted recently.
+[warning long sentence]: [82] Among the evidence cited in the article for making the case that the biology of the brain and psychiatry of the mind are inseparable: Brain imaging scans that allow researchers to see differences in people with and without mental illness; studies of the amazing plasticity of the brain, with neurons growing in response to environmental stimuli, like learning; and brain imaging research showing that people with obsessive-compulsive disorder who respond to either behavioral therapy or medication both show the same biologic changes.
+[files2sentences] Loaded 35118 sentences from 1250 documents. topic count: 35118
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[warning long sentence]: [84] WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Greenhouse gas emissions - blamed for global warming - may cause the collapse of the West Antarctic Ice Sheet and raise the average global sea level by four to six metres, beginning as early as the next century, a new scientific study predicted recently.
+[warning long sentence]: [99] Other SUVs already on the market include the Acura SLX ($38,300), Chevrolet Blazer ($21,600), the monstrous Chevrolet/GMC Suburban ($25,500), Dodge Durango ($27,000), available with an optional 5.9-liter V-8, the biggest engine in its class; GMC Jimmy ($21,800), Honda CR-V ($18,300), Honda Passport ($$23,800), Infiniti QX4 ($35,550), Isuzu Rodeo ($17,900), Isuzu Trooper ($27,800), Jeep Wrangler ($14,200), Land Rover Discovery ($34,500), Land Rover Range Rover ($56,000), Mitsubishi Montero ($33,500), Mitsubishi Montero Sport ($18,100), Nissan Pathfinder ($23,900), Oldsmobile Bravada ($30,700), Subaru Forester ($18,700), Subaru Outback ($24,500), Toyota 4Runner ($20,500), Toyota RAV4 ($15,400) and Toyota Land Cruiser ($45,900) Oh yes, what's a Quigley?
+[warning long sentence]: [82] While those decisions were being made on July 25 in the 77 seconds between 4:43:13 p.m. , when the controller spotted the fire, and 4:44:30, when the last sound was recorded, amateur photographers on the highways below were capturing the flight's death throes: a Concorde filled with German tourists hoping to be on a supersonic rendezvous with a New York cruise ship was seen fatally crippled, spewing flames and smoke as it roared low over the suburbs and farms north of Paris.
+[warning long sentence]: [91] The stamping factory in Flint is among the least efficient of all, and under great pressure from GM to improve its results or face closure.``They have 14 stamping facilities and they probably need 9 or 10,'' said David Bradley, an analyst at J.P. Morgan and Co. A successful introduction of the new pickup truck is considered vital to GM, which earns up to half its worldwide profits just from sales in North America of full-size pickup trucks and the Suburban, Yukon and Tahoe sport utility vehicles, which share the same underbodies.
+[warning long sentence]: [84] WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Greenhouse gas emissions - blamed for global warming - may cause the collapse of the West Antarctic Ice Sheet and raise the average global sea level by four to six metres, beginning as early as the next century, a new scientific study predicted recently.
+[warning long sentence]: [82] Among the evidence cited in the article for making the case that the biology of the brain and psychiatry of the mind are inseparable: Brain imaging scans that allow researchers to see differences in people with and without mental illness; studies of the amazing plasticity of the brain, with neurons growing in response to environmental stimuli, like learning; and brain imaging research showing that people with obsessive-compulsive disorder who respond to either behavioral therapy or medication both show the same biologic changes.
+[files2sentences] Loaded 35118 sentences from 1250 documents. topic count: 35118
+FOR TOPIC: D0613D got query:  Who were the GenXers? What were their perceived habits, preferences, characteristics, and impact?   
+FOR TOPIC: D0608H got query:  What devices and procedures have been implemented to improve automobile safety?  
+FOR TOPIC: D0632E got query:  What is the extent and nature of Mongolia's diplomatic and economic relations with other countries? 
+FOR TOPIC: D0605E got query:  Describe what procedures for treatment of osteoarthritis have been attempted and the result of research on these treatments. 
+FOR TOPIC: D0622D got query:  Track the spread of the West Nile virus through the United States and the efforts taken to control it. 
+FOR TOPIC: D0648C got query:  What are signs of obsessive-compulsive disorder (OCD)? What treatments have been tried and what has been effective? What other disorders are related to OCD?  
+FOR TOPIC: D0619A got query:  Discuss the relationship between gays (homosexuals) and the Republican party. How are Republicans courting gays? How do they alienate gays? Include discussion of the Log Cabin Republicans. 
+FOR TOPIC: D0609I got query:  What impact have Israeli settlements in the West Bank had on the Israeli/Palestinian peace process?  What are the reactions of both parties and of the international community? 
+FOR TOPIC: D0626H got query:  How were the bombings of the US embassies in Kenya and Tanzania conducted?  What terrorist groups and individuals were responsible? How and where were the attacks planned? 
+FOR TOPIC: D0612C got query:  What are recent developments in autism diagnosis, treatment, and research? What is thought to be the cause? What services are available to patients and families? What is the frequency of occurrence? 
+FOR TOPIC: D0645I got query:  What are the problems facing low-income Americans in the housing market?  How are the problems being addressed? 
+FOR TOPIC: D0647B got query:  Describe the custody battle between Cuban and US relatives of the boy Elian Gonzales.  Include details about how he came into the custody of his US relatives, the legal and international issues, and the resolution of the situation.  
+FOR TOPIC: D0635H got query:  How has the administration of Governor George W. Bush implemented capital punishment and how are those policies viewed outside of Texas?  
+FOR TOPIC: D0629B got query:  Identify computer viruses detected worldwide.  Include such details as how they are spread, what operating systems they affect, what damage they inflict, their country of origin, and their creators wherever possible. 
+FOR TOPIC: D0643G got query:  Describe the causes and effects of the El Nino and La Nina weather condition. What programs and scientific techniques are in effect to better predict and cope with the conditions?   
+FOR TOPIC: D0614E got query:  Describe developments in the movement for the independence of Quebec from Canada. 
+FOR TOPIC: D0630C got query:  What is the current status of bookselling? What challenges face traditional sellers? How are booksellers associations involved? How successful is online bookselling and how has it affected traditional sellers? 
+FOR TOPIC: D0602B got query:  Discuss the prevalence of steroid use among female athletes over the years. Include information regarding trends, side effects and consequences of such use. 
+FOR TOPIC: D0641E got query:  Describe theories concerning the causes and effects of global warming and arguments against these theories. 
+FOR TOPIC: D0639C got query:  What precursor chemicals are used in making WMDs? What other uses do the chemicals have, if any?  Where have the chemicals been found? What controls are placed on WMDs and/or their precursor chemicals?  
+FOR TOPIC: D0616G got query:  How have the Chechen militants elected to fight against the Russian government? What is the Russian response to the militancy and what toll is it taking on both sides?  
+FOR TOPIC: D0625G got query:  What are the most prevalent diseases in Kenya and and how are they affecting the population? What is being done to combat them? 
+FOR TOPIC: D0606F got query:  What are the most significant impacts said to result from global climate change? 
+FOR TOPIC: D0637A got query:  Provide reasons for using solar energy. How widespread internationally is its use and development? Discuss cooperation between nations. Which nations are the leaders in solar energy development? 
+FOR TOPIC: D0604D got query:  How did fans, media, the marketplace, and critics prepare for and react to the movie? Include preparations and reactions outside the United States. 
+FOR TOPIC: D0621C got query:  Give examples of criminal activity in China. Name those involved, if possible. What is China doing to fight crime? 
+FOR TOPIC: D0633F got query:  Which crime categories have had increasing or decreasing trends nationally in the U.S? Which geographic areas of the U.S. have had increasing or decreasing trends for particular crime categories? 
+FOR TOPIC: D0624F got query:  What is known about the murder of Stephen Lawrence, his killers, the actions of the government, and the reactions of the public? 
+FOR TOPIC: D0634G got query:  What conservation measures are being taken locally and nationally to save the salmon species in the Pacific Northwest? What is the nature of Canadian-U.S. relations on Pacific salmon fishing?  
+FOR TOPIC: D0631D got query:  Discuss the Concorde jet, its crash in 2000, and aftermaths of this crash. 
+FOR TOPIC: D0650E got query:  Describe former President Carter's international efforts including activities of the Carter Center. 
+FOR TOPIC: D0623E got query:  Describe anti-smoking laws passed or rejected world-wide which prohibit smoking in public places or work places. Include any arguments used for or against such laws. 
+FOR TOPIC: D0649D got query:  Who is Vladimir Putin, including his experience and background? What led up to his election as Russian President, and what were his actions between his election and swearing in? 
+FOR TOPIC: D0610A got query:  What are the advantages and disadvantages of home schooling? Is the trend growing or declining?  
+FOR TOPIC: D0627I got query:  What are the laws, problems, and issues surrounding international adoption by American families? 
+FOR TOPIC: D0640D got query:  Discuss the sinking of the Russian submarine Kursk, the attempts to save it, and salvage operations.  
+FOR TOPIC: D0618I got query:  What efforts are being made to combat the spread of malaria and to treat those currently affected? 
+FOR TOPIC: D0617H got query:  What caused the crash of  EgyptAir Flight 990?  Include evidence, theories and speculation. 
+FOR TOPIC: D0646A got query:  What is the definition of perjury? Is it a federal offense? How common is it and what kinds of punishments have been given? 
+FOR TOPIC: D0644H got query:  What factors led to the federal budget surplus? What are the expectations for future surpluses? What have been proposed for use of the surplus? 
+FOR TOPIC: D0628A got query:  Describe ADD/ADHD. How is it diagnosed? What kind of treatments are there? Discuss the controversies surrounding its treatment.  
+FOR TOPIC: D0642F got query:  What have been the key policies and outcomes (good or bad) of the Venezuelan Presidency of Hugo Chavez? What supportive or critical statements or actions have come from Venezuelans or leaders of other countries? 
+FOR TOPIC: D0615F got query:  What are the various perspectives in the U.S. public debate regarding the teaching of evolution, creation science, or intelligent design in public school science classes? What are the key points and counterpoints expressed by people who hold each of those perspectives? 
+FOR TOPIC: D0638B got query:  How successful was NASA's Galileo space probe mission of Jupiter?  What discoveries were made about the planet and its moons?  Include details about when the probe was launched and any troubles it may have encountered. 
+FOR TOPIC: D0636I got query:  What are the key issues under discussion between the 3 major American automobile manufacturers and the United Auto Workers (UAW)? 
+FOR TOPIC: D0601A got query:  Discuss conditions on American Indian reservations or among Native American communities. Include the benefits and drawbacks of the reservation system. Include legal privileges and problems. 
+FOR TOPIC: D0603C got query:  Why are wetlands important? Where are they threatened? What steps are being taken to preserve them? What frustrations and setbacks have there been?  
+FOR TOPIC: D0611B got query:  What methods or products are used to control pests for organic gardens or farms?  Include information on methods of controlling such pests as insects or fungus which do not involve the use of chemical pesticides and are accepted by organizations which certify organic produce for the marketplace. 
+FOR TOPIC: D0620B got query:  Discuss measures that schools and school districts have taken to prevent violent occurrences and shootings, such as those in Littleton, Colorado and Jonesboro, Arkansas. 
+FOR TOPIC: D0607G got query:  Note examples of civil unrest in China and the Chinese government's policy toward and reaction to it. Specify the causes of the unrest. 
+Done building sentences...
+Loaded 35168 sentences from 1250 documents. 50 topics.
+---------------------------------
+Sample sentence.  Topic: D0607G:  Note examples of civil unrest in China and the Chinese government's policy toward and reaction to it. Specify the causes of the unrest. 
+Sample sentence.  Topic: D0620B:  Discuss measures that schools and school districts have taken to prevent violent occurrences and shootings, such as those in Littleton, Colorado and Jonesboro, Arkansas. 
+Sample sentence.  Topic: D0611B:  What methods or products are used to control pests for organic gardens or farms?  Include information on methods of controlling such pests as insects or fungus which do not involve the use of chemical pesticides and are accepted by organizations which certify organic produce for the marketplace. 
+Sample sentence.  Topic: D0603C:  Why are wetlands important? Where are they threatened? What steps are being taken to preserve them? What frustrations and setbacks have there been?  
+Save the vectorized corpus as a .mm file
+If created, then assume used on next call...
+FOR TOPIC: d0613d-------------
+-----------> Creating sim matrix for topic: d0613d
+########################################
+#
+# Use the all_topics vectorizer
+# - assume this is second run.  Load topic sentences and tokenize them using vector
+# - Then create sim matrix
+1/  Loading sentences...
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+**LIMITING TOPIC TO: d0613d
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[files2sentences] Loaded 1118 sentences from 25 documents. topic count: 1118
+FOR TOPIC: d0613d got query: 
+Using query: 
+Loaded 1119 sentences from 25 documents. 2 topics.
+---------------------------------
+Sample sentence.  Topic: d0613d: 
+Sample sentence.  Topic: D0613D: WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.
+Sample sentence.  Topic: D0613D: Is it: A) the name of the so-so punk band Billy Idol led over a decade and a half go?
+Sample sentence.  Topic: D0613D: B) the title of the 1991 ``groundbreaking'' novel by Douglas Coupland?
+Save the vectorized corpus as a .mm file
+Use all_topics vectorizing model: c:\scripts-18\duc\summ/../data/models_2006/tfidf_model_.mm
+Use tfidf model: c:\scripts-18\duc\summ/../data/models_2006/tfidf_model_.mm
+[debug1] We convert our vectors corpus to TF-IDF space : <class 'gensim.interfaces.TransformedCorpus'>
+-----> PRINT SIMS
+*skip zero cosims
+AT: (1,1) sim: 1.000000000
+  for sent1: >WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.<
+   vs sent2: >WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.<
+AT: (1,7) sim: 0.140153676
+  for sent1: >WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.<
+   vs sent2: >In the '90s, ``Generation X'' is a fashionable synonym for twentysomethings like ``baby boomers'' was for thirtysomethings in the '80s.<
+FOR TOPIC: d0613d got query: 
+Using query: 
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+**LIMITING TOPIC TO: d0613d
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[files2sentences] Loaded 1118 sentences from 25 documents. topic count: 1118
+LOAD PRE-COMPUTED SIM MATRIX: c:\scripts-18\duc\summ/../data/models_2006/_d0613d_sim_matrix.npy
+--> SAMPLE SIM NUMBERS (**note: node 2 node sims forced to 0 not 1.000):
+AT: (0,0) sim: 0.000000000
+  for sent1: 
+   vs sent2: 
+AT: (0,1) sim: 0.000000000
+  for sent1: 
+   vs sent2: WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.
+/ calculating random walk with restart on graph size: <built-in method vcount of Graph object at 0x000000002AA1F8B8>
+---> Random walk top scores:
+RWS Rank #0 is: 0.157481392755 sentence: 
+RWS Rank #1 is: 0.00843708049273 sentence: - Train me.
+RWS Rank #2 is: 0.00818250295896 sentence: HERE TODAY .
+RWS Rank #3 is: 0.00643643601341 sentence: - Lighten up.
+RWS Rank #4 is: 0.00632907828145 sentence: Religion Notes .
+RWS Rank #5 is: 0.00630421696944 sentence: Note, however, that by their definition, 13ers -- and by implication, Gen Xers -- are inherently American.
+Wrote to: c:\scripts-18\duc\summ/../data/models_2006//Top_summary/random_walk/d0613d.txt
+Calc top cos sims for topic: d0613d...
+SELECT TOP COS SIM FOR TOPIC: d0613d--------
+FOR TOPIC: d0613d got query: 
+Query sentence: 
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+**LIMITING TOPIC TO: d0613d
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[files2sentences] Loaded 1118 sentences from 25 documents. topic count: 1118
+#1 score: 0.52679079771 sentence idx: 613 sentence: - Train me.
+#2 score: 0.486207962036 sentence idx: 1086 sentence: HERE TODAY .
+#3 score: 0.409786611795 sentence idx: 619 sentence: - Lighten up.
+#4 score: 0.391658306122 sentence idx: 192 sentence: Religion Notes .
+#5 score: 0.36813890934 sentence idx: 23 sentence: Note, however, that by their definition, 13ers -- and by implication, Gen Xers -- are inherently American.
+#6 score: 0.324903845787 sentence idx: 609 sentence: They say: - Appreciate me and show it.
+#7 score: 0.315223455429 sentence idx: 866 sentence: Coming Tomorrow .
+#8 score: 0.315223455429 sentence idx: 1088 sentence: COMING TOMORROW .
+#9 score: 0.31095418334 sentence idx: 868 sentence: Gel candles .
+#10 score: 0.30303889513 sentence idx: 586 sentence: Workers hate: .
+Experiment: do6_two_scores_1 For topic: d0613d doing clustering: leading_eigenvector and selection report to: c:\scripts-18\duc\summ/../data/models_2006//Top_summary/ex_do6_two_scores_1/leading_eigenvector/d0613d.txt
+FOR TOPIC: d0613d got query: 
+Using query: 
+SOURCING SENTENCES FOR YEAR: 2006
+SOURCING SENTENCES FROM: c:\scripts-18\duc\summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs
+**LIMITING TOPIC TO: d0613d
+Sample first file: c:/scripts-18/duc/summ/../data/2006/DUC2006_Summarization_Documents/duc2006_docs/D0601A/APW19990707.0181
+[files2sentences] Loaded 1118 sentences from 25 documents. topic count: 1118
+LOAD PRE-COMPUTED SIM MATRIX: c:\scripts-18\duc\summ/../data/models_2006/_d0613d_sim_matrix.npy
+--> SAMPLE SIM NUMBERS (**note: node 2 node sims forced to 0 not 1.000):
+AT: (0,0) sim: 0.000000000
+  for sent1: 
+   vs sent2: 
+AT: (0,1) sim: 0.000000000
+  for sent1: 
+   vs sent2: WASHINGTON, D.C. 20003 Tel: 202-547-4512 Fax: 202-546-4194 COPYRIGHT 1998 BY WORLDSOURCES, INC., A JOINT VENTURE OF FDCH, INC. AND WORLD TIMES, INC. NO PORTION OF THE MATERIALS CONTAINED HEREIN MAY BE USED IN ANY MEDIA WITHOUT ATTRIBUTION TO WORLDSOURCES, INC. Everyone seems to have his or her own idea about what ``Generation X'' means.
+EXPERIMENT: do6_two_scores_1
+Calculate random walk scores...
+---> Random walk top scores:
+RWS Rank #0 is: 0.157481392755 sentence: 
+RWS Rank #1 is: 0.00843708049273 sentence: - Train me.
+RWS Rank #2 is: 0.00818250295896 sentence: HERE TODAY .
+RWS Rank #3 is: 0.00643643601341 sentence: - Lighten up.
+RWS Rank #4 is: 0.00632907828145 sentence: Religion Notes .
+RWS Rank #5 is: 0.00630421696944 sentence: Note, however, that by their definition, 13ers -- and by implication, Gen Xers -- are inherently American.
+Get edge distributions
+Running clustering [leading_eigenvector] on graph...
+For topic: d0613d Done clustering took: 1.51800012589 seconds
+Doing selection
+Removing weight threshold for 2006 dataset...
+---> Random walk top scores:
+RWS Rank #0 is: 0.152560555381 sentence: 
+RWS Rank #1 is: 0.00591749409203 sentence: ``Look at it this way -- if the motto of Generation X is `Just Do It,' then the motto of the Millennials is `Let's Do It,' while the motto of the Baby Boomers is `Let's Meditate About It,''' said Neil Howe, co-author of ``Generations: The History of America's Future.''
+RWS Rank #2 is: 0.00587985737799 sentence: These people are so young,' '' said Nan Whaley, who at age 24 is both executive director of the county's Democratic Party and a member of the local Board of Elections.
+RWS Rank #3 is: 0.00546737617506 sentence: DETROIT (AP) -- When G. Richard Wagoner Jr. assumes the job of CEO of General Motors Corp. on June 1, he will be the youngest chief executive ever at GM, running the world's largest automaker at age 47.
+RWS Rank #4 is: 0.00545140531287 sentence: Ford said Friday that one fourth of all Focus buyers so far were under 25 years old -- a higher share of younger buyers than any other vehicle sold in the United States.
+RWS Rank #5 is: 0.00542968386291 sentence: Bold, savvy, confident and often demanding, the 45 million youngsters dubbed Generation X are hard to miss in today's workplace, and the staider side of Corporate America is only just learning -- sometimes with eyebrows raised -- to cope with them.
+()
+Doing round robin selection
+0v8  require min sentence summary length of: 5
+0v9  require max sentence word length summary length of: 90
+[RR] Storing sentence #1 from cluster: 0's rank: 1 cluster size: 129>> These people are so young,' '' said Nan Whaley, who at age 24 is both executive director of the county's Democratic Party and a member of the local Board of Elections.
+[RR] Storing sentence #2 from cluster: 8's rank: 0 cluster size: 175>> ``Look at it this way -- if the motto of Generation X is `Just Do It,' then the motto of the Millennials is `Let's Do It,' while the motto of the Baby Boomers is `Let's Meditate About It,''' said Neil Howe, co-author of ``Generations: The History of America's Future.''
+#0v8# Skipping short sentence: She's an aspiring filmmaker!
+#0v8# Skipping short sentence: It seems so.
+#0v8# Skipping short sentence: He had an Afro.''
+[RR] Storing sentence #3 from cluster: 4's rank: 0 cluster size: 1>> ``It's so free-form, it's stultifying.''
+#0v8# Skipping short sentence: And on and on.
+[RR] Storing sentence #4 from cluster: 6's rank: 0 cluster size: 1>> Nike is a trailblazer once again.
+[RR] Storing sentence #5 from cluster: 7's rank: 0 cluster size: 1>> Now it's all done by computer.
+[RR] Storing sentence #6 from cluster: 9's rank: 0 cluster size: 212>> And according to a recent study by the Families and Work Institute in New York City, high schoolers overwhelmingly said they wanted to land jobs that gave them time for family activities.
+[RR] Storing sentence #7 from cluster: 10's rank: 0 cluster size: 219>> He points to the Pontiac Aztek, a new SUV coming out this year and the Pontiac Piranha, a concept car that will be shown for the first time at this week's Chicago Auto Show, as the types of vehicles that eventually will bring younger buyers back into the GM fold.
+[RR] Storing sentence #8 from cluster: 11's rank: 0 cluster size: 183>> ``Word got out that we cared about young people and that we tried to get them involved in things,'' Lieberman said.
+[RR] Storing sentence #9 from cluster: 12's rank: 0 cluster size: 194>> The same survey shows the younger age group also has the strongest belief in the power of the individual: 84 percent of those 18 to 29 think everyone has the inner strength to succeed in life; only 77 percent of those between the ages of 50 and 64 and 70 percent of those age 65 and older believe this.
+[RR] Storing sentence #10 from cluster: 0's rank: 2 cluster size: 129>> Ford said Friday that one fourth of all Focus buyers so far were under 25 years old -- a higher share of younger buyers than any other vehicle sold in the United States.
+[RR] Storing sentence #11 from cluster: 8's rank: 1 cluster size: 175>> DETROIT (AP) -- When G. Richard Wagoner Jr. assumes the job of CEO of General Motors Corp. on June 1, he will be the youngest chief executive ever at GM, running the world's largest automaker at age 47.
+#0v8# Skipping short sentence: She's an aspiring filmmaker!
+#0v8# Skipping short sentence: It seems so.
+#0v8# Skipping short sentence: He had an Afro.''
+#0v8# Skipping short sentence: And on and on.
+[RR] Storing sentence #12 from cluster: 9's rank: 1 cluster size: 212>> ``We started recruiting young people right out of college that we think have talent,'' he said.
+Done do_selection
+Done topic: d0613d
+Done run_exercise...
+Running rouge for topic digits: 0613
+[debug run rouge system dir]: c:\scripts-18\duc\summ/../data/models_2006/Top_summary/ex_do6_two_scores_1/leading_eigenvector
+gold standard models: c:\scripts-18\duc\summ/../data/models_2006/../2006/nisteval/rouge/peers
+Using user trained summaries from: c:\scripts-18\duc\summ/../data/models_2006/Top_summary/ex_do6_two_scores_1/leading_eigenvector
+Using gold system trained summaries from: c:\scripts-18\duc\summ/../data/models_2006/../2006/nisteval/rouge/peers
+---------------------------------------------
+1 ROUGE-1 Average_R: 0.38593 (95%-conf.int. 0.38593 - 0.38593)
+1 ROUGE-1 Average_P: 0.26505 (95%-conf.int. 0.26505 - 0.26505)
+1 ROUGE-1 Average_F: 0.31427 (95%-conf.int. 0.31427 - 0.31427)
+---------------------------------------------
+1 ROUGE-2 Average_R: 0.07455 (95%-conf.int. 0.07455 - 0.07455)
+1 ROUGE-2 Average_P: 0.05114 (95%-conf.int. 0.05114 - 0.05114)
+1 ROUGE-2 Average_F: 0.06066 (95%-conf.int. 0.06066 - 0.06066)
+---------------------------------------------
+1 ROUGE-3 Average_R: 0.03626 (95%-conf.int. 0.03626 - 0.03626)
+1 ROUGE-3 Average_P: 0.02484 (95%-conf.int. 0.02484 - 0.02484)
+1 ROUGE-3 Average_F: 0.02948 (95%-conf.int. 0.02948 - 0.02948)
+---------------------------------------------
+1 ROUGE-4 Average_R: 0.03106 (95%-conf.int. 0.03106 - 0.03106)
+1 ROUGE-4 Average_P: 0.02125 (95%-conf.int. 0.02125 - 0.02125)
+1 ROUGE-4 Average_F: 0.02524 (95%-conf.int. 0.02524 - 0.02524)
+---------------------------------------------
+1 ROUGE-L Average_R: 0.35019 (95%-conf.int. 0.35019 - 0.35019)
+1 ROUGE-L Average_P: 0.24050 (95%-conf.int. 0.24050 - 0.24050)
+1 ROUGE-L Average_F: 0.28516 (95%-conf.int. 0.28516 - 0.28516)
+---------------------------------------------
+1 ROUGE-W-1.2 Average_R: 0.10065 (95%-conf.int. 0.10065 - 0.10065)
+1 ROUGE-W-1.2 Average_P: 0.13252 (95%-conf.int. 0.13252 - 0.13252)
+1 ROUGE-W-1.2 Average_F: 0.11441 (95%-conf.int. 0.11441 - 0.11441)
+---------------------------------------------
+1 ROUGE-S* Average_R: 0.14025 (95%-conf.int. 0.14025 - 0.14025)
+1 ROUGE-S* Average_P: 0.06695 (95%-conf.int. 0.06695 - 0.06695)
+1 ROUGE-S* Average_F: 0.09063 (95%-conf.int. 0.09063 - 0.09063)
+---------------------------------------------
+1 ROUGE-SU* Average_R: 0.14224 (95%-conf.int. 0.14224 - 0.14224)
+1 ROUGE-SU* Average_P: 0.06806 (95%-conf.int. 0.06806 - 0.06806)
+1 ROUGE-SU* Average_F: 0.09207 (95%-conf.int. 0.09207 - 0.09207)
+
+Done evaluation
+**WATCH THAT SUMMARIES ACTUALLY IN: c:\scripts-18\duc\summ/../data/models_2006/Top_summary/ex_do6_two_scores_1/leading_eigenvector
+AVGF: 0.31427
+Done grid search

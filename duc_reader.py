@@ -158,17 +158,36 @@ def xml2text(xml_filename,text_tag='TEXT'):
 
             for node2 in node:
                 if node.tag == 'BODY': #Process nested tag
-                    if node2.tag == text_tag:
-                        content=etree.tostring(node2)
-                        content=re.sub(r'\<.{0,1}TEXT\>','',content)
-                        content=re.sub(r'\<.{0,1}P\>','',content)
-                        blob+=content
+                    if node2.tag == text_tag: #TEXT
+                        content=''
+                        for inner in node2: #Not always iterable
+                            #Cases where inner <P> statements have no period so are grouped as one sentence.
+                            if inner.tag=='P':
+                                content=etree.tostring(inner)
+                                content=re.sub(r'\<.{0,1}TEXT\>','',content)
+                                content=re.sub(r'\<.{0,1}P\>','',content)
+                                if not re.search(r'\.',content): content+=". "
+                                blob+=content
+                            else:
+                                content=etree.tostring(inner)
+                                content=re.sub(r'\<.{0,1}TEXT\>','',content)
+                                content=re.sub(r'\<.{0,1}P\>','',content)
+                                if not re.search(r'\.',content): content+=". "
+                                blob+=content
+                        if not content: #No iterations in text
+                            content=etree.tostring(node2)
+                            content=re.sub(r'\<.{0,1}TEXT\>','',content)
+                            content=re.sub(r'\<.{0,1}P\>','',content)
+                            if not re.search(r'\.',content): content+=". "
+                            blob+=content
+                            
 
                 else: #Process text where NO BODY
                     if node2.tag == 'P':
                         content=etree.tostring(node2)
                         content=re.sub(r'\<.{0,1}TEXT\>','',content)
                         content=re.sub(r'\<.{0,1}P\>','',content)
+                        if not re.search(r'\.',content): content+=". "
                         p_blob+=content
 
             
@@ -286,6 +305,10 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
         for sentence in sent_detector.tokenize(document):
             sentence=clean_sentence(sentence)
             if not filter_out_sentence(sentence):
+                if verbose:
+                    sentence_length=len(re.split(r' ',sentence))
+                    if sentence_length>80:
+                        print ("[warning long sentence]: ["+str(sentence_length)+"] "+str(sentence))
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
 
@@ -293,7 +316,7 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
     if not documents:
         print ("Stopping as no documents found (see above)")
         sys.exit()
-
+        
     return documents,sentences,sentence_topics
 
 def get_list_of_all_topics():

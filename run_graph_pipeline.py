@@ -43,6 +43,7 @@ from duc_reader import DOCS_SOURCE
 
 Perf=Performance_Tracker()
 
+#0v9# Jan 22, 2019  Max acceptable sentence length: 90 --> d0602b 2006
 #0v8# Jan 21, 2019  Require min 7 words for summary
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -581,7 +582,9 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     ##5/  Round Robin Selection
     print ("Doing round robin selection")
     min_length=4
+    max_sentence_length=90
     print ("0v8  require min sentence summary length of: "+str(min_length))
+    print ("0v9  require max sentence word length summary length of: "+str(max_sentence_length))
     
     sentence_cache=[] #Top sentences to collect
     c=0
@@ -612,6 +615,11 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
                 #0v8# Require min length of 7
                 if got_next and len(re.split(r'\s+',sentence))<min_length:
                     print ("#0v8# Skipping short sentence: "+str(sentence))
+                    got_next=False
+                    
+                #0v9# Max length 90
+                if len(re.split(r' ',sentence))>max_sentence_length:
+                    print ("#0v9# Skipping long sentence: "+str(sentence))
                     got_next=False
 
                 if got_next:
