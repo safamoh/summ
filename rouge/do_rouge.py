@@ -1,7 +1,10 @@
 import re
 import os
 import sys
-from rouge.pyrouge import Rouge155
+try:
+    from rouge.pyrouge import Rouge155
+except:
+    from pyrouge import Rouge155
 
 sys.path.insert(0,"..")
 from duc_reader import get_list_of_all_topics
