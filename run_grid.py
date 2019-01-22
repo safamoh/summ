@@ -67,11 +67,17 @@ def run_rouge(topic_id):
 
 
 def run_grid_search():
+    print ("[] recall topics expect proper sim matrix & year setup")
     topic_id='d408c' #dates missing
     topic_id='d436j'
     topic_id='d694j'
-    run_id='a'
-    run_comment='std low score min length 4 words #0v8# run_graph_pipeline'
+    
+    #2006
+    topic_id='d0602b'
+    branch_removal=['create_sim_matrix'] # if know already exists
+
+    run_id='2006a'
+    run_comment='std low score'
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')

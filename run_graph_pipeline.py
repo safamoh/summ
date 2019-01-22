@@ -38,6 +38,7 @@ from scipy.sparse import csr_matrix
 import markov_clustering as mc
 
 from igraph.clustering import VertexClustering
+from duc_reader import DOCS_SOURCE
 
 
 Perf=Performance_Tracker()
@@ -48,6 +49,7 @@ Perf=Performance_Tracker()
 
 #igraph to scipy sparse matrix
 #https://github.com/igraph/python-igraph/issues/72
+
 
 def to_sparse(graph, weight_attr=None):
     edges = graph.get_edgelist()
@@ -501,6 +503,12 @@ def alg_sort_clusters_by_weight(cluster_weights):
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True):
+    global DOCS_SOURCE
+    if str(DOCS_SOURCE)=='2006':
+        print ("Removing weight threshold for 2006 dataset...")
+        trim_low_weights=False
+
+
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
 
     ###  Standard info
@@ -516,17 +524,29 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
 
 
     ##2/  Filter clusters by weight threshold
+    total_weight=0
+    total_weight_count=0
     if trim_low_weights:
         weight_threshold=0.0095   
         ptr_tuple_top=[]
         for i,weight in ptr_tuple:
+            total_weight+=weight
+            total_weight_count+=1
             if weight>weight_threshold:
                 ptr_tuple_top+=[(i,weight)]
     else:
         ptr_tuple_top=[]
         for i,weight in ptr_tuple:
+            total_weight+=weight
+            total_weight_count+=1
             ptr_tuple_top+=[(i,weight)]
     
+    average_weight=total_weight/total_weight_count
+    if not ptr_tuple_top:
+        print ("ALL WEIGHTS BELOW THRESHOLD: "+str(weight_threshold))
+        print ("Average weight: "+str(average_weight))
+        print ("Suggest to modify weight threshold !")
+        weight_=bad_threshold
 
     ##3/ Lookup random walk scores for clusters
     #        i_cluster:  The index of the sub-graph (cluster)
@@ -564,7 +584,16 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     print ("0v8  require min sentence summary length of: "+str(min_length))
     
     sentence_cache=[] #Top sentences to collect
+    c=0
+    lverbose=False
     while len(sentence_cache)<target_sentences: #while need more sentences
+        c+=1
+        if c==10000 or not ptr_tuple_top:
+            print ("Could not resolve round-robin")
+            print ("PTR: "+str(ptr_tuple_top))
+            lverbose=True
+            hard_stop_=cant_select
+
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
             rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
 
