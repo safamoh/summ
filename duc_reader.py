@@ -128,6 +128,7 @@ def walk_directory(folders,include_dir=False):
                     yield path
                     
 def xml2text(xml_filename,text_tag='TEXT'):
+    #0v3#  Jan 21, 2019  Include headline or date?? as summaries
     #0v2#  Dec 27, 2018
     #>  2006 has TEXT nested under BODY tag.
     #>  If no TEXT found then use <P> tags
@@ -141,6 +142,13 @@ def xml2text(xml_filename,text_tag='TEXT'):
         root = etree.fromstring(xmlstring, parser=parser)
         tree = etree.ElementTree(root)
         for node in root:
+            #0v3
+            if node.tag == 'HEADLINE':
+                content=etree.tostring(node)
+                content=re.sub(r'\<.{0,1}HEADLINE\>','',content)
+                content=re.sub(r'\<.{0,1}P\>','',content)
+                blob+=content+"." #Include end-of-line
+
             if node.tag == text_tag:
                 content=etree.tostring(node)
                 content=re.sub(r'\<.{0,1}TEXT\>','',content)
