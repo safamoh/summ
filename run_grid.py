@@ -53,6 +53,12 @@ def run_rouge(topic_id):
 
     run_on_all_topics(system_dir=local_system_dir,topic_regex=topic_digits)
     print ("**WATCH THAT SUMMARIES ACTUALLY IN: "+str(local_system_dir))
+
+    #Restore db
+    if is_windows:
+        from_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc_SAFA.db'
+        to_path='./rouge/ROUGE-1.5.5/data/WordNet-2.0.exc.db'
+        shutil.copy(from_path,to_path)
     return
 
 
@@ -67,8 +73,8 @@ def run_grid_search():
 
     branches=['pipeline']
     branches=['analysis']
-    branches=['rouge']
 
+    branches=['rouge']
     branches=['pipeline','analysis','rouge']
 
     
