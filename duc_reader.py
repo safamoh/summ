@@ -319,7 +319,7 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
     if limit_topic:
         print ("**just loaded data for topic: "+str(limit_topic))
     else:
-        print ("Corpus topic count: "+str(len(list(set(docuent_topics)))))
+        print ("Corpus topic count: "+str(len(list(set(document_topics)))))
 
     if not documents:
         print ("Stopping as no documents found (see above)")

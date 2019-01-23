@@ -76,9 +76,20 @@ def run_grid_search():
     topic_id='d0602b'
     topic_id='d0613d'
     branch_removal=['create_sim_matrix'] # if know already exists
+    branch_removal=[]
 
     run_id='2006a'
     run_comment='std low score -- Add . before </P> min length 5 not 4'
+    
+    #/  <table> tags makes long
+    run_id='2005a'
+    topic_id='d699a'
+    run_comment='tags in body text'
+    
+    #/  failing at round-robin branch
+    run_id='2005a'
+    topic_id='d671g'
+    run_comment='stops on round-robin branch'
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')

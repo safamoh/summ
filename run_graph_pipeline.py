@@ -1,4 +1,5 @@
 from __future__ import division
+import sys
 import os
 import re
 import numpy as np
@@ -591,11 +592,27 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     lverbose=False
     while len(sentence_cache)<target_sentences: #while need more sentences
         c+=1
-        if c==10000 or not ptr_tuple_top:
+        
+        ## CATCH IF CAN'T FIND ENOUGH GOOD SENTENCES
+        if c==1000 or not ptr_tuple_top:
             print ("Could not resolve round-robin")
             print ("PTR: "+str(ptr_tuple_top))
             lverbose=True
-            hard_stop_=cant_select
+
+            ## REVIEW ISSUE
+            print ("-- DUMP cluster sentences")
+            for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
+                print ("--------------------------------")
+                rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
+                for sentence in rws_sorted:
+                    print ("> "+str(sentence))
+                    
+            for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
+                rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
+                print ("[debug] POOL OF SENTENCES IN CLUSTER #"+str(i_cluster)+": "+str(len(rws_sorted)))
+                print ("[debug] cluster pointers: "+str(cluster_ptr[i_cluster]))
+            sys.exit("Could not resolve round-robin (see info above)")
+
 
         for i_cluster,weight in ptr_tuple_top: #FOR EACH CLUSTER
             rws_sorted=sorted_sentences_in_cluster[i_cluster] #Get sorted sentences for each cluster
@@ -627,7 +644,7 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
                     print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster])+" cluster size: "+str(cluster_size)+">> "+str(sentence))
                     sentence_cache+=[sentence]
 
-                    cluster_ptr[i_cluster]+=1
+                cluster_ptr[i_cluster]+=1 #Balanced increment
             if len(sentence_cache)==target_sentences:break
             
     print ("Done do_selection")   

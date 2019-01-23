@@ -35,7 +35,7 @@ if not os.path.exists(output_directory+"/cos_sim"):
     os.mkdir(output_directory+"/cos_sim")
 
 ## GLOBAL CONFIG
-USE_SKLEARN_VECTORIZER=False #Rather then gensim tf-idf
+USE_SKLEARN_VECTORIZER=True #Rather then gensim tf-idf
 
 
 def run_exercise(force_topic_id='',branch_removal=[]):
@@ -58,8 +58,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
     branch+=['select_top_cos_sims']
 #    branch+=['do_selection_multiple_cluster_algs']
 #    branch+=['select_by_cluster_weight_factor']
-#    branch+=['do_selection_by_round_robin']
-#    branch+=['do_selection_by_round_robin']
+    branch+=['do_selection_by_round_robin']
     branch+=['experiments']
 
     ##Customize branches if called via grid search
