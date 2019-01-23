@@ -21,6 +21,7 @@ import string
 import numpy as np
 import igraph
 
+#0v3# Jan 23, 2019  Remove tags from body text
 #0v2# Dec 27, 2018  Added support for 2006, 2007 data input
 
 ENC='utf-8'
@@ -38,8 +39,8 @@ VERSION=3
 #  GLOBAL DATA SOURCES
 ##########################
 DOCS_SOURCE='2007'
-DOCS_SOURCE='2005' #rouge ok
 DOCS_SOURCE='2006' #ok
+DOCS_SOURCE='2005' #rouge ok
 
 if DOCS_SOURCE=='2005': #org default
     TEMP_DATA_PATH=LOCAL_DIR+"../data/"
@@ -200,11 +201,13 @@ def xml2text(xml_filename,text_tag='TEXT'):
     #Prepend headline content
     blob=headline_content+blob
     
+    #0v3# REMOVE ALL TAGS FROM CONTENT (# <TABLE CINFO>>>
+    blob=re.sub(r'<[a-zA-Z\/][^>]*>','',blob)#,flags=re.DOTALL)
+    
     # POST CLEAN ERRONEOUS TAGS
-    blob=re.sub(r'\<.{0,1}ANNOTATION\>','',blob)
+    #blob=re.sub(r'\<.{0,1}ANNOTATION\>','',blob)
     blob=re.sub(r' _ ',' ',blob) #
     blob=re.sub(r'\s+',' ',blob) #single spaced max
-    
     
     #print "FOR FILE: "+str(xml_filename)
     return blob
@@ -312,7 +315,12 @@ def files2sentences(limit_topic='',limit=0,verbose=True):
                 sentences+=[sentence]
                 sentence_topics+=[document_topics[i]]
 
-    print ("[files2sentences] Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents. topic count: "+str(len(sentence_topics)))
+    print ("[files2sentences] Loaded "+str(len(sentences))+" sentences from "+str(len(documents))+" documents.")
+    if limit_topic:
+        print ("**just loaded data for topic: "+str(limit_topic))
+    else:
+        print ("Corpus topic count: "+str(len(list(set(docuent_topics)))))
+
     if not documents:
         print ("Stopping as no documents found (see above)")
         sys.exit()
