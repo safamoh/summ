@@ -46,7 +46,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
     # Options
     ####################################
     # Create vectorizer using entire corpus (ie/ tf-ifd across all topics)
-    vectorize_all_topics=True #False will do individual topics
+    vectorize_all_topics=False #will do individual topics
 
     print ("Only 1 sim matrix create per topic")
     print ("**so, if toggle 'vectorize_all_topics' must re-run 'create_sim_matrix'")
@@ -72,22 +72,22 @@ def run_exercise(force_topic_id='',branch_removal=[]):
     else:
         all_topics=get_list_of_all_topics()
 
+    print ("ACTIVE BRANCHES: "+str(branch))
     print ("Processing topics: "+str(all_topics))
     print (str(len(all_topics))+" topics found.")
     
     if 'create_sim_matrix' in branch:
-        if vectorize_all_topics:
-            if USE_SKLEARN_VECTORIZER:
-                run_pipeline_sklearn_create_vectorizer()
-            else:
-                run_pipeline(create_all_topics_vectorizer=True)
+        if USE_SKLEARN_VECTORIZER:
+            run_pipeline_sklearn_create_vectorizer(vectorize_all_topics=vectorize_all_topics)
+        elif vectorize_all_topics:
+            run_pipeline(create_all_topics_vectorizer=True)
             
     for topic_id in all_topics:
         print ("FOR TOPIC: "+str(topic_id)+"-------------")
 
         if 'create_sim_matrix' in branch:
             if USE_SKLEARN_VECTORIZER:
-                run_pipeline_sklearn_create_sims(topic_id)
+                run_pipeline_sklearn_create_sims(topic_id,vectorize_all_topics=vectorize_all_topics)
             else:
                 if vectorize_all_topics:
                     print ("-----------> Creating sim matrix for topic: "+str(topic_id))

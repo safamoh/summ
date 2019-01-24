@@ -75,7 +75,7 @@ def run_grid_search():
     #2006
     topic_id='d0602b'
     topic_id='d0613d'
-    branch_removal=['create_sim_matrix'] # if know already exists
+    #branch_removal=['create_sim_matrix'] # if know already exists
     branch_removal=[]
 
     run_id='2006a'
@@ -90,6 +90,14 @@ def run_grid_search():
     run_id='2005a'
     topic_id='d671g'
     run_comment='stops on round-robin branch'
+    run_comment="don't remove stopwords"
+    
+    #/ jan24 allow non full vectorizer for sklearn
+    run_id='2005a'
+    topic_id='d671g'
+    run_comment="full vectorizer sklearn"
+    run_id='2005b'
+    run_comment="single topic vectorizer sklearn"
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')

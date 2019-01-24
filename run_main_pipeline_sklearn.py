@@ -131,9 +131,9 @@ def cosine_sim_algs(matrix):
 
 class Custom_Vectorizer():
     #Follow sklearn interface 
-    def __init__(self):
+    def __init__(self,subset=''):
         #self.vectorizer_path=TEMP_DATA_PATH+'vectorizer_model_'+local_topic_id+'.mm'
-        self.vectorizer_path=TEMP_DATA_PATH+'vectorizer_model.joblib'
+        self.vectorizer_path=TEMP_DATA_PATH+'vectorizer_model_'+subset+'.joblib'
         return
     def initialize(self):
 #        self.vectorizer=TfidfVectorizer()
@@ -158,21 +158,14 @@ class Custom_Vectorizer():
         self.vectorizer=load(self.vectorizer_path)
         return
 
-def run_pipeline_sklearn_create_vectorizer():
-    #> use all docs for vectorizer
-    
-    
-    #1/  Get sentences
-    documents,sentences,sentences_topics=files2sentences(limit_topic='')
-    #Add all query sentences
-    for topic_id in get_list_of_all_topics():
-        query_sentence=get_query(topic_id)
-        sentences.insert(0,query_sentence)
-        sentences_topics.insert(0,topic_id)
-        
-    
+
+def create_vectorizer_from_docs(documents,limit_topic=''):
     #2/  Normalize documents (prior to tf-idf)
-    print ("[debug] normalizing docs...")
+    if not limit_topic:
+        print ("[debug] normalizing docs...(For FULL VECTORIZER)")
+    else:
+        print ("[debug] normalizing docs...For single topic: "+limit_topic)
+
     input_docs=[]
     for doc in documents:
         for words in tokenize_sentences([doc]):
@@ -182,7 +175,7 @@ def run_pipeline_sklearn_create_vectorizer():
     print ("[debug] creating tfidf vectorizer...")
 
     #vectorizer = TfidfVectorizer()
-    vectorizer = Custom_Vectorizer()
+    vectorizer = Custom_Vectorizer(subset=limit_topic)
     vectorizer.initialize()
 
     vectorizer.fit(input_docs)
@@ -191,14 +184,29 @@ def run_pipeline_sklearn_create_vectorizer():
     print ("[debug] saving vectorizer...")
     vectorizer.save()
     
- 
     return
 
-def run_pipeline_sklearn_create_sims(topic_id):
+def run_pipeline_sklearn_create_vectorizer(vectorize_all_topics=True,limit_topic=''):
+    
+    if vectorize_all_topics:
+        #1/  Get training corpus
+        documents,sentences,sentences_topics=files2sentences(limit_topic='')
+        create_vectorizer_from_docs(documents,limit_topic='')
+    else: #Create for each topic
+        for topic_id in get_list_of_all_topics():
+            documents,sentences,sentences_topics=files2sentences(limit_topic=topic_id)
+            create_vectorizer_from_docs(documents,limit_topic=topic_id)
+    return
+
+def run_pipeline_sklearn_create_sims(topic_id,vectorize_all_topics=False):
     #0/  Load vectorizer -- trained above
 
-    print ("Loading vectorizer...")
-    vectorizer=Custom_Vectorizer()
+    if vectorize_all_topics:
+        print ("Loading vectorizer... (FULL VECTORIZER)")
+        vectorizer=Custom_Vectorizer()
+    else:
+        print ("Loading vectorizer... (sngle topic vectorizer for: "+str(topic_id)+")")
+        vectorizer=Custom_Vectorizer(subset=topic_id)
     vectorizer.initialize()
     vectorizer.load()
     
