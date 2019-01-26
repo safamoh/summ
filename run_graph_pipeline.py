@@ -163,7 +163,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
         #Use percent distributions to calculate new weight
         for i,e in enumerate(g.es): #FOR EACH EDGE
             if experiment=='do6_two_scores_1':
-                weight=max(cosim_dist[i],ws_dist[i])  #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
+                weight=cosim_dist[i]  #max of cosim OR ws_dist     (do6_1): edge_weight= ( Max[(cos sim) , [(node1_rws)+(node2_rws)]/2)] ]
             elif experiment=='do6_two_scores_2':
                 weight=(cosim_dist[i]+(query1_cosim[i]+query2_cosim[i])/2)/2   #  (do6_2): edge_weight=((cos sim) + [(node1_qcs+node2_qcs)/2])/2
             else: #Standard do6_two_scores
