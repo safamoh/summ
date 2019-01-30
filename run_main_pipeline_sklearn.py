@@ -20,6 +20,7 @@ from sklearn.metrics.pairwise import linear_kernel
 
 Perf=Performance_Tracker()
 
+#0v2#   Jan 24, 2019  Added single topic vectorizer option
 
 def print_sims(sims,sentences,max_lines=3):
     print ("-----> PRINT SIMS")

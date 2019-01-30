@@ -635,14 +635,17 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
                     got_next=False
                     
                 #0v9# Max length 90
-                if len(re.split(r' ',sentence))>max_sentence_length:
+                elif len(re.split(r' ',sentence))>max_sentence_length:
                     print ("#0v9# Skipping long sentence: "+str(sentence))
                     got_next=False
 
-                if got_next:
+                elif got_next:
                     cluster_size=len(clusters.subgraphs()[i_cluster].vs)
                     print ("[RR] Storing sentence #"+str(len(sentence_cache)+1)+" from cluster: "+str(i_cluster)+"'s rank: "+str(cluster_ptr[i_cluster])+" cluster size: "+str(cluster_size)+">> "+str(sentence))
                     sentence_cache+=[sentence]
+                    
+                else:
+                    print ("> skip non indexed: "+str(sentence))
 
                 cluster_ptr[i_cluster]+=1 #Balanced increment
             if len(sentence_cache)==target_sentences:break
