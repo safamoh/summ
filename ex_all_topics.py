@@ -131,7 +131,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
                     os.mkdir(out_report_dir)
 
                 print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                g,clusters,cluster_weights,query_sentence,query_index,uG=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
                 print ("Doing selection")
                 fp=codecs.open(out_report_file,'w',encoding='utf-8')
                 for sentence in do_selection_by_weight(g,clusters,cluster_weights,query_sentence,query_index):
@@ -150,7 +150,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
                     os.mkdir(out_report_dir)
 
                 print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                g,clusters,cluster_weights,query_sentence,query_index,uG=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
                 print ("Doing selection")
                 fp=codecs.open(out_report_file,'w',encoding='utf-8')
                 for sentence in do_selection(g,clusters,cluster_weights,query_sentence,query_index):
@@ -170,10 +170,10 @@ def run_exercise(force_topic_id='',branch_removal=[]):
                     os.mkdir(out_report_dir)
 
                 print ("For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
+                g,clusters,cluster_weights,query_sentence,query_index,uG=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
                 print ("Doing selection")
                 fp=codecs.open(out_report_file,'w',encoding='utf-8')
-                for sentence in do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10):
+                for sentence in do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,uG=uG):
                     fp.write(sentence+"\n")
                 fp.close()
 
@@ -210,7 +210,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
                         os.mkdir(out_report_dir)
     
                     print ("Experiment: "+str(experiment)+" For topic: "+str(topic_id)+" doing clustering: "+str(sub_branch)+" and selection report to: "+str(out_report_file))
-                    g,clusters,cluster_weights,query_sentence,query_index=run_clustering_on_graph(topic_id=topic_id,method=sub_branch,experiment=experiment)
+                    g,clusters,cluster_weights,query_sentence,query_index,uG=run_clustering_on_graph(topic_id=topic_id,method=sub_branch,experiment=experiment)
                     print ("Doing selection")
                     fp=codecs.open(out_report_file,'w',encoding='utf-8')
                     the_function=globals()[experiment]

@@ -98,6 +98,11 @@ def run_grid_search():
     run_comment="full vectorizer sklearn"
     run_id='2005b'
     run_comment="single topic vectorizer sklearn"
+    
+    
+    run_id='vis'
+    run_comment=""
+    branch_removal=['create_sim_matrix'] #**************************
 
     log_file='grid_log.tsv'
     try: fp=open(log_file,'a')
@@ -109,10 +114,11 @@ def run_grid_search():
     branches=['rouge']
     branches=['pipeline','analysis','rouge']
 
+    branches=['pipeline']
+
     
     if 'pipeline' in branches:
-        branch_removal=['create_sim_matrix']
-        branch_removal=[]
+#        branch_removal=[]
         run_exercise(force_topic_id=topic_id,branch_removal=branch_removal)
     
     if 'rouge' in branches:

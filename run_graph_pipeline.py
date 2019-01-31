@@ -41,6 +41,8 @@ import markov_clustering as mc
 from igraph.clustering import VertexClustering
 from duc_reader import DOCS_SOURCE
 
+from vis_graph import _plot
+
 
 Perf=Performance_Tracker()
 
@@ -182,6 +184,8 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
     Perf.start()
     
     markov_subgraphs=[]
+    uG='' #Undirected version of graph that corresponds to true cluster
+    
     if 'markov' in method:
         print ("---> doing markov clustering")
         matrix=to_sparse(g,weight_attr='weight')
@@ -329,7 +333,7 @@ def run_clustering_on_graph(topic_id='',method='fast_greedy',experiment=''):
         print ("Visualize clusters...")
         view_graph_clusters(g,clusters)
         
-    return g,clusters,cluster_weights,query_sentence,query_index
+    return g,clusters,cluster_weights,query_sentence,query_index,uG
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -504,12 +508,21 @@ def alg_sort_clusters_by_weight(cluster_weights):
     return ptr_tuple
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True):
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,uG=''):
     global DOCS_SOURCE
     if str(DOCS_SOURCE)=='2006':
         print ("Removing weight threshold for 2006 dataset...")
         trim_low_weights=False
 
+    ## Visual
+    DO_VISUALIZATION=False
+    if DO_VISUALIZATION:
+        print ("Close visualization to continue...")
+        if uG: #undirect graph
+            _plot(uG,membership=clusters)
+        else: 
+            _plot(g,membership=clusters)
+    
 
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
 
