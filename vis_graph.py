@@ -1,8 +1,16 @@
 import igraph
 from random import randint
+from graph_utils import calc_rank_percent_distribution
 
 def _plot(g, membership=None):
+    print ("CREATING VISUALIZATION...")
     print ("Number of clusters: "+str(len(membership)))
+    
+    #Convert weights to distributed 0..100 for gradient view
+    distributed=calc_rank_percent_distribution(g.es["weight"])
+    distributed = [int(x * 100) for x in distributed] #
+    distributed=map(lambda x: 0 if x<90 else x, distributed) #Modify only show top
+
     
     #Create lookup for clusters
     id2cluster={}
@@ -22,11 +30,12 @@ def _plot(g, membership=None):
             else:
                 edges_colors.append("black")
         gcopy.delete_edges(edges)
+        
         layout = gcopy.layout("kk")
         g.es["color"] = edges_colors
     else:
-        layout = g.layout("kk")
         g.es["color"] = "gray"
+
     visual_style = {}
     visual_style["vertex_label_dist"] = 0
     visual_style["vertex_shape"] = "circle"
@@ -36,18 +45,63 @@ def _plot(g, membership=None):
     visual_style["bbox"] = (1024, 768)
     visual_style["margin"] = 40
     
+    #Special adjustments
+    visual_style["edge_curved"] = False# True
+#option    visual_style['edge_width'] = [w for w in g.es['weight']]
+
+    #Edge colors
+    #> this assigns based on degree
+#degree    num_colors = max(gcopy.degree()) + 1
+    num_colors = 100
+#    palette = igraph.RainbowPalette(n=num_colors) #Hue
+#RainbowPalette(n=120, s=1, v=0.5, alpha=0.75)
+#    palette = igraph.GradientPalette('white','black',n=num_colors)
+#    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),'black',n=num_colors) #4th is opacity
+#ok    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),(0,0,0,1),n=num_colors) #4th is opacity
+    #                                  R     G   B         R   G  B 
+    
+    #Note: at 0 opacity since filter weights to 0 most wouldn't show
+    palette = igraph.GradientPalette((1, 1, 1, 0),(0.3,0.3,0.3,1),n=num_colors) #4th is opacity
+    
+#degree    color_list = [palette.get(degree) for degree in gcopy.degree()]
+    color_list = [palette.get(weight_dist) for weight_dist in distributed]
+    visual_style["edge_color"] = color_list
+
+    #opacity option  g.es['color']="rgba(1,1,1,0.1)"
+
+    
+    #REMOVALS:
+    #noisy#     visual_style["edge_label"] = g.es["weight"] #noisy
+    
+    
+
+    layout=''
     #Standard 1)
-    visual_style["layout"] = layout
+    #- tight clusters ok
+    layout_name="kk"
     
     #Standard 2)
-    #N??    visual_style["layout"] = g.layout_fruchterman_reingold(weights=g.es["weight"], maxiter=500, area=N ** 3, repulserad=N ** 3)
+    #About same as 1
+    #layout = gcopy.layout_fruchterman_reingold(weights=gcopy.es["weight"], maxiter=1000)#, area=N ** 3, repulserad=N ** 3)
     #?need more    visual_style["layout"] = g.layout_fruchterman_reingold(weights=g.es["weight"], maxiter=1000)
 
-    #Standard 3)  Supposed to be that circle thing
-    #visual_style['layout']="fr" #
+    #Standard 3)
+    #- Supposed to be that circle thing
+    #- more overlap but decent
+    #layout_name="fr"
+    
+    #Standard 4)
+    #- circular edge
+    #- VERY noise as all to edge
+    #layout=gcopy.layout_circle()
 
-    if False:
-        visual_style["edge_label"] = g.es["weight"] #noisy
+    if layout:
+        pass
+    else:
+        layout = gcopy.layout(layout_name)
+
+    visual_style["layout"] = layout
+
 
     for vertex in g.vs():
         vertex["label"] = vertex.index

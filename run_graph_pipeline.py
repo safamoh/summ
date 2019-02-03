@@ -515,13 +515,13 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
         trim_low_weights=False
 
     ## Visual
-    DO_VISUALIZATION=False
+    DO_VISUALIZATION=True
     if DO_VISUALIZATION:
         print ("Close visualization to continue...")
         if uG: #undirect graph
-            _plot(uG,membership=clusters)
+            _plot(uG.copy(),membership=clusters)
         else: 
-            _plot(g,membership=clusters)
+            _plot(g.copy(),membership=clusters)
     
 
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style
