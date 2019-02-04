@@ -173,7 +173,7 @@ def run_exercise(force_topic_id='',branch_removal=[]):
                 g,clusters,cluster_weights,query_sentence,query_index,uG=run_clustering_on_graph(topic_id=topic_id,method=sub_branch)
                 print ("Doing selection")
                 fp=codecs.open(out_report_file,'w',encoding='utf-8')
-                for sentence in do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,uG=uG):
+                for sentence in do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=10,uG=uG,topic_id=topic_id):
                     fp.write(sentence+"\n")
                 fp.close()
 

@@ -508,7 +508,7 @@ def alg_sort_clusters_by_weight(cluster_weights):
     return ptr_tuple
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,uG=''):
+def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_index,target_sentences=5,trim_low_weights=True,uG='',topic_id=''):
     global DOCS_SOURCE
     if str(DOCS_SOURCE)=='2006':
         print ("Removing weight threshold for 2006 dataset...")
@@ -519,9 +519,9 @@ def do_selection_by_round_robin(g,clusters,cluster_weights,query_sentence,query_
     if DO_VISUALIZATION:
         print ("Close visualization to continue...")
         if uG: #undirect graph
-            _plot(uG.copy(),membership=clusters)
+            _plot(topic_id,uG.copy(),membership=clusters)
         else: 
-            _plot(g.copy(),membership=clusters)
+            _plot(topic_id,g.copy(),membership=clusters)
     
 
     ##:  Round robin selection:  Choose top sentence from each cluster in round-robin style

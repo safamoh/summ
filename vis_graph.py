@@ -2,7 +2,7 @@ import igraph
 from random import randint
 from graph_utils import calc_rank_percent_distribution
 
-def _plot(g, membership=None):
+def _plot(topic_id,g, membership=None):
     print ("CREATING VISUALIZATION...")
     print ("Number of clusters: "+str(len(membership)))
     
@@ -46,35 +46,32 @@ def _plot(g, membership=None):
     visual_style["margin"] = 40
     
     #Special adjustments
-    visual_style["edge_curved"] = False# True
-#option    visual_style['edge_width'] = [w for w in g.es['weight']]
+    visual_style["edge_curved"] = False  # True
+    #option    visual_style['edge_width'] = [w for w in g.es['weight']]
+
 
     #Edge colors
+    num_colors = 200  # 100-> causes color index too large
+
     #> this assigns based on degree
-#degree    num_colors = max(gcopy.degree()) + 1
-    num_colors = 100
-#    palette = igraph.RainbowPalette(n=num_colors) #Hue
-#RainbowPalette(n=120, s=1, v=0.5, alpha=0.75)
-#    palette = igraph.GradientPalette('white','black',n=num_colors)
-#    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),'black',n=num_colors) #4th is opacity
-#ok    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),(0,0,0,1),n=num_colors) #4th is opacity
+    #degree    num_colors = max(gcopy.degree()) + 1
+    #    palette = igraph.RainbowPalette(n=num_colors) #Hue
+    #RainbowPalette(n=120, s=1, v=0.5, alpha=0.75)
+    #    palette = igraph.GradientPalette('white','black',n=num_colors)
+    #    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),'black',n=num_colors) #4th is opacity
+    #ok    palette = igraph.GradientPalette((1.0, 1.0, 1.0, 0.0),(0,0,0,1),n=num_colors) #4th is opacity
     #                                  R     G   B         R   G  B 
+
     
     #Note: at 0 opacity since filter weights to 0 most wouldn't show
     palette = igraph.GradientPalette((1, 1, 1, 0),(0.3,0.3,0.3,1),n=num_colors) #4th is opacity
     
-#degree    color_list = [palette.get(degree) for degree in gcopy.degree()]
-    color_list = [palette.get(weight_dist) for weight_dist in distributed]
+    print ("LENGTH DIS: "+str(len(distributed)))
+    color_list = [palette.get(weight_dist) for weight_dist in distributed]  #If fails:  increase num_colors
     visual_style["edge_color"] = color_list
 
-    #opacity option  g.es['color']="rgba(1,1,1,0.1)"
 
-    
-    #REMOVALS:
-    #noisy#     visual_style["edge_label"] = g.es["weight"] #noisy
-    
-    
-
+    ##  DEFINE LAYOUT
     layout=''
     #Standard 1)
     #- tight clusters ok
@@ -116,7 +113,13 @@ def _plot(g, membership=None):
         visual_style["vertex_color"] = g.vs["color"]
 
     print ("plotting...")
-    igraph.plot(g, **visual_style)
+    
+    #Include filename if not to screen
+    out=igraph.plot(g, **visual_style)
+    out.save("./plots/"+topic_id + '_plot.png')
+
+    return
+
 
 if __name__ == "__main__":
     #fails# g = igraph.Nexus.get("karate")
